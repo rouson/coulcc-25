@@ -1,5 +1,9 @@
 MODULE FBN_COULCC
 !-----------------------------------------------------------------------
+  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128
+!-----------------------------------------------------------------------
+!  USE FBN_CONSTANTS (PI and E-M constant)
+!-----------------------------------------------------------------------
   CONTAINS
 !-----------------------------------------------------------------------
 !  COMPLEX COULOMB WAVEFUNCTION PROGRAM USING STEED'S METHOD            
@@ -11,7 +15,7 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
 !  A. R. Barnett           Manchester  March   1981                     
 !  modified I.J. Thompson  Daresbury, Sept. 1983 for Complex Functions  
-!  modified A.R. Flores    WashU, April 2025 for Modern Compilers                  
+!  modified A.R. Flores    WashU, April 2025 for Modern Compilers       
 !-----------------------------------------------------------------------
 !  original program  RCWFN       in    CPC  8 (1974) 377-395            
 !                 +  RCWFF       in    CPC 11 (1976) 141-142            
@@ -113,13 +117,13 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
     SUBROUTINE COULCC(XX,ETA1,ZLMIN,NL,FC,GC,FCP,GCP,SIG,MODE1,KFN,IFAIL)
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX*16 (A-H,O-Z)                                     
+      IMPLICIT COMPLEX(dpf) (A-H,O-Z)                                     
       PARAMETER(JMAX=50)                                                
       DIMENSION FC(NL),GC(NL),FCP(NL),GCP(NL),SIG(NL),XRCF(JMAX,4)      
       LOGICAL PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2,NPINT  
-      REAL*8 ERR,RERR,ABSC,ACCUR,ACCT,ACC8,ACCH,ACC16,ACCB, XNEAR 
-      REAL*8 ZERO,ONE,TWO,HALF,HPI,TLOG,FPMAX,FPMIN,FPLMIN,FPLMAX      
-      REAL*8 PACCQ,EPS,OFF,SCALE,SF,SFSH,TA,RK,OMEGA,R20,ASYM,ABSX      
+      REAL(dpf) ERR,RERR,ABSC,ACCUR,ACCT,ACC8,ACCH,ACC16,ACCB, XNEAR 
+      REAL(dpf) ZERO,ONE,TWO,HALF,HPI,TLOG,FPMAX,FPMIN,FPLMIN,FPLMAX      
+      REAL(dpf) PACCQ,EPS,OFF,SCALE,SF,SFSH,TA,RK,OMEGA,R20,ASYM,ABSX      
 !-----------------------------------------------------------------------
       COMMON /STEED/ RERR,NFP,N11,NPQ(2),N20,KAS(2)                     
 !***  common blocks are for information & storage only.                 
@@ -772,9 +776,9 @@ MODULE FBN_COULCC
       FUNCTION CF1C(X,ETA,ZL,EPS,FCL,TPK1,ETANE0,LIMIT,ERR,NFP, &        
      &              ACCH,FPMIN,FPMAX,PR,CALLER)                         
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX*16(A-H,O-Z)                                      
+      IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
       LOGICAL PR,ETANE0                                                 
-      REAL*8 ONE,TWO,EPS,ERR,ACCH,FPMIN,FPMAX,ABSC,SMALL,RK,PX          
+      REAL(dpf) ONE,TWO,EPS,ERR,ACCH,FPMIN,FPMAX,ABSC,SMALL,RK,PX          
       CHARACTER*6 CALLER                                                
       DATA ONE,TWO / 1D+0, 2D+0 /                                       
       ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
@@ -848,10 +852,10 @@ MODULE FBN_COULCC
       FUNCTION CF2(X,ETA,ZL,PM,EPS,LIMIT,ERR,NPQ,ACC8,ACCH,  &          
      &             PR,ACCUR,DELL,CALLER)                                
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX*16(A-H,O-Z)                                      
+      IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
       LOGICAL PR                                                        
-      REAL*8 EPS,ERR,ACC8,ACCH,ACCUR,TA,RK                              
-      REAL*8 ABSC,ZERO,HALF,ONE,TWO                                     
+      REAL(dpf) EPS,ERR,ACC8,ACCH,ACCUR,TA,RK                              
+      REAL(dpf) ABSC,ZERO,HALF,ONE,TWO                                     
       CHARACTER*6 CALLER                                                
       DATA ZERO,HALF,ONE,TWO / 0D+0, .5D+0, 1D+0, 2D+0 /                
       ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
@@ -902,11 +906,11 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
       FUNCTION F11(X,ETA,ZL,P,EPS,LIMIT,KIND,ERR,NITS,FPMAX,ACC8,ACC16) 
 !-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Z)                                          
-      COMPLEX*16 X,ETA,ZL,P,AA,BB,Z,F11,CI                       
-      COMPLEX*16 DD,G,F,AI,BI,T                                         
+      IMPLICIT REAL(dpf)(A-H,O-Z)                                       
+      COMPLEX(dpf) X,ETA,ZL,P,AA,BB,Z,F11,CI                       
+      COMPLEX(dpf) DD,G,F,AI,BI,T                                       
       LOGICAL ZLLIN                                                     
-      REAL*16 AR,BR,GR,GI,DR,DI,TR,TI,UR,UI,FI,FI1,DEN                  
+      REAL(qpf) AR,BR,GR,GI,DR,DI,TR,TI,UR,UI,FI,FI1,DEN                
       DATA ZERO,ONE,TWO / 0D+0, 1D+0, 2D+0 /, CI / (0D+0, 1D+0) /       
       ABSC(AA) = ABS(REAL(AA)) + ABS(IMAG(AA))                          
       NINTC(AA) = NINT(REAL(REAL(AA)))                                  
@@ -1011,9 +1015,9 @@ MODULE FBN_COULCC
       FUNCTION CF1R(X,ETA,ZL,EPS,FCL,TPK1,ETANE0,LIMIT,ERR,NFP, &       
      &              ACCH,FPMIN,FPMAX,PR,CALLER)                         
 !-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Z)                                          
+      IMPLICIT REAL(dpf)(A-H,O-Z)                                          
       LOGICAL PR,ETANE0                                                 
-      CHARACTER*6 CALLER                                                
+      CHARACTER(len=6) CALLER                                                
       DATA ONE,TWO / 1D+0, 2D+0 /                                       
 !-----------------------------------------------------------------------
 ! ***    Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)               
@@ -1096,10 +1100,10 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
 !      useful number also input:  FPMAX = near-largest f.p. number      
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX*16(A-H,O-Z)                                      
+      IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
       DIMENSION X(JMAX,4)                                               
       LOGICAL FINITE                                                    
-      REAL*8 EP,EPS,AT,ATL,ABSC,RE,FPMAX                                
+      REAL(dpf) EP,EPS,AT,ATL,ABSC,RE,FPMAX                                
       DATA ONE,ZERO / (1D+0,0D+0), (0D+0,0D+0) /                        
       ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
       NINTC(W) = NINT(REAL(REAL(W)))                                    
@@ -1176,9 +1180,9 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
 !      useful number also input:  FPMAX = near-largest f.p. number      
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX*16(A-H,O-Z)                                      
+      IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
       DIMENSION XX(2,NMAX),G(NMAX),C(NMAX)                              
-      REAL*8 RE,EPS,T1,T2,T3,ZERO,ONE,TWO,AT,ATL,ABSC,FPMAX             
+      REAL(dpf) RE,EPS,T1,T2,T3,ZERO,ONE,TWO,AT,ATL,ABSC,FPMAX             
       DATA ZERO,ONE,TWO,CI / 0D+0, 1D+0, 2D+0, (0D+0,1D+0) /            
       ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
 !-----------------------------------------------------------------------
@@ -1302,10 +1306,10 @@ MODULE FBN_COULCC
 !              Jnl. Computational Physics, vol 137, pp242-258 (1980)    
 !   note:      restart procedure modified by I.J.Thompson               
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX*16(A-H,O-Z)                                      
+      IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
       DIMENSION A(100),B(100),XX(2,100)                                 
       LOGICAL EVEN                                                      
-      REAL*8 EPS                                                        
+      REAL(dpf) EPS                                                        
       COMMON /RCFCM2/ X1,M2M1,MP12,EVEN,M                               
 !-----------------------------------------------------------------------
 !     ibn = ibeg + inum - 1                                             
@@ -1374,8 +1378,8 @@ MODULE FBN_COULCC
 !     this routine computes the logarithm of the gamma function gamma(z)
 !     for any complex argument 'Z' to any accuracy preset by CALL LOGAM 
 !-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Z)                                          
-      COMPLEX*16 Z,U,V,H,R,CLOGAM,SER
+      IMPLICIT REAL(dpf)(A-H,O-Z)                                          
+      COMPLEX(dpf) Z,U,V,H,R,CLOGAM,SER
       DIMENSION B(15),BN(15),BD(15)                                     
 !-----------------------------------------------------------------------
       DATA LERR /6/, NX0 /6/, NB /15/, &                                
@@ -1471,8 +1475,8 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
       FUNCTION CDIGAM(Z)                                                
 !-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Z)                                          
-      COMPLEX*16 Z,U,V,H,R,CDIGAM,SER
+      IMPLICIT REAL(dpf)(A-H,O-Z)                                          
+      COMPLEX(dpf) Z,U,V,H,R,CDIGAM,SER
       DIMENSION B(15),BN(15),BD(15)                                     
 !-----------------------------------------------------------------------
       DATA LERR /6/, NX0 /6/, NB /15/, &                                
@@ -1553,8 +1557,8 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
       SUBROUTINE LOGAM(ACC)                                               
 !-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Z)                                          
-      COMPLEX*16 Z,U,V,H,R,SER
+      IMPLICIT REAL(dpf)(A-H,O-Z)                                          
+      COMPLEX(dpf) Z,U,V,H,R,SER
       DIMENSION B(15),BN(15),BD(15)                                     
 !-----------------------------------------------------------------------
       DATA LERR /6/, NX0 /6/, NB /15/, &                                
@@ -1600,8 +1604,8 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
 !     TIDY A COMPLEX NUMBER                                             
 !-----------------------------------------------------------------------
-      REAL*8 X,Y,ACC,AZ                                                 
-      COMPLEX*16 Z,TIDY                                                 
+      REAL(dpf) X,Y,ACC,AZ                                                 
+      COMPLEX(dpf) Z,TIDY                                                 
 !-----------------------------------------------------------------------
       X = REAL(Z)                                                       
       Y = IMAG(Z)                                                       
@@ -1611,6 +1615,7 @@ MODULE FBN_COULCC
       TIDY = DCMPLX(X,Y)                                                
       RETURN                                                            
       END                                                               
+!-----------------------------------------------------------------------
 END MODULE FBN_COULCC
 !-----------------------------------------------------------------------
 program test
@@ -1618,14 +1623,14 @@ use fbn_coulcc
 !-----------------------------------------------------------------------
 ! CCTEST OF COULCC27                                                    
 !-----------------------------------------------------------------------
-      IMPLICIT REAL*8 (A-H,O-Z)                                         
-      COMPLEX*16 X,ETA,ZLMIN,FC(201),GC(201),FCP(201),GCP(201), &       
+      IMPLICIT REAL(dpf) (A-H,O-Z)                                         
+      COMPLEX(dpf) X,ETA,ZLMIN,FC(201),GC(201),FCP(201),GCP(201), &       
      &           SIG(201),ZL,WS,CI                                      
       INTEGER LDISP(8)                                                  
       LOGICAL WHIT                                                      
       COMMON       /STEED/ RERR,NFP(2),NPQ(3),KASE(2)                   
-      CHARACTER*20 NOTE                                                 
-      CHARACTER*4 WHO(2,4,3),IRREG,REG                                  
+      CHARACTER(len=20) NOTE                                                 
+      CHARACTER(len=4) WHO(2,4,3),IRREG,REG                                  
       DATA ZERO,HALF,ONE,FOUR,CI / 0D+0,0.5D+0,1D+0,4D+0,(0D+0,1D+0) /  
       DATA WHO / 'F','G','j','y','J','Y','I','K' ,          &           
      &           'F','H+','j','h(1)','J','H(1)','?','?' ,   &           
