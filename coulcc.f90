@@ -1294,8 +1294,6 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
     END FUNCTION CF1A                                                 
 !-----------------------------------------------------------------------
-    SUBROUTINE RCF(A,B,IBEG,INUM,XX,EPS)                              
-!-----------------------------------------------------------------------
 !  RCF converts polynomial A to the corresponding continued             
 !         fraction, in 'normal'  form with coefficients B               
 !         by the 'P algorithmn' of Patry & Gupta                        
@@ -1327,6 +1325,8 @@ MODULE COULCC_M
 !   see also:  Haenggi,Roesel & Trautmann,                              
 !              Jnl. Computational Physics, vol 137, pp242-258 (1980)    
 !   note:      restart procedure modified by I.J.Thompson               
+!-----------------------------------------------------------------------
+    SUBROUTINE RCF(A,B,IBEG,INUM,XX,EPS)                              
 !-----------------------------------------------------------------------
       IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
       DIMENSION A(100),B(100),XX(2,100)                                 
@@ -1406,6 +1406,9 @@ MODULE COULCC_M
     COMPLEX(dpf) FUNCTION CLOGAM(Z)                         
 !-----------------------------------------------------------------------
       IMPLICIT NONE
+!-----------------------------------------------------------------------
+      COMPLEX(dpf),INTENT(IN) :: Z
+!-----------------------------------------------------------------------
       REAL(dpf),   PARAMETER :: ACC8=(2._dpf)*(10._dpf)**(-16_dpf)  !2D-16
       REAL(dpf),   PARAMETER :: ACC16=(3._dpf)*(10._dpf)**(-33_dpf) !3D-33_dpf
       REAL(dpf),   PARAMETER :: FPLMIN=-140._dpf 
@@ -1420,7 +1423,7 @@ MODULE COULCC_M
       REAL(dpf),   PARAMETER :: HL2P = LOG(TWO*PI)*HALF
       INTEGER(spi),PARAMETER :: NB=15
       REAL(dpf),DIMENSION(NB) :: B
-      COMPLEX(dpf) :: Z,V,H,R,SER
+      COMPLEX(dpf) :: V,H,R,SER
       INTEGER(spi) :: NX0,N,J,K,NT,I,MX
       REAL(dpf) :: ACCUR,ACC,X0,X,A,C,D,E,F,T,F21,ERR
       LOGICAL :: ACCUR_REACHED
@@ -1544,6 +1547,9 @@ MODULE COULCC_M
     COMPLEX(dpf) FUNCTION CDIGAM(Z)                                     
 !-----------------------------------------------------------------------
       IMPLICIT NONE
+!-----------------------------------------------------------------------
+      COMPLEX(dpf),INTENT(IN) :: Z
+!-----------------------------------------------------------------------
       REAL(dpf),   PARAMETER :: ACC8=(2._dpf)*(10._dpf)**(-16_dpf)  !2D-16
       REAL(dpf),   PARAMETER :: ACC16=(3._dpf)*(10._dpf)**(-33_dpf) !3D-33_dpf
       REAL(dpf),   PARAMETER :: ZERO=0._dpf
@@ -1555,7 +1561,7 @@ MODULE COULCC_M
       REAL(dpf),   PARAMETER :: PI=FOUR*ATAN(ONE)
       INTEGER(spi),PARAMETER :: NB=15
       REAL(dpf),DIMENSION(NB) :: B
-      COMPLEX(dpf) :: Z,U,V,H,R,SER
+      COMPLEX(dpf) :: U,V,H,R,SER
       INTEGER(spi) :: NX0,N,J,K,NT,I
       REAL(dpf) :: ACCUR,ACC,X0,X,A,F21,ERR
       LOGICAL :: ACCUR_REACHED
@@ -1660,10 +1666,13 @@ MODULE COULCC_M
 !   TIDY A COMPLEX NUMBER                                             
 !-----------------------------------------------------------------------
     COMPLEX(dpf) FUNCTION TIDY(Z,ACC)                                   
+!-----------------------------------------------------------------------
       IMPLICIT NONE
 !-----------------------------------------------------------------------
-      REAL(dpf) :: X,Y,ACC,AZ                                              
-      COMPLEX(dpf) :: Z                                                 
+      COMPLEX(dpf),INTENT(IN) :: Z
+      REAL(dpf),   INTENT(IN) :: ACC
+!-----------------------------------------------------------------------
+      REAL(dpf) :: X,Y,AZ                                              
       REAL(dpf),PARAMETER :: ZERO=0._dpf
 !-----------------------------------------------------------------------
       X = Z%RE                                                       
