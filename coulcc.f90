@@ -1395,15 +1395,15 @@ MODULE COULCC_M
       RETURN                                                            
 !-----------------------------------------------------------------------
  1000 FORMAT('0RCF: LAST CALL SET M =',I4,', BUT RESTART REQUIRES',I4)  
-   90 WRITE(STDOUT,1000) M,IBEG-1                                            
+   90 WRITE(STDOUT,1000) M,IBEG-1                                       
       STOP ("RCF HAS FAILED")                                           
 !-----------------------------------------------------------------------
     END SUBROUTINE RCF                                                  
 !-----------------------------------------------------------------------
-    COMPLEX(dpf) FUNCTION CLOGAM(Z)                         
+!   this routine computes the logarithm of the gamma function gamma(z)
+!   for any complex argument 'Z' to any accuracy preset by CALL LOGAM 
 !-----------------------------------------------------------------------
-!     this routine computes the logarithm of the gamma function gamma(z)
-!     for any complex argument 'Z' to any accuracy preset by CALL LOGAM 
+    COMPLEX(dpf) FUNCTION CLOGAM(Z)                         
 !-----------------------------------------------------------------------
       IMPLICIT NONE
       REAL(dpf),   PARAMETER :: ACC8=(2._dpf)*(10._dpf)**(-16_dpf)  !2D-16
@@ -1423,7 +1423,8 @@ MODULE COULCC_M
       COMPLEX(dpf) :: Z,V,H,R,SER
       INTEGER(spi) :: NX0,N,J,K,NT,I,MX
       REAL(dpf) :: ACCUR,ACC,X0,X,A,C,D,E,F,T,F21,ERR
-!-----------------------------------------------------------------------                           
+      LOGICAL :: ACCUR_REACHED
+!-----------------------------------------------------------------------
       REAL(dpf),DIMENSION(NB),PARAMETER :: BN= [             +1._dpf &
                                                &,            -1._dpf &
                                                &,            +1._dpf &
@@ -1455,6 +1456,8 @@ MODULE COULCC_M
                                                &,           870._dpf &
                                                &,         14322._dpf]
 !-----------------------------------------------------------------------
+ 1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
+!-----------------------------------------------------------------------
 ! INLINE INIT FOR NOW (logam entry)
 !-----------------------------------------------------------------------
       ACC=ACC8
@@ -1462,62 +1465,75 @@ MODULE COULCC_M
       NX0 = 6                                                           
       X0  = NX0 + ONE                                                   
       ACCUR = ACC                                                       
-      DO 120 K=1,NB                                                     
+      ACCUR_REACHED=.FALSE.
+      LOOP_120: DO K=1,NB                                                     
         F21 = K*2 - ONE                                                  
         B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
         ERR = ABS(B(K)) * K*TWO / X0**F21                                
-  120 IF(ERR.LT.ACC) GO TO 130                                          
-      NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
-      K = NB                                                           
-  130 NT = K                                                            
+        IF(ERR.LT.ACC) THEN
+          ACCUR_REACHED=.TRUE.
+          EXIT LOOP_120
+        END IF                                          
+      END DO LOOP_120                                         
+      IF (.NOT.ACCUR_REACHED) THEN
+        NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
+        K = NB                                                           
+      END IF
+      NT = K                                                            
 !-----------------------------------------------------------------------
-      X=REAL(Z)                                                         
-      T=IMAG(Z)                                                         
-      MX = INT(REAL(ACCUR*100 - X))                                     
-      IF(ABS(ABS(X)-MX) + ABS(T).LT.ACCUR*50) GO TO 60                  
-      F=ABS(T)                                                          
-      V=DCMPLX(X,F)                                                     
-      IF(X .LT. ZERO) V=ONE-V                                           
-      H=ZERO                                                            
-      C=REAL(V)                                                         
-      N=NX0-INT(C)                                                      
-      IF(N .LT. 0) GO TO 30                                             
-      H=V                                                               
-      D=IMAG(V)                                                         
-      A=ATAN2(D,C)                                                      
-      IF(N .EQ. 0) GO TO 20                                             
-      DO 10 I = 1,N                                                     
-      C=C+ONE                                                           
-      V=DCMPLX(C,D)                                                     
-      H=H*V                                                             
-  10  A=A+ATAN2(D,C)                                                    
-  20  H=DCMPLX(HALF*LOG(REAL(H)**2+IMAG(H)**2),A)                       
-      V=V+ONE                                                           
-  30  R=ONE/V**2                                                        
-      SER = B(NT)                                                       
-      DO 40 J=2,NT                                                      
-        K = NT+1 - J                                                    
-  40  SER = B(K) + R*SER                                                
-      CLOGAM = HL2P+(V-HALF)*LOG(V)-V + SER/V - H                       
-      IF(X .GE. ZERO) GO TO 50                                          
+      X=Z%RE                                                         
+      T=Z%IM                                                         
+      MX=INT(REAL(ACCUR*100._dpf-X,KIND=dpf),KIND=spi)                                     
+      IF(ABS(ABS(X)-MX)+ABS(T).LT.ACCUR*50) THEN
+        WRITE(STDOUT,1000) 'CLOGAM',X                                       
+        CLOGAM = ZERO                                                     
+      ELSE                  
+        F=ABS(T)                                                          
+        V=CMPLX(X,F,KIND=dpf)                                                     
+        IF(X.LT.ZERO) V=ONE-V                                           
+        H=ZERO                                                            
+        C=V%RE                                                         
+        N=NX0-INT(C,KIND=spi)                                                      
+        IF(N.GE.0_spi) THEN                                             
+          H=V                                                               
+          D=V%IM                                                         
+          A=ATAN2(D,C)                                                      
+          IF(N.NE.0) THEN                                             
+            DO I = 1,N                                                     
+              C=C+ONE                                                           
+              V=CMPLX(C,D,KIND=dpf)                                                     
+              H=H*V                                                             
+              A=A+ATAN2(D,C)
+            END DO
+          END IF                                                    
+          H=CMPLX(HALF*LOG(H%RE**2+H%IM**2),A,KIND=dpf)                       
+          V=V+ONE                                                           
+        END IF
+        R=ONE/V**2                                                        
+        SER = B(NT)                                                       
+        DO J=2,NT                                                      
+          K = NT+1 - J                                                    
+          SER = B(K) + R*SER
+        END DO                                                
 !-----------------------------------------------------------------------
-      A= INT(X)-ONE                                                     
-      C=PI*(X-A)                                                        
-      D=PI*F                                                            
-      E = ZERO                                                        
-      F = -TWO*D                                                      
-      IF(F.GT.FPLMIN) E = EXP(F)                                      
-      F=SIN(C)                                                          
-      E= D + HALF*LOG(E*F**2+QUART*(ONE-E)**2)                          
-      F=ATAN2(COS(C)*TANH(D),F)-A*PI                                    
-      CLOGAM=ALPI-DCMPLX(E,F)-CLOGAM                                  
+        CLOGAM = HL2P+(V-HALF)*LOG(V)-V + SER/V - H                       
 !-----------------------------------------------------------------------
-  50  IF(SIGN(ONE,T) .LT. -HALF) CLOGAM=CONJG(CLOGAM)                 
-      RETURN                                                            
+        IF(X.LT.ZERO) THEN                                          
 !-----------------------------------------------------------------------
- 1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
-  60  WRITE(STDOUT,1000) 'CLOGAM',X                                       
-      CLOGAM = ZERO                                                     
+          A= INT(X,KIND=spi)-ONE                                                     
+          C=PI*(X-A)                                                        
+          D=PI*F                                                            
+          E = ZERO                                                        
+          F = -TWO*D                                                      
+          IF(F.GT.FPLMIN) E = EXP(F)                                      
+          F=SIN(C)                                                          
+          E= D + HALF*LOG(E*F**2+QUART*(ONE-E)**2)                          
+          F=ATAN2(COS(C)*TANH(D),F)-A*PI                                    
+          CLOGAM=ALPI-CMPLX(E,F,KIND=dpf)-CLOGAM
+        END IF                                  
+!-----------------------------------------------------------------------
+        IF(SIGN(ONE,T).LT.-HALF) CLOGAM=CONJG(CLOGAM)                 
+      END IF
 !-----------------------------------------------------------------------
     END FUNCTION CLOGAM                                                 
 !-----------------------------------------------------------------------
