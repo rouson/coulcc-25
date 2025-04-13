@@ -1584,7 +1584,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
     SUBROUTINE LOGAM(ACC)                                               
 !-----------------------------------------------------------------------
-      IMPLICIT REAL(dpf)(A-H,O-Z)                                          
+      IMPLICIT REAL(dpf)(A-H,O-Z)                                       
       COMPLEX(dpf) Z,U,V,H,R,SER
       DIMENSION B(15),BN(15),BD(15)                                     
 !-----------------------------------------------------------------------
@@ -1616,9 +1616,9 @@ MODULE COULCC_M
       HL2P = LOG(TWO*PI) * HALF                                         
       ACCUR = ACC                                                       
       DO 120 K=1,NB                                                     
-       F21 = K*2 - ONE                                                  
-       B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
-       ERR = ABS(B(K)) * K*TWO / X0**F21                                
+        F21 = K*2 - ONE                                                  
+        B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
+        ERR = ABS(B(K)) * K*TWO / X0**F21                                
   120 IF(ERR.LT.ACC) GO TO 130                                          
       NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
       K = NB                                                           
@@ -1626,19 +1626,20 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
     END SUBROUTINE LOGAM                                                
 !-----------------------------------------------------------------------
+!   TIDY A COMPLEX NUMBER                                             
+!-----------------------------------------------------------------------
     COMPLEX(dpf) FUNCTION TIDY(Z,ACC)                                   
 !-----------------------------------------------------------------------
-!     TIDY A COMPLEX NUMBER                                             
+      REAL(dpf) :: X,Y,ACC,AZ                                              
+      COMPLEX(dpf) :: Z                                                 
+      REAL(dpf),PARAMETER :: ZERO=0._dpf
 !-----------------------------------------------------------------------
-      REAL(dpf) X,Y,ACC,AZ                                              
-      COMPLEX(dpf) Z                                                    
-!-----------------------------------------------------------------------
-      X = REAL(Z)                                                       
-      Y = IMAG(Z)                                                       
+      X = Z%RE                                                       
+      Y = Z%IM                                                       
       AZ= (ABS(X) + ABS(Y)) * ACC * 5                                   
-      IF(ABS(X) .LT. AZ) X = 0D+0                                       
-      IF(ABS(Y) .LT. AZ) Y = 0D+0                                       
-      TIDY = DCMPLX(X,Y)                                                
+      IF(ABS(X) .LT. AZ) X = ZERO                                       
+      IF(ABS(Y) .LT. AZ) Y = ZERO                                       
+      TIDY = CMPLX(X,Y,KIND=dpf)                                                
 !-----------------------------------------------------------------------
     END FUNCTION TIDY                                                   
 !-----------------------------------------------------------------------
