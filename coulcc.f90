@@ -1520,11 +1520,11 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
         IF (X.LT.ZERO) THEN                                          
 !-----------------------------------------------------------------------
-          A= INT(X,KIND=spi)-ONE                                                     
+          A=INT(X,KIND=spi)-ONE                                                     
           C=PI*(X-A)                                                        
           D=PI*F                                                            
-          E = ZERO                                                        
-          F = -TWO*D                                                      
+          E=ZERO                                                        
+          F=-TWO*D                                                      
           IF (F.GT.FPLMIN) E = EXP(F)                                      
           F=SIN(C)                                                          
           E= D + HALF*LOG(E*F**2+QUART*(ONE-E)**2)                          
