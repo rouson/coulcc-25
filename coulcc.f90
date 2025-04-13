@@ -1487,7 +1487,7 @@ MODULE COULCC_M
       X=Z%RE                                                         
       T=Z%IM                                                         
       MX=INT(REAL(ACCUR*100._dpf-X,KIND=dpf),KIND=spi)                                     
-      IF (ABS(ABS(X)-MX)+ABS(T).LT.ACCUR*50) THEN
+      IF (ABS(ABS(X)-MX)+ABS(T).LT.ACCUR*50._dpf) THEN
         WRITE(STDOUT,1000) 'CLOGAM',X                                       
         CLOGAM = ZERO                                                     
       ELSE                  
@@ -1665,7 +1665,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 !   TIDY A COMPLEX NUMBER                                             
 !-----------------------------------------------------------------------
-    COMPLEX(dpf) FUNCTION TIDY(Z,ACC)                                   
+    PURE COMPLEX(dpf) FUNCTION TIDY(Z,ACC)                                   
 !-----------------------------------------------------------------------
       IMPLICIT NONE
 !-----------------------------------------------------------------------
