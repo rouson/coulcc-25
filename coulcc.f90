@@ -1521,6 +1521,10 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
     END FUNCTION CLOGAM                                                 
 !-----------------------------------------------------------------------
+!   this routine computes the logarithmic derivative of the gamma     
+!   function  psi(Z) = digamma(Z) = d (ln gamma(Z))/dZ  for any       
+!   complex argument Z, to any accuracy preset by CALL LOGAM(ACC)     
+!-----------------------------------------------------------------------
     COMPLEX(dpf) FUNCTION CDIGAM(Z)                                     
 !-----------------------------------------------------------------------
       IMPLICIT NONE
@@ -1538,6 +1542,7 @@ MODULE COULCC_M
       COMPLEX(dpf) :: Z,U,V,H,R,SER
       INTEGER(spi) :: NX0,N,J,K,NT,I
       REAL(dpf) :: ACCUR,ACC,X0,X,A,F21,ERR
+      LOGICAL :: ACCUR_REACHED
 !-----------------------------------------------------------------------                           
       REAL(dpf),DIMENSION(NB),PARAMETER :: BN= [             +1._dpf &
                                                &,            -1._dpf &
@@ -1570,6 +1575,8 @@ MODULE COULCC_M
                                                &,           870._dpf &
                                                &,         14322._dpf]
 !-----------------------------------------------------------------------
+ 1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
+!-----------------------------------------------------------------------
 ! INLINE INIT FOR NOW (logam entry)
 !-----------------------------------------------------------------------
       ACC=ACC8
@@ -1577,57 +1584,67 @@ MODULE COULCC_M
       NX0 = 6                                                           
       X0  = NX0 + ONE                                                   
       ACCUR = ACC                                                       
-      DO 120 K=1,NB                                                     
+      ACCUR_REACHED=.FALSE.
+      LOOP_120: DO K=1,NB                                                     
         F21 = K*2 - ONE                                                  
         B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
         ERR = ABS(B(K)) * K*TWO / X0**F21                                
-  120 IF(ERR.LT.ACC) GO TO 130                                          
-      NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
-      K = NB                                                           
-  130 NT = K                                                            
-!-----------------------------------------------------------------------
-!     this routine computes the logarithmic derivative of the gamma     
-!     function  psi(Z) = digamma(Z) = d (ln gamma(Z))/dZ  for any       
-!     complex argument Z, to any accuracy preset by CALL LOGAM(ACC)     
+        IF(ERR.LT.ACC) THEN
+          ACCUR_REACHED=.TRUE.
+          EXIT LOOP_120
+        END IF                                          
+      END DO LOOP_120                                         
+      IF (.NOT.ACCUR_REACHED) THEN
+        NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
+        K = NB                                                           
+      END IF
+      NT = K                                                            
 !-----------------------------------------------------------------------
       U=Z                                                               
-      X=REAL(U)                                                         
+      X=U%RE                                                         
       A=ABS(X)                                                          
-      IF(ABS(IMAG(U)) + ABS(A + INT(X)) .LT. ACCUR) GO TO 110           
-      IF(X .LT. ZERO) U=-U                                              
-      V=U                                                               
-      H=ZERO                                                            
-      N=NX0-INT(A)                                                      
-      IF(N .LT. 0) GO TO 90                                             
-      H=ONE/V                                                           
-      IF(N .EQ. 0) GO TO 80                                             
-      DO 70 I = 1,N                                                     
-      V=V+ONE                                                           
-  70  H=H+ONE/V                                                         
-  80  V=V+ONE                                                           
-  90  R=ONE/V**2                                                        
-      SER = B(NT) * (2*NT-1)                                            
-      DO 100 J=2,NT                                                     
-        K = NT+1 - J                                                    
-  100 SER = B(K)*(2*K-1) + R*SER                                        
-      CDIGAM = LOG(V) - HALF/V - R*SER - H                              
+      IF(ABS(U%IM) + ABS(A+INT(X,KIND=spi)).LT.ACCUR) THEN              
 !-----------------------------------------------------------------------
-      IF(X .GE. ZERO) RETURN                                            
+        WRITE(STDOUT,1000) 'CDIGAM',X                                     
+        CDIGAM=ZERO
 !-----------------------------------------------------------------------
-      H=PI*U                                                            
-      CDIGAM = CDIGAM + ONE/U + PI*COS(H)/SIN(H)                      
+      ELSE
+        IF(X.LT.ZERO) U=-U                                              
+        V=U                                                               
+        H=ZERO                                                            
+        N=NX0-INT(A,KIND=spi)                                             
+        IF(N.GE.0_spi) THEN                                             
+          H=ONE/V                                                           
+          IF(N.NE.0) THEN                                             
+            DO I = 1,N                                                     
+              V=V+ONE                                                           
+              H=H+ONE/V                                                         
+            END DO
+          END IF                                                        
+          V=V+ONE                                                           
+        END IF
+        R=ONE/V**2                                                        
+        SER = B(NT) * (2*NT-1)                                            
+        DO J=2,NT                                                     
+          K = NT+1 - J                                                    
+          SER = B(K)*(2*K-1) + R*SER
+        END DO                                        
 !-----------------------------------------------------------------------
-      RETURN                                                            
+        CDIGAM = LOG(V) - HALF/V - R*SER - H                              
 !-----------------------------------------------------------------------
- 1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
-  110 WRITE(STDOUT,1000) 'CDIGAM',X                                     
-      CDIGAM=ZERO                                                      
+        IF(X.LT.ZERO) THEN                                            
+          H=PI*U                                                            
+          CDIGAM = CDIGAM + ONE/U + PI*COS(H)/SIN(H) 
+        END IF                     
+!-----------------------------------------------------------------------
+      END IF                                                            
 !-----------------------------------------------------------------------
     END FUNCTION CDIGAM
 !-----------------------------------------------------------------------
 !   TIDY A COMPLEX NUMBER                                             
 !-----------------------------------------------------------------------
     COMPLEX(dpf) FUNCTION TIDY(Z,ACC)                                   
+      IMPLICIT NONE
 !-----------------------------------------------------------------------
       REAL(dpf) :: X,Y,ACC,AZ                                              
       COMPLEX(dpf) :: Z                                                 
