@@ -1,6 +1,7 @@
 MODULE COULCC_M
 !-----------------------------------------------------------------------
-  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128
+  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128 &
+                                        &, stdin=>input_unit,stdout=>output_unit
 !-----------------------------------------------------------------------
   CONTAINS
 !-----------------------------------------------------------------------
@@ -233,7 +234,7 @@ MODULE COULCC_M
       NFP = - NFP                                                    
       IF(NFP.LT.0   .OR.(UNSTAB.AND.ERR.LT.ACCB)) GO TO 40              
       IF(.NOT.ZLNEG .OR. UNSTAB.AND.ERR.GT.ACCB)  GO TO 20              
-      IF(PR) WRITE(6,1060) '-L',ERR                                  
+      IF(PR) WRITE(STDOUT,1060) '-L',ERR                                  
       IF(ERR.GT.ACCB) GO TO 280                                      
       GO TO 40                                                       
 !-----------------------------------------------------------------------
@@ -424,7 +425,7 @@ MODULE COULCC_M
   100 OMEGA = - OMEGA                                        
 !-----------------------------------------------------------------------
       IF(UNSTAB) GO TO 360                                    
-      IF(REAL(X).LT.-XNEAR .AND. PR) WRITE(6,1060) '-X',ERR   
+      IF(REAL(X).LT.-XNEAR .AND. PR) WRITE(STDOUT,1060) '-X',ERR   
   110 RERR = MAX(RERR,ERR)                                          
 !-----------------------------------------------------------------------
 ! ***  establish case of calculation required for irregular solution    
@@ -517,7 +518,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 !    F11 failed from BB = negative integer                              
 !-----------------------------------------------------------------------
-        WRITE(6,1060) '-L',ONE                                   
+        WRITE(STDOUT,1060) '-L',ONE                                   
         GO TO 390                                                
       END IF                                                    
 !-----------------------------------------------------------------------
@@ -668,7 +669,7 @@ MODULE COULCC_M
       W = FCM / FCL                                                     
       IF(LOG(ABSC(W))+LOG(ABSC(FC(LF))) .LT. FPLMIN) GO TO 340       
       IF(MODE.GE.3) GO TO 240                                        
-      IF(ABSC(F-PQ1) .LT. ACCH*ABSC(F) .AND. PR) WRITE(6,1020) LH,ZLM+DELL
+      IF(ABSC(F-PQ1) .LT. ACCH*ABSC(F) .AND. PR) WRITE(STDOUT,1020) LH,ZLM+DELL
       HPL = HCL * PQ1                                                   
       IF(ABSC(HPL).LT.FPMIN.OR.ABSC(HCL).LT.FPMIN) GO TO 330         
 !-----------------------------------------------------------------------
@@ -724,7 +725,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
   290 IF(ID.GT.0 .AND. LF.NE.M1) GO TO 300                              
       IF(IFAIL.LT.0) RETURN                                          
-      IF(RERR.GT.ACCB) WRITE(6,1070) RERR                            
+      IF(RERR.GT.ACCB) WRITE(STDOUT,1070) RERR                            
       IF(RERR.GT.0.1) IFAIL = -4                                     
 !-----------------------------------------------------------------------
       RETURN                                                         
@@ -759,19 +760,19 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
   310 IF(PR) WRITE (6,1000) XX                                          
       RETURN                                                            
-  320 IF(PR) WRITE(6,1010) ZL+DELL,'IR',HCL,'MORE',FPMAX                
+  320 IF(PR) WRITE(STDOUT,1010) ZL+DELL,'IR',HCL,'MORE',FPMAX                
       GO TO 280                                                         
-  330 IF(PR) WRITE(6,1010) ZL+DELL,'IR',HCL,'LESS',FPMIN                
+  330 IF(PR) WRITE(STDOUT,1010) ZL+DELL,'IR',HCL,'LESS',FPMIN                
       GO TO 280                                                         
-  340 IF(PR) WRITE(6,1010) ZL+DELL,'  ',FCL,'LESS',FPMIN                
+  340 IF(PR) WRITE(STDOUT,1010) ZL+DELL,'  ',FCL,'LESS',FPMIN                
       GO TO 280                                                         
-  350 IF(PR) WRITE(6,1010) ZL+DELL,'  ',FCL,'MORE',FPMAX                
+  350 IF(PR) WRITE(STDOUT,1010) ZL+DELL,'  ',FCL,'MORE',FPMAX                
       GO TO 280                                                         
-  360 IF(PR) WRITE(6,1030) ZLL+DELL                                     
+  360 IF(PR) WRITE(STDOUT,1030) ZLL+DELL                                     
       GO TO 280                                                         
-  370 IF(PR) WRITE(6,1040) Z11,I                                        
+  370 IF(PR) WRITE(STDOUT,1040) Z11,I                                        
       GO TO 390                                                         
-  380 IF(PR) WRITE(6,1050) ZLMIN,ZLM,ZLM+ONE,ZLMIN+NL-ONE               
+  380 IF(PR) WRITE(STDOUT,1050) ZLMIN,ZLM,ZLM+ONE,ZLMIN+NL-ONE               
   390 IFAIL = -1                                                        
       GO TO 290                                                         
 !-----------------------------------------------------------------------
@@ -906,7 +907,7 @@ MODULE COULCC_M
      & ' ITERATIONS, SO ERROR IN IRREGULAR SOLUTION =',1P,D11.2,' AT ZL &
      & =', 0P,2F8.3)  
 !-----------------------------------------------------------------------
-      IF(PR.AND.NPQ.GE.LIMIT-1 .AND. ERR.GT.ACCUR) WRITE(6,1000) CALLER,INT(IMAG(PM)),NPQ,ERR,ZL+DELL
+      IF(PR.AND.NPQ.GE.LIMIT-1 .AND. ERR.GT.ACCUR) WRITE(STDOUT,1000) CALLER,INT(IMAG(PM)),NPQ,ERR,ZL+DELL
       CF2 = PQ                                                          
 !-----------------------------------------------------------------------
     END FUNCTION CF2                                                  
@@ -1394,7 +1395,7 @@ MODULE COULCC_M
       RETURN                                                            
 !-----------------------------------------------------------------------
  1000 FORMAT('0RCF: LAST CALL SET M =',I4,', BUT RESTART REQUIRES',I4)  
-   90 WRITE(6,1000),M,IBEG-1                                            
+   90 WRITE(STDOUT,1000),M,IBEG-1                                            
       STOP ("RCF HAS FAILED")                                           
 !-----------------------------------------------------------------------
     END SUBROUTINE RCF                                                  
@@ -1492,7 +1493,7 @@ MODULE COULCC_M
       RETURN                                                            
 !-----------------------------------------------------------------------
  1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
-  60  WRITE(LERR,1000) 'CLOGAM',X                                       
+  60  WRITE(STDOUT,1000) 'CLOGAM',X                                       
       CLOGAM = ZERO                                                     
 !-----------------------------------------------------------------------
     END FUNCTION CLOGAM                                                 
@@ -1576,7 +1577,7 @@ MODULE COULCC_M
       RETURN                                                            
 !-----------------------------------------------------------------------
  1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
-  110 WRITE(LERR,1000) 'CDIGAM',X                                       
+  110 WRITE(STDOUT,1000) 'CDIGAM',X                                       
       CDIGAM=ZERO                                                      
 !-----------------------------------------------------------------------
     END FUNCTION CDIGAM
@@ -1645,24 +1646,38 @@ END MODULE COULCC_M
 !-----------------------------------------------------------------------
 PROGRAM CCTEST
 !-----------------------------------------------------------------------
-  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64
+  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64 &
+                              &,stdin=>input_unit,stdout=>output_unit
 !-----------------------------------------------------------------------
   USE COULCC_M                                               
 !-----------------------------------------------------------------------
-  IMPLICIT REAL(dpf) (A-H,O-Z)                                         
+  IMPLICIT NONE
 !-----------------------------------------------------------------------
-      COMPLEX(dpf) X,ETA,ZLMIN,ZL,WS,CI      
-      COMPLEX(dpf) FC(201),GC(201),FCP(201),GCP(201),SIG(201)               
-      INTEGER LDISP(8)                                                  
-      LOGICAL WHIT                                                      
-      COMMON /STEED/ RERR,NFP(2),NPQ(3),KASE(2)                   
-      CHARACTER(len=20) NOTE                                                 
-      CHARACTER(len=4) WHO(2,4,3),IRREG,REG                                  
-      DATA ZERO,HALF,ONE,FOUR,CI / 0D+0,0.5D+0,1D+0,4D+0,(0D+0,1D+0) /  
-      DATA WHO / 'F','G','j','y','J','Y','I','K' ,          &           
-       &           'F','H+','j','h(1)','J','H(1)','?','?' ,   &           
-       &           'F','H-','j','h(2)','J','H(2)','?','?' /               
-      DATA LDISP / 1,2,4,11,31,101,301,1001 /                           
+      LOGICAL :: WHIT                                                      
+      INTEGER(spi) :: I,L,NL,MODE,IFAIL,MD,IH,KFN,KFIN
+      COMPLEX(dpf) :: X,ETA,ZLMIN,ZL,WS
+      COMPLEX(dpf),DIMENSION(201) :: FC,GC,FCP,GCP,SIG               
+!-----------------------------------------------------------------------
+      REAL(dpf) :: RERR
+      INTEGER(spi),DIMENSION(2) :: NFP,KASE
+      INTEGER(spi),DIMENSION(3) :: NPQ
+      COMMON /STEED/ RERR,NFP,NPQ,KASE                                  
+!-----------------------------------------------------------------------
+      CHARACTER(len=20) :: NOTE                                         
+      CHARACTER(len=4)  :: IRREG,REG                                  
+!-----------------------------------------------------------------------
+      INTEGER(spi),PARAMETER,DIMENSION(8) :: LDISP=[1,2,4,11,31,101,301,1001]
+      REAL(dpf),   PARAMETER :: ZERO=0._dpf
+      REAL(dpf),   PARAMETER :: HALF=0.5_dpf
+      REAL(dpf),   PARAMETER :: ONE=1._dpf
+      REAL(dpf),   PARAMETER :: FOUR=4._dpf
+      COMPLEX(dpf),PARAMETER :: CI=CMPLX(0._dpf,1._dpf,KIND=dpf)
+      REAL(dpf),   PARAMETER :: PI=FOUR*ATAN(ONE)
+!-----------------------------------------------------------------------
+      CHARACTER(len=4),DIMENSION(2,4,3) :: WHO                          
+      DATA WHO / 'F','G','j','y','J','Y','I','K' ,         &           
+       &         'F','H+','j','h(1)','J','H(1)','?','?' ,  &           
+       &         'F','H-','j','h(2)','J','H(2)','?','?' /               
 !-----------------------------------------------------------------------
  1000 FORMAT('1TEST OF THE CONTINUED-FRACTION COULOMB & BESSEL ROUTINES'/)
  1010 FORMAT(/'0X =',F12.4,F9.4,', ETA =',2F8.3,', ZLMIN =',2F8.3,'  NL=',I4,  '  MODE = ',I3,'  KFN =',I2,8X,A20)
@@ -1671,21 +1686,20 @@ PROGRAM CCTEST
  1040 FORMAT(24X,' FC''=       ',1P,2D20.12,',  GC'' =',6X ,2D20.12)    
  1050 FORMAT(24X,' SIG=   ',   2F20.12)                                 
 !-----------------------------------------------------------------------
-      PI = FOUR * ATAN(ONE)                                             
-      WRITE(6,1000)                                                     
+      WRITE(STDOUT,1000)                                                     
 !-----------------------------------------------------------------------
-  10  READ(5,*,END=40) X,ETA,ZLMIN,NL,MODE,KFN,WHIT,NOTE                
+  10  READ(STDIN,*,END=40) X,ETA,ZLMIN,NL,MODE,KFN,WHIT,NOTE                
       IF(NL.LE.0) GO TO 40                                              
       IFAIL = 1                                                         
       MD = MOD(ABS(MODE),10)                                            
       IH =     ABS(MODE)/10                                             
       KFIN = KFN                                                        
       IF(WHIT) KFN=MAX(KFN,0)                                           
-      WRITE(6,1010) X,ETA,ZLMIN,NL,MODE,KFN,NOTE                        
+      WRITE(STDOUT,1010) X,ETA,ZLMIN,NL,MODE,KFN,NOTE                        
 !-----------------------------------------------------------------------
       CALL COULCC(X,ETA,ZLMIN,NL,FC,GC,FCP,GCP,SIG,MODE,KFN,IFAIL)      
 !-----------------------------------------------------------------------
-      WRITE(6,1020) IFAIL,RERR,NFP,NPQ,KASE                             
+      WRITE(STDOUT,1020) IFAIL,RERR,NFP,NPQ,KASE                             
       IF(IFAIL.LT.0) GO TO 30                                           
       DO 20 I=1,8                                                       
         L = LDISP(I)                                                      
@@ -1703,9 +1717,9 @@ PROGRAM CCTEST
           IF(MOD(MD,2).EQ.1) FCP(L)  = FCP(L) / WS                    
           REG = 'WH-F'                                               
         END IF                                                        
-        WRITE(6,1030) ZL,REG,FC(L),IRREG,GC(L)                            
-        IF(MD.EQ.1)WRITE(6,1040) FCP(L),GCP(L)                 
-        IF(SIG(L).NE.ZERO.AND.KFIN.EQ.0) WRITE(6,1050) SIG(L)             
+        WRITE(STDOUT,1030) ZL,REG,FC(L),IRREG,GC(L)                            
+        IF(MD.EQ.1)WRITE(STDOUT,1040) FCP(L),GCP(L)                 
+        IF(SIG(L).NE.ZERO.AND.KFIN.EQ.0) WRITE(STDOUT,1050) SIG(L)      
   20  CONTINUE                                                          
   30  CONTINUE                                                          
       GO TO 10                                                          
