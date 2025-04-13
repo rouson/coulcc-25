@@ -1,8 +1,6 @@
-MODULE FBN_COULCC
+MODULE COULCC_M
 !-----------------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128
-!-----------------------------------------------------------------------
-!  USE FBN_CONSTANTS (PI and E-M constant)
 !-----------------------------------------------------------------------
   CONTAINS
 !-----------------------------------------------------------------------
@@ -117,13 +115,13 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
     SUBROUTINE COULCC(XX,ETA1,ZLMIN,NL,FC,GC,FCP,GCP,SIG,MODE1,KFN,IFAIL)
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX(dpf) (A-H,O-Z)                                     
+      IMPLICIT COMPLEX(dpf) (A-H,O-Z)                                   
       PARAMETER(JMAX=50)                                                
       DIMENSION FC(NL),GC(NL),FCP(NL),GCP(NL),SIG(NL),XRCF(JMAX,4)      
       LOGICAL PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2,NPINT  
-      REAL(dpf) ERR,RERR,ABSC,ACCUR,ACCT,ACC8,ACCH,ACC16,ACCB, XNEAR 
-      REAL(dpf) ZERO,ONE,TWO,HALF,HPI,TLOG,FPMAX,FPMIN,FPLMIN,FPLMAX      
-      REAL(dpf) PACCQ,EPS,OFF,SCALE,SF,SFSH,TA,RK,OMEGA,R20,ASYM,ABSX      
+      REAL(dpf) ERR,RERR,ABSC,ACCUR,ACCT,ACC8,ACCH,ACC16,ACCB, XNEAR    
+      REAL(dpf) ZERO,ONE,TWO,HALF,HPI,TLOG,FPMAX,FPMIN,FPLMIN,FPLMAX    
+      REAL(dpf) PACCQ,EPS,OFF,SCALE,SF,SFSH,TA,RK,OMEGA,R20,ASYM,ABSX   
 !-----------------------------------------------------------------------
       COMMON /STEED/ RERR,NFP,N11,NPQ(2),N20,KAS(2)                     
 !***  common blocks are for information & storage only.                 
@@ -132,11 +130,12 @@ MODULE FBN_COULCC
       & ,GAM,HCL,HPL,FCM,HCL1,ALPHA,BETA,PL                             
       EQUIVALENCE            (PK,XRCF(1,1))                             
 !-----------------------------------------------------------------------
-      DATA ZERO,ONE,TWO,LIMIT /0.0D+0, 1.0D+0, 2.0D+0, 20000 /,         &
-     &     HALF, CI / 0.5D+0, (0D+0, 1D+0) /,                           &
-     &     FPMAX,FPMIN,FPLMAX,FPLMIN / 1D+60,1D-60 ,140D+0, -140D+0 /,  &
-     &     R20,ASYM,XNEAR,NDROP / 3., 3., .5, 5 /,                      &
-     &     ACCUR, ACC8, ACC16 / 1D-14, 2D-16, 3D-33 /                   
+      DATA ZERO,ONE,TWO,LIMIT /0.0D+0, 1.0D+0, 2.0D+0, 20000 /          
+      DATA HALF, CI / 0.5D+0, (0D+0, 1D+0) /                            
+      DATA FPMAX,FPMIN,FPLMAX,FPLMIN / 1D+60,1D-60 ,140D+0, -140D+0 /   
+      DATA R20,ASYM,XNEAR,NDROP / 3., 3., .5, 5 /                       
+      DATA ACCUR, ACC8, ACC16 / 1D-14, 2D-16, 3D-33 /                   
+!-----------------------------------------------------------------------
       NINTC(W) = NINT(REAL(REAL(W)))                                    
       ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
       NPINT(W,ACCB) = ABSC(NINTC(W)-W).LT.ACCB .AND. REAL(W).LT.HALF    
@@ -147,10 +146,10 @@ MODULE FBN_COULCC
       IFAIL = -2                                                        
       N11   = 0                                                         
       NFP   = 0                                                         
-      KAS(1)   = 0                                                      
-      KAS(2)   = 0                                                      
-      NPQ(1)   = 0                                                      
-      NPQ(2)   = 0                                                      
+      KAS(1)= 0                                                      
+      KAS(2)= 0                                                      
+      NPQ(1)= 0                                                      
+      NPQ(2)= 0                                                      
       N20 = 0                                                           
       HPI = TWO*ATAN(ONE)                                               
       TLOG = LOG(TWO)                                                   
@@ -159,18 +158,18 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
 !     initialise the log-gamma function
 !-----------------------------------------------------------------------
-!      DUMMY = LOGAM(ACC8)                                                  
+!     DUMMY = LOGAM(ACC8)                                              
       ACCH  = SQRT(ACCUR)                                               
       ACCB  = SQRT(ACCH)                                                
       RERR = ACCT                                                       
 !-----------------------------------------------------------------------
       CIK = ONE                                                         
-         IF(KFN.GE.3) CIK = CI * SIGN(ONE,ACC8-IMAG(XX))                
+      IF(KFN.GE.3) CIK = CI * SIGN(ONE,ACC8-IMAG(XX))                
       X     = XX * CIK                                                  
       ETA   = ETA1                                                      
       IF(KFN .GT. 0) ETA = ZERO                                         
-         ETANE0  = ABSC(ETA).GT.ACC8                                    
-         ETAI = ETA*CI                                                  
+      ETANE0  = ABSC(ETA).GT.ACC8                                    
+      ETAI = ETA*CI                                                  
       DELL  = ZERO                                                      
       IF(KFN .GE. 2)  DELL = HALF                                       
       ZM1   = ZLMIN - DELL                                              
@@ -186,21 +185,21 @@ MODULE FBN_COULCC
       XI  = ONE/X                                                       
       XLOG = LOG(X)                                                     
 !-----------------------------------------------------------------------
-! log with cut along the negative real axis] see also OMEGA
+! log with cut along the negative real axis see also OMEGA
 !-----------------------------------------------------------------------
       ID = 1                                                            
       DONEM = .FALSE.                                                   
-         UNSTAB = .FALSE.                                               
+      UNSTAB = .FALSE.                                               
       LF = M1                                                           
       IFAIL = -1                                                        
-   10    ZLM = ZM1 + LF - M1                                            
-         ZLL = ZM1 + L1 - M1                                            
+  10  ZLM = ZM1 + LF - M1                                            
+      ZLL = ZM1 + L1 - M1                                            
 !-----------------------------------------------------------------------
 ! *** ZLL  is final lambda value, or 0.5 smaller for J,Y Bessels
 !-----------------------------------------------------------------------
-              Z11 = ZLL                                                 
-              IF(ID.LT.0) Z11 = ZLM                                     
-              P11 = CI*SIGN(ONE,ACC8-IMAG(ETA))                         
+      Z11 = ZLL                                                 
+      IF(ID.LT.0) Z11 = ZLM                                     
+      P11 = CI*SIGN(ONE,ACC8-IMAG(ETA))                         
       LAST = L1                                                         
 !-----------------------------------------------------------------------
 ! *** Find phase shifts and Gamow factor at lambda = ZLL
@@ -219,150 +218,150 @@ MODULE FBN_COULCC
       IF(.NOT.ZLNEG) CLL = ZLL*TLOG- HPI*ETA - CLOGAM(BB) + (CLGAA+CLGAB)*HALF
       THETA  = X - ETA*(XLOG+TLOG) - ZLL*HPI + SIGMA            
 !-----------------------------------------------------------------------
-        TA = (IMAG(AA)**2+IMAG(AB)**2+ABS(REAL(AA))+ABS(REAL(AB)))*HALF 
+      TA = (IMAG(AA)**2+IMAG(AB)**2+ABS(REAL(AA))+ABS(REAL(AB)))*HALF 
       IF(ID.GT.0 .AND. ABSX .LT. TA*ASYM .AND. .NOT.ZLNEG) GO TO 20     
 !-----------------------------------------------------------------------
 ! ***  use CF1 instead of CF1A, if predicted to converge faster, 
 !          (otherwise using CF1A as it treats negative lambda &  
 !           recurrence-unstable cases properly)                  
 !-----------------------------------------------------------------------
-           RK = SIGN(ONE, REAL(X) + ACC8)                               
-           P =  THETA                                                   
-           IF(RK.LT.0) P = -X + ETA*(LOG(-X)+TLOG)-ZLL*HPI-SIGMA        
+      RK = SIGN(ONE, REAL(X) + ACC8)                               
+      P =  THETA                                                   
+      IF(RK.LT.0) P = -X + ETA*(LOG(-X)+TLOG)-ZLL*HPI-SIGMA        
       F = RK * CF1A(X*RK,ETA*RK,ZLL,P,ACCT,JMAX,NFP,FEST,ERR,FPMAX,XRCF,XRCF(1,3), XRCF(1,4))
       FESL = LOG(FEST) + ABS(IMAG(X))                                   
-         NFP = - NFP                                                    
+      NFP = - NFP                                                    
       IF(NFP.LT.0   .OR.(UNSTAB.AND.ERR.LT.ACCB)) GO TO 40              
       IF(.NOT.ZLNEG .OR. UNSTAB.AND.ERR.GT.ACCB)  GO TO 20              
-         IF(PR) WRITE(6,1060) '-L',ERR                                  
-         IF(ERR.GT.ACCB) GO TO 280                                      
-         GO TO 40                                                       
+      IF(PR) WRITE(6,1060) '-L',ERR                                  
+      IF(ERR.GT.ACCB) GO TO 280                                      
+      GO TO 40                                                       
 !-----------------------------------------------------------------------
 ! ***  evaluate CF1  =  f   =  F'(ZLL,ETA,X)/F(ZLL,ETA,X)             
 !-----------------------------------------------------------------------
-   20 IF(AXIAL) THEN                                                    
+  20  IF(AXIAL) THEN                                                    
 !  REAL VERSION   
-      F = CF1R(REAL(X),REAL(ETA),REAL(ZLL),ACC8,SF,RK,ETANE0,LIMIT,ERR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
-          FCL = SF                                                      
-          TPK1= RK                                                      
-         ELSE                                                           
+        F = CF1R(REAL(X),REAL(ETA),REAL(ZLL),ACC8,SF,RK,ETANE0,LIMIT,ERR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
+        FCL = SF                                                      
+        TPK1= RK                                                      
+      ELSE                                                           
 !  COMPLEX VERSION
-      F = CF1C(X,ETA,ZLL,ACC8,FCL,TPK1,ETANE0,LIMIT,ERR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
-         ENDIF                                                          
+        F = CF1C(X,ETA,ZLL,ACC8,FCL,TPK1,ETANE0,LIMIT,ERR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
+      END IF                                                          
+!-----------------------------------------------------------------------
       IF(ERR.GT.ONE) GO TO 390                                          
 !-----------------------------------------------------------------------
 ! ***  Make a simple check for CF1 being badly unstable:                
 !-----------------------------------------------------------------------
       IF(ID.LT.0) GO TO 30                                              
       UNSTAB = REAL((ONE-ETA*XI)*CI*IMAG(THETA)/F).GT.ZERO     &        
-     & .AND..NOT.AXIAL .AND. ABS(IMAG(THETA)).GT.-LOG(ACC8)*.5 &        
-     & .AND. ABSC(ETA)+ABSC(ZLL).LT.ABSC(X)                             
+        & .AND..NOT.AXIAL .AND. ABS(IMAG(THETA)).GT.-LOG(ACC8)*.5 &        
+        & .AND. ABSC(ETA)+ABSC(ZLL).LT.ABSC(X)                             
       IF(UNSTAB) GO TO 60                                               
 !-----------------------------------------------------------------------
 ! *** compare accumulated phase FCL with asymptotic phase for G(k+1) :  
 !     to determine estimate of F(ZLL) (with correct sign) to start recur
 !-----------------------------------------------------------------------
-   30 W   =  X*X  *(HALF/TPK1 + ONE/TPK1**2) + ETA*(ETA-TWO*X)/TPK1     
-      FESL   = (ZLL+ONE) * XLOG + CLL - W - LOG(FCL)                    
-   40 FESL = FESL - ABS(SCALE)                                          
-          RK   =        MAX(REAL(FESL), FPLMIN*HALF)                    
-          FESL = DCMPLX(MIN(RK,   FPLMAX*HALF ) , IMAG(FESL))           
-      FEST= EXP(FESL)                                                   
+  30  W    =  X*X  *(HALF/TPK1 + ONE/TPK1**2) + ETA*(ETA-TWO*X)/TPK1     
+      FESL = (ZLL+ONE) * XLOG + CLL - W - LOG(FCL)                    
+  40  FESL = FESL - ABS(SCALE)                                          
+      RK   =        MAX(REAL(FESL), FPLMIN*HALF)                    
+      FESL = DCMPLX(MIN(RK,   FPLMAX*HALF ) , IMAG(FESL))           
+      FEST = EXP(FESL)                                                   
 !-----------------------------------------------------------------------
-           RERR = MAX(RERR, ERR, ACC8 * ABS(REAL(THETA)) )              
+      RERR = MAX(RERR, ERR, ACC8 * ABS(REAL(THETA)) )              
 !-----------------------------------------------------------------------
       FCL = FEST                                                        
       FPL = FCL*F                                                       
       IF(IFCP) FCP(L1) = FPL                                            
-               FC (L1) = FCL                                            
+      FC (L1) = FCL                                                    
 !-----------------------------------------------------------------------
 ! *** downward recurrence to lambda = ZLM. array GC,if present,stores RL
 !-----------------------------------------------------------------------
       I  = MAX(-ID, 0)                                                  
       ZL  = ZLL + I                                                     
-         MONO = 0                                                       
-        OFF = ABS(FCL)                                                  
-         TA = ABSC(SIGMA)                                               
+      MONO = 0                                                       
+      OFF = ABS(FCL)                                                  
+      TA = ABSC(SIGMA)                                               
       DO 70  L  = L1-ID,LF,-ID                                          
-         IF(ETANE0) THEN                                                
-               IF(RLEL) THEN                                            
-                    DSIG = ATAN2(REAL(ETA),REAL(ZL))                    
-                    RL = SQRT(REAL(ZL)**2 + REAL(ETA)**2)               
-                  ELSE                                                  
-                    AA = ZL - ETAI                                      
-                    BB = ZL + ETAI                                      
-                    IF(ABSC(AA).LT.ACCH.OR.ABSC(BB).LT.ACCH) GOTO 50    
-                    DSIG = (LOG(AA) - LOG(BB)) * CI*HALF                
-                    RL = AA * EXP(CI*DSIG)                              
-                 ENDIF                                                  
-             IF(ABSC(SIGMA).LT.TA*HALF) THEN                            
+        IF(ETANE0) THEN                                                
+          IF(RLEL) THEN                                            
+            DSIG = ATAN2(REAL(ETA),REAL(ZL))                    
+            RL = SQRT(REAL(ZL)**2 + REAL(ETA)**2)               
+          ELSE                                                  
+            AA = ZL - ETAI                                      
+            BB = ZL + ETAI                                      
+            IF(ABSC(AA).LT.ACCH.OR.ABSC(BB).LT.ACCH) GOTO 50    
+            DSIG = (LOG(AA) - LOG(BB)) * CI*HALF                
+            RL = AA * EXP(CI*DSIG)                              
+          END IF                                                  
+          IF(ABSC(SIGMA).LT.TA*HALF) THEN                            
 !-----------------------------------------------------------------------
 ! re-calculate SIGMA because of accumulating roundoffs:                 
 !-----------------------------------------------------------------------
-                SL =(CLOGAM(ZL+I-ETAI)-CLOGAM(ZL+I+ETAI))*CI*HALF       
-                RL = (ZL - ETAI) * EXP(CI*ID*(SIGMA - SL))              
-                SIGMA = SL                                              
-                TA = ZERO                                               
-              ELSE                                                      
-                SIGMA = SIGMA - DSIG * ID                               
-              ENDIF                                                     
-                TA = MAX(TA, ABSC(SIGMA))                               
-             SL    =  ETA  + ZL*ZL*XI                                   
-                PL = ZERO                                               
-                IF(ABSC(ZL).GT.ACCH) PL = (SL*SL - RL*RL)/ZL            
-             FCL1  = (FCL *SL + ID*ZL*FPL)/RL                           
-              SF = ABS(FCL1)                                            
-                       IF(SF.GT.FPMAX) GO TO 350                        
-             FPL   = (FPL *SL + ID*PL*FCL)/RL                           
-             IF(MODE .LE. 1) GCP(L+ID)= PL * ID                         
+            SL =(CLOGAM(ZL+I-ETAI)-CLOGAM(ZL+I+ETAI))*CI*HALF       
+            RL = (ZL - ETAI) * EXP(CI*ID*(SIGMA - SL))              
+            SIGMA = SL                                              
+            TA = ZERO                                               
+          ELSE                                                      
+            SIGMA = SIGMA - DSIG * ID                               
+          END IF                                                     
+          TA = MAX(TA, ABSC(SIGMA))                               
+          SL =  ETA  + ZL*ZL*XI                                   
+          PL = ZERO                                               
+          IF(ABSC(ZL).GT.ACCH) PL = (SL*SL - RL*RL)/ZL            
+          FCL1  = (FCL *SL + ID*ZL*FPL)/RL                           
+          SF = ABS(FCL1)                                            
+          IF(SF.GT.FPMAX) GO TO 350                        
+          FPL   = (FPL *SL + ID*PL*FCL)/RL                           
+          IF(MODE .LE. 1) GCP(L+ID)= PL * ID                         
         ELSE                                                            
 !-----------------------------------------------------------------------
 !  ETA = 0, including Bessels.  NB RL==SL                               
 !-----------------------------------------------------------------------
-           RL = ZL* XI                                                  
-           FCL1 = FCL * RL + FPL*ID                                     
-              SF = ABS(FCL1)                                            
-                      IF(SF.GT.FPMAX) GO TO 350                         
-           FPL  =(FCL1* RL - FCL) * ID                                  
-        ENDIF                                                           
-!             IF(ABSC(FCL1).LT.ABSC(FCL)) THEN                          
-              IF(SF.LT.OFF) THEN                                        
-                 MONO = MONO + 1                                        
-                ELSE                                                    
-                 MONO = 0                                               
-                ENDIF                                                   
-         FCL   =  FCL1                                                  
-           OFF = SF                                                     
-         FC(L) =  FCL                                                   
-         IF(IFCP) FCP(L)  = FPL                                         
-           IF(KFN.EQ.0) SIG(L) = SIGMA                                  
-           IF(MODE .LE. 2) GC(L+ID) = RL                                
-      ZL = ZL - ID                                                      
-      IF(MONO.LT.NDROP) GO TO 70                                        
-      IF(AXIAL .OR. REAL(ZLM)*ID.GT.-NDROP.AND..NOT.ETANE0) GO TO 70    
-         UNSTAB = .TRUE.                                                
+          RL = ZL* XI                                                  
+          FCL1 = FCL * RL + FPL*ID                                     
+          SF = ABS(FCL1)                                            
+          IF(SF.GT.FPMAX) GO TO 350                         
+          FPL  =(FCL1* RL - FCL) * ID                                  
+        END IF                                                           
+        IF(SF.LT.OFF) THEN                                        
+          MONO = MONO + 1                                        
+        ELSE                                                    
+          MONO = 0                                               
+        END IF                                                   
+        FCL =  FCL1                                                  
+        OFF = SF                                                     
+        FC(L) =  FCL                                                   
+        IF(IFCP) FCP(L)  = FPL                                         
+        IF(KFN.EQ.0) SIG(L) = SIGMA                                  
+        IF(MODE .LE. 2) GC(L+ID) = RL                                
+        ZL = ZL - ID                                                      
+        IF(MONO.LT.NDROP) GO TO 70                                        
+        IF(AXIAL .OR. REAL(ZLM)*ID.GT.-NDROP.AND..NOT.ETANE0) GO TO 70    
+        UNSTAB = .TRUE.                                                
 !-----------------------------------------------------------------------
 ! ***    take action if cannot or should not recur below this ZL:       
 !-----------------------------------------------------------------------
-   50    ZLM = ZL                                                       
-         LF = L                                                         
-            IF(ID.LT.0) GO TO 380                                       
-         IF(.NOT.UNSTAB) LF = L + 1                                     
-         IF(L+MONO.LT.L1-2 .OR. ID.LT.0 .OR. .NOT.UNSTAB) GO TO 80      
+  50    ZLM = ZL                                                       
+        LF = L                                                         
+        IF(ID.LT.0) GO TO 380                                       
+        IF(.NOT.UNSTAB) LF = L + 1                                     
+        IF(L+MONO.LT.L1-2 .OR. ID.LT.0 .OR. .NOT.UNSTAB) GO TO 80      
 !-----------------------------------------------------------------------
 ! otherwise, all L values (for stability) should be done    
 !            in the reverse direction:                      
 !-----------------------------------------------------------------------
-         GO TO 60                                                       
-   70 CONTINUE                                                          
+        GO TO 60                                                       
+  70  CONTINUE                                                          
       GO TO 80                                                          
-   60       ID = -1                                                     
-            LF = L1                                                     
-            L1 = M1                                                     
-            RERR = ACCT                                                 
-            GO TO 10                                                    
-   80 IF(FCL .EQ. ZERO) FCL = + ACC8                                    
-      F  = FPL/FCL                                                      
+  60  ID = -1                                                     
+      LF = L1                                                     
+      L1 = M1                                                     
+      RERR = ACCT                                                 
+      GO TO 10                                                    
+  80  IF(FCL .EQ. ZERO) FCL = + ACC8                                    
+      F = FPL/FCL                                                      
 !-----------------------------------------------------------------------
 ! *** Check, if second time around, that the 'f' values agree]          
 !-----------------------------------------------------------------------
@@ -370,7 +369,7 @@ MODULE FBN_COULCC
       IF(DONEM) RERR = MAX(RERR, ABSC(F-FIRST)/ABSC(F))                 
       IF(DONEM) GO TO 90                                                
 !-----------------------------------------------------------------------
-       NOCF2 = .FALSE.                                                  
+      NOCF2 = .FALSE.                                                  
       THETAM  = X - ETA*(XLOG+TLOG) - ZLM*HPI + SIGMA                   
 !-----------------------------------------------------------------------
 ! *** on left x-plane, determine OMEGA by requiring cut on -x axis      
@@ -378,98 +377,96 @@ MODULE FBN_COULCC
 !       so H(omega) is smaller and recurs upwards accurately.           
 !     (x-plane boundary is shifted to give CF2(LH) a chance to converge)
 !-----------------------------------------------------------------------
-                           OMEGA = SIGN(ONE,IMAG(X)+ACC8)               
+      OMEGA = SIGN(ONE,IMAG(X)+ACC8)               
       IF(REAL(X).GE.XNEAR) OMEGA = SIGN(ONE,IMAG(THETAM)+ACC8)          
 !-----------------------------------------------------------------------
-         SFSH = EXP(OMEGA*SCALE - ABS(SCALE))                           
-         OFF=EXP(MIN(TWO * MAX(ABS(IMAG(X)),ABS(IMAG(THETAM)), &        
-     &                         ABS(IMAG(ZLM))*3 ) , FPLMAX) )           
-          EPS = MAX(ACC8 , ACCT * HALF / OFF)                           
+      SFSH = EXP(OMEGA*SCALE - ABS(SCALE))                           
+      OFF = EXP(MIN(TWO*MAX(ABS(IMAG(X)),ABS(IMAG(THETAM)),ABS(IMAG(ZLM))*3),FPLMAX))
+      EPS = MAX(ACC8 , ACCT * HALF / OFF)                           
 !-----------------------------------------------------------------------
 ! ***    Try first estimated omega, then its opposite,                  
 !        to find the H(omega) linearly independent of F                 
 !        i.e. maximise  CF1-CF2 = 1/(F H(omega)) , to minimise H(omega) 
 !-----------------------------------------------------------------------
-   90 DO 100 L=1,2                                                      
-         LH = 1                                                         
-         IF(OMEGA.LT.ZERO) LH = 2                                       
-      PM = CI*OMEGA                                                     
-      ETAP = ETA * PM                                                   
-         IF(DONEM) GO TO 130                                            
-         PQ1 = ZERO                                                     
-         PACCQ = ONE                                                    
-         KASE = 0                                                       
+  90  DO 100 L=1,2                                                      
+        LH = 1                                                          
+        IF(OMEGA.LT.ZERO) LH = 2                                        
+        PM = CI*OMEGA                                                   
+        ETAP = ETA * PM                                                 
+        IF(DONEM) GO TO 130                                             
+        PQ1 = ZERO                                                      
+        PACCQ = ONE                                                     
+        KASE = 0                                                        
 !-----------------------------------------------------------------------
 ! ***   Check for small X, i.e. whether to avoid CF2 :                  
 !-----------------------------------------------------------------------
-      IF(MODE.GE.3 .AND. ABSX.LT.ONE ) GO TO 190                        
-      IF(MODE.LT.3 .AND. (NOCF2 .OR. ABSX.LT.XNEAR .AND.  &             
-     &   ABSC(ETA)*ABSX .LT. 5 .AND. ABSC(ZLM).LT.4)) THEN              
-        KASE = 5                                                        
-        GO TO 120                                                       
-        ENDIF                                                           
+        IF(MODE.GE.3 .AND. ABSX.LT.ONE ) GO TO 190                      
+        IF(MODE.LT.3 .AND. (NOCF2 .OR. ABSX.LT.XNEAR .AND.  &           
+          &  ABSC(ETA)*ABSX .LT. 5 .AND. ABSC(ZLM).LT.4)) THEN          
+          KASE = 5                                                      
+          GO TO 120                                                     
+        END IF                                                          
 !-----------------------------------------------------------------------
 ! ***  Evaluate   CF2 : PQ1 = p + i.omega.q  at lambda = ZLM            
 !-----------------------------------------------------------------------
-         PQ1 = CF2(X,ETA,ZLM,PM,EPS,LIMIT,ERR,NPQ(LH),ACC8,ACCH, &      
-     &             PR,ACCUR,DELL,'COULCC')                              
+        PQ1 = CF2(X,ETA,ZLM,PM,EPS,LIMIT,ERR,NPQ(LH),ACC8,ACCH,PR,ACCUR,DELL,'COULCC')
 !-----------------------------------------------------------------------
-       ERR = ERR * MAX(ONE,ABSC(PQ1)/MAX(ABSC(F-PQ1),ACC8) )            
-       IF(ERR.LT.ACCH)       GO TO 110                                  
+        ERR = ERR * MAX(ONE,ABSC(PQ1)/MAX(ABSC(F-PQ1),ACC8) )            
+        IF(ERR.LT.ACCH) GO TO 110                                  
 !-----------------------------------------------------------------------
 ! *** check if impossible to get F-PQ accurately because of cancellation
 !-----------------------------------------------------------------------
-               NOCF2 = REAL(X).LT.XNEAR .AND. ABS(IMAG(X)).LT.-LOG(ACC8)
+        NOCF2 = REAL(X).LT.XNEAR .AND. ABS(IMAG(X)).LT.-LOG(ACC8)
 !-----------------------------------------------------------------------
 !     original guess for OMEGA (based on THETAM) was wrong              
 !     Use KASE 5 or 6 if necessary if Re(X) < XNEAR                     
 !-----------------------------------------------------------------------
-  100            OMEGA = - OMEGA                                        
-                IF(UNSTAB) GO TO 360                                    
-                IF(REAL(X).LT.-XNEAR .AND. PR) WRITE(6,1060) '-X',ERR   
-  110     RERR = MAX(RERR,ERR)                                          
+  100 OMEGA = - OMEGA                                        
+!-----------------------------------------------------------------------
+      IF(UNSTAB) GO TO 360                                    
+      IF(REAL(X).LT.-XNEAR .AND. PR) WRITE(6,1060) '-X',ERR   
+  110 RERR = MAX(RERR,ERR)                                          
 !-----------------------------------------------------------------------
 ! ***  establish case of calculation required for irregular solution    
 !-----------------------------------------------------------------------
-  120 IF(KASE.GE.5) GO TO 130                                           
-      IF(REAL(X) .GT. XNEAR) THEN                                       
+  120 IF(KASE.GE.5) GO TO 130                                         
+      IF(REAL(X) .GT. XNEAR) THEN                                     
 !-----------------------------------------------------------------------
 !  estimate errors if KASE 2 or 3 were to be used:                      
 !-----------------------------------------------------------------------
-         PACCQ = EPS * OFF * ABSC(PQ1) / MAX(ABS(IMAG(PQ1)),ACC8)       
-        ENDIF                                                           
-      IF(PACCQ .LT. ACCUR) THEN                                         
-          KASE = 2                                                      
-          IF(AXIAL) KASE = 3                                            
-      ELSE                                                              
-          KASE = 1                                                      
-          IF(NPQ(1) * R20 .LT. JMAX)     KASE = 4                       
+        PACCQ = EPS * OFF * ABSC(PQ1) / MAX(ABS(IMAG(PQ1)),ACC8)      
+      END IF                                                          
+      IF(PACCQ .LT. ACCUR) THEN                                       
+        KASE = 2                                                      
+        IF(AXIAL) KASE = 3                                            
+      ELSE                                                            
+        KASE = 1                                                      
+        IF(NPQ(1) * R20 .LT. JMAX) KASE = 4                       
 !-----------------------------------------------------------------------
 !  i.e. change to kase=4 if the 2F0 predicted to converge               
 !-----------------------------------------------------------------------
-      ENDIF                                                             
-  130 GO TO (190,140,150,170,190,190),  ABS(KASE)                       
-  140    IF(.NOT.DONEM) &                                               
+      END IF                                                          
+  130 GO TO (190,140,150,170,190,190), ABS(KASE)                      
+  140 IF(.NOT.DONEM) PQ2 = CF2(X,ETA,ZLM,-PM,EPS,LIMIT,ERR,NPQ(3-LH),ACC8,ACCH,PR,ACCUR,DELL,'COULCC')
 !-----------------------------------------------------------------------
 ! ***  Evaluate   CF2 : PQ2 = p - i.omega.q  at lambda = ZLM   (Kase 2) 
 !-----------------------------------------------------------------------
-     &  PQ2 = CF2(X,ETA,ZLM,-PM,EPS,LIMIT,ERR,NPQ(3-LH),ACC8,ACCH, &    
-     &             PR,ACCUR,DELL,'COULCC')                              
+      P = (PQ2 + PQ1) * HALF                                      
+      Q = (PQ2 - PQ1) * HALF*PM                                   
 !-----------------------------------------------------------------------
-        P     = (PQ2 + PQ1) * HALF                                      
-        Q     = (PQ2 - PQ1) * HALF*PM                                   
-      GO TO 160                                                         
-  150   P     = REAL(PQ1)                                               
-        Q     = IMAG(PQ1)                                               
+      GO TO 160                                                       
+!-----------------------------------------------------------------------
+  150 P = REAL(PQ1)                                               
+      Q = IMAG(PQ1)                                               
 !-----------------------------------------------------------------------
 ! ***   With Kase = 3 on the real axes, P and Q are real & PQ2 = PQ1*   
 !-----------------------------------------------------------------------
-        PQ2 = CONJG(PQ1)                                                
+      PQ2 = CONJG(PQ1)                                                
 !-----------------------------------------------------------------------
 ! *** solve for FCM = F at lambda = ZLM,then find norm factor W=FCM/FCL 
 !-----------------------------------------------------------------------
   160 W   = (PQ1 - F) * (PQ2 - F)                                       
-         SF = EXP(-ABS(SCALE))                                          
+      SF  = EXP(-ABS(SCALE))                                          
       FCM = SQRT(Q / W) * SF                                            
 !-----------------------------------------------------------------------
 !  any SQRT given here is corrected by                                  
@@ -477,34 +474,36 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
       IF(REAL(FCM/FCL).LT.ZERO) FCM  = - FCM                            
       GAM = (F - P)/Q                                                   
-         TA = ABSC(GAM + PM)                                            
-         PACCQ= EPS * MAX(TA,ONE/TA)                                    
+      TA = ABSC(GAM + PM)                                            
+      PACCQ= EPS * MAX(TA,ONE/TA)                                    
       HCL = FCM * (GAM + PM) * (SFSH/(SF*SF))                           
 !-----------------------------------------------------------------------
       IF(PACCQ.GT.ACCUR .AND. KASE.GT.0) THEN                           
 !-----------------------------------------------------------------------
 !  Consider a KASE = 1 Calculation                                      
 !-----------------------------------------------------------------------
-          F11V= F11(X,ETA,Z11,P11,ACCT,LIMIT,0,ERR,N11,FPMAX,ACC8,ACC16)
-          IF(ERR.LT.PACCQ) GO TO 200                                    
-          ENDIF                                                         
+        F11V= F11(X,ETA,Z11,P11,ACCT,LIMIT,0,ERR,N11,FPMAX,ACC8,ACC16)
+        IF(ERR.LT.PACCQ) GO TO 200                                    
+      END IF                                                         
       RERR=MAX(RERR,PACCQ)                                              
+!-----------------------------------------------------------------------
       GO TO 230                                                         
 !-----------------------------------------------------------------------
 ! *** Arrive here if KASE = 4                                           
 !     to evaluate the exponentially decreasing H(LH) directly.          
 !-----------------------------------------------------------------------
-  170  IF(DONEM) GO TO 180                                              
+  170 IF(DONEM) GO TO 180                                              
       AA = ETAP - ZLM                                                   
       BB = ETAP + ZLM + ONE                                             
       F20V = F20(AA,BB,-HALF*PM*XI, ACCT,JMAX,ERR,FPMAX,N20,XRCF)       
-        IF(N20.LE.0) GO TO 190                                          
-        RERR = MAX(RERR,ERR)                                            
-         HCL = FPMIN                                                    
-         IF(ABS(REAL(PM*THETAM)+OMEGA*SCALE).GT.FPLMAX) GO TO 330       
-  180 HCL = F20V * EXP(PM * THETAM + OMEGA*SCALE)                       
-      FCM = SFSH / ((F - PQ1) * HCL )                                   
-      GO TO 230                                                         
+      IF(N20.LE.0) GO TO 190                                          
+      RERR = MAX(RERR,ERR)                                            
+      HCL = FPMIN                                                    
+      IF(ABS(REAL(PM*THETAM)+OMEGA*SCALE).GT.FPLMAX) GO TO 330       
+  180 HCL = F20V * EXP(PM * THETAM + OMEGA*SCALE)                     
+      FCM = SFSH / ((F - PQ1) * HCL )                                 
+!-----------------------------------------------------------------------
+      GO TO 230                                                       
 !-----------------------------------------------------------------------
 ! *** Arrive here if KASE=1   (or if 2F0 tried mistakenly & failed)     
 !-----------------------------------------------------------------------
@@ -512,31 +511,31 @@ MODULE FBN_COULCC
 !      using REAL*16 arithmetic if possible.                            
 !  where Z11 = ZLL if ID>0, or = ZLM if ID<0                            
 !-----------------------------------------------------------------------
-  190 F11V = F11(X,ETA,Z11,P11,ACCT,LIMIT,0,ERR,N11,FPMAX,ACC8,ACC16)   
+  190 F11V = F11(X,ETA,Z11,P11,ACCT,LIMIT,0,ERR,N11,FPMAX,ACC8,ACC16) 
 !-----------------------------------------------------------------------
-  200       IF(N11.LT.0) THEN                                           
+  200 IF(N11.LT.0) THEN                                           
 !-----------------------------------------------------------------------
 !    F11 failed from BB = negative integer                              
 !-----------------------------------------------------------------------
-               WRITE(6,1060) '-L',ONE                                   
-               GO TO 390                                                
-               ENDIF                                                    
-            IF(ERR.GT.PACCQ .AND. PACCQ.LT.ACCB) THEN                   
+        WRITE(6,1060) '-L',ONE                                   
+        GO TO 390                                                
+      END IF                                                    
+!-----------------------------------------------------------------------
+      IF(ERR.GT.PACCQ .AND. PACCQ.LT.ACCB) THEN                   
 !-----------------------------------------------------------------------
 !  Consider a KASE 2 or 3 calculation                                   
 !-----------------------------------------------------------------------
-                KASE = -2                                               
-                IF(AXIAL) KASE = -3                                     
-                GO TO 130                                               
-                ENDIF                                                   
-         RERR = MAX(RERR, ERR)                                          
-         IF(ERR.GT.FPMAX) GO TO 370                                     
-         IF(ID.LT.0) CLL = Z11*TLOG- HPI*ETA - CLOGAM(BB)  &            
-     &                       + CLOGAM(Z11 + ONE + P11*ETA) - P11*SIGMA  
-      EK   = (Z11+ONE)*XLOG - P11*X + CLL  - ABS(SCALE)                 
+        KASE = -2                                               
+        IF(AXIAL) KASE = -3                                     
+        GO TO 130                                               
+      END IF                                                   
+      RERR = MAX(RERR, ERR)                                          
+      IF(ERR.GT.FPMAX) GO TO 370                                     
+      IF(ID.LT.0) CLL = Z11*TLOG-HPI*ETA-CLOGAM(BB)+CLOGAM(Z11+ONE+P11*ETA)-P11*SIGMA
+      EK = (Z11+ONE)*XLOG - P11*X + CLL  - ABS(SCALE)                 
       IF(ID.GT.0) EK = EK - FESL + LOG(FCL)                             
-         IF(REAL(EK).GT.FPLMAX) GO TO 350                               
-         IF(REAL(EK).LT.FPLMIN) GO TO 340                               
+      IF(REAL(EK).GT.FPLMAX) GO TO 350                               
+      IF(REAL(EK).LT.FPLMIN) GO TO 340                               
       FCM = F11V * EXP(EK)                                              
 !-----------------------------------------------------------------------
       IF(KASE.GE.5) THEN                                                
@@ -545,95 +544,96 @@ MODULE FBN_COULCC
 ! ***  For abs(X) < XNEAR, then CF2 may not converge accurately, so     
 ! ***      use an expansion for irregular soln from origin :            
 !-----------------------------------------------------------------------
-         SL = ZLM                                                       
-            ZLNEG = REAL(ZLM) .LT. -ONE + ACCB                          
-         IF(KASE.EQ.5 .OR. ZLNEG) SL = - ZLM - ONE                      
-         PK = SL + ONE                                                  
-            AA = PK - ETAP                                              
-            AB = PK + ETAP                                              
-            BB = TWO*PK                                                 
-                     CLGAA = CLOGAM(AA)                                 
-                     CLGAB = CLGAA                                      
-         IF(ETANE0)  CLGAB = CLOGAM(AB)                                 
-                     CLGBB = CLOGAM(BB)                                 
-           IF(KASE.EQ.6 .AND. .NOT.ZLNEG) THEN                          
-              IF(NPINT(AA,ACCUR)) CLGAA = CLGAB - TWO*PM*SIGMA          
-              IF(NPINT(AB,ACCUR)) CLGAB = CLGAA + TWO*PM*SIGMA          
-             ENDIF                                                      
-          CLL = SL*TLOG- HPI*ETA - CLGBB + (CLGAA + CLGAB) * HALF       
-          DSIG = (CLGAA - CLGAB) * PM*HALF                              
-             IF(KASE.EQ.6) P11 = - PM                                   
-          EK  = PK * XLOG - P11*X + CLL  - ABS(SCALE)                   
-                     SF = EXP(-ABS(SCALE))                              
-                     CHI = ZERO                                         
-       IF(.NOT.( KASE.EQ.5 .OR. ZLNEG ) ) GO TO 210                     
+        SL = ZLM                                                       
+        ZLNEG = REAL(ZLM) .LT. -ONE + ACCB                          
+        IF(KASE.EQ.5 .OR. ZLNEG) SL = - ZLM - ONE                      
+        PK = SL + ONE                                                  
+        AA = PK - ETAP                                              
+        AB = PK + ETAP                                              
+        BB = TWO*PK                                                 
+        CLGAA = CLOGAM(AA)                                 
+        CLGAB = CLGAA                                      
+        IF(ETANE0) CLGAB = CLOGAM(AB)                                 
+        CLGBB = CLOGAM(BB)                                 
+        IF(KASE.EQ.6 .AND. .NOT.ZLNEG) THEN                          
+          IF(NPINT(AA,ACCUR)) CLGAA = CLGAB - TWO*PM*SIGMA          
+          IF(NPINT(AB,ACCUR)) CLGAB = CLGAA + TWO*PM*SIGMA          
+        END IF                                                      
+        CLL = SL*TLOG- HPI*ETA - CLGBB + (CLGAA + CLGAB) * HALF       
+        DSIG = (CLGAA - CLGAB) * PM*HALF                              
+        IF(KASE.EQ.6) P11 = - PM                                   
+        EK = PK * XLOG - P11*X + CLL  - ABS(SCALE)                   
+        SF = EXP(-ABS(SCALE))                              
+        CHI = ZERO                                         
+        IF(.NOT.( KASE.EQ.5 .OR. ZLNEG ) ) GO TO 210                  
 !-----------------------------------------------------------------------
 ! *** Use  G(l)  =  (cos(CHI) * F(l) - F(-l-1)) /  sin(CHI)             
-!                                                                       
+!-----------------------------------------------------------------------
 !      where CHI = sig(l) - sig(-l-1) - (2l+1)*pi/2                     
 !-----------------------------------------------------------------------
-         CHI = SIGMA - DSIG - (ZLM-SL) * HPI                            
-         F11V=F11(X,ETA,SL,P11,ACCT,LIMIT,0,ERR,NPQ(1),FPMAX,ACC8,ACC16)
-                    RERR = MAX(RERR,ERR)                                
-            IF(KASE.EQ.6) GO TO 210                                     
-         FESL = F11V * EXP( EK )                                        
-         FCL1 = EXP(PM*CHI) * FCM                                       
-         HCL = FCL1 - FESL                                              
-               RERR=MAX(RERR,ACCT*MAX(ABSC(FCL1),ABSC(FESL))/ABSC(HCL)) 
-         HCL = HCL / SIN(CHI) * (SFSH/(SF*SF))                          
-       GO TO 220                                                        
+        CHI = SIGMA - DSIG - (ZLM-SL) * HPI                            
+        F11V=F11(X,ETA,SL,P11,ACCT,LIMIT,0,ERR,NPQ(1),FPMAX,ACC8,ACC16)
+        RERR = MAX(RERR,ERR)                                
+        IF(KASE.EQ.6) GO TO 210                                     
+        FESL = F11V * EXP( EK )                                        
+        FCL1 = EXP(PM*CHI) * FCM                                       
+        HCL = FCL1 - FESL                                              
+        RERR=MAX(RERR,ACCT*MAX(ABSC(FCL1),ABSC(FESL))/ABSC(HCL)) 
+        HCL = HCL / SIN(CHI) * (SFSH/(SF*SF))                          
+!-----------------------------------------------------------------------
+        GO TO 220                                                        
 !-----------------------------------------------------------------------
 ! *** Use the logarithmic expansion for the irregular solution (KASE 6) 
 !        for the case that BB is integral so sin(CHI) would be zero.    
-!                                                                       
-  210    RL = BB - ONE                                                  
-         N  = NINTC(RL)                                                 
-         ZLOG = XLOG + TLOG - PM*HPI                                    
-         CHI = CHI + PM * THETAM + OMEGA * SCALE + AB * ZLOG            
-            AA  = ONE - AA                                              
-         IF(NPINT(AA,ACCUR)) THEN                                       
-            HCL = ZERO                                                  
-         ELSE                                                           
-               IF(ID.GT.0 .AND. .NOT.ZLNEG) F11V = FCM * EXP(-EK)       
-            HCL = EXP(CHI - CLGBB - CLOGAM(AA)) * (-1)**(N+1)  &        
-     &              * ( F11V * ZLOG +                          &        
-     &      F11(X,ETA,SL,-PM,ACCT,LIMIT,2,ERR,NPQ(2),FPMAX,ACC8,ACC16)) 
-                RERR = MAX(RERR,ERR)                                    
-            ENDIF                                                       
-         IF(N.GT.0) THEN                                                
-             EK = CHI + CLOGAM(RL) - CLGAB - RL*ZLOG                    
-             DF =F11(X,ETA,-SL-ONE,-PM,ZERO,N,0,ERR,L,FPMAX,ACC8,ACC16) 
-             HCL = HCL + EXP(EK) * DF                                   
-            ENDIF                                                       
 !-----------------------------------------------------------------------
-  220    PQ1 = F - SFSH/(FCM * HCL)                                     
-      ELSE                                                              
-           IF(MODE.LE.2) HCL = SFSH/((F - PQ1) * FCM)                   
-           KASE = 1                                                     
-      ENDIF                                                             
+  210   RL = BB - ONE                                                  
+        N  = NINTC(RL)                                                 
+        ZLOG = XLOG + TLOG - PM*HPI                                    
+        CHI = CHI + PM * THETAM + OMEGA * SCALE + AB * ZLOG            
+        AA  = ONE - AA                                              
+        IF(NPINT(AA,ACCUR)) THEN                                       
+          HCL = ZERO                                                  
+        ELSE                                                           
+          IF(ID.GT.0 .AND. .NOT.ZLNEG) F11V = FCM * EXP(-EK)       
+          HCL = EXP(CHI-CLGBB-CLOGAM(AA))*(-1)**(N+1)*(F11V*ZLOG &   
+            & +F11(X,ETA,SL,-PM,ACCT,LIMIT,2,ERR,NPQ(2),FPMAX,ACC8,ACC16))
+          RERR = MAX(RERR,ERR)                                    
+        END IF                                                       
+        IF(N.GT.0) THEN                                                
+           EK  = CHI + CLOGAM(RL) - CLGAB - RL*ZLOG                    
+           DF  = F11(X,ETA,-SL-ONE,-PM,ZERO,N,0,ERR,L,FPMAX,ACC8,ACC16) 
+           HCL = HCL + EXP(EK) * DF                                   
+        END IF                                                       
+!-----------------------------------------------------------------------
+  220   PQ1 = F - SFSH/(FCM * HCL)                                    
+!-----------------------------------------------------------------------
+      ELSE !KASE<=4                                                   
+        IF(MODE.LE.2) HCL = SFSH/((F - PQ1) * FCM)                   
+        KASE = 1                                                     
+      END IF                                                          
 !-----------------------------------------------------------------------
 ! ***  Now have absolute normalisations for Coulomb Functions           
 !          FCM & HCL  at lambda = ZLM                                   
 !      so determine linear transformations for Functions required :     
 !-----------------------------------------------------------------------
   230 IH = ABS(MODE1) / 10                                              
-        IF(KFN.EQ.3) IH = (3-IMAG(CIK))/2  + HALF                       
+      IF(KFN.EQ.3) IH = (3-IMAG(CIK))/2  + HALF                       
       P11 = ONE                                                         
       IF(IH.EQ.1) P11 = CI                                              
       IF(IH.EQ.2) P11 = -CI                                             
-                  DF = - PM                                             
+      DF = - PM                                             
       IF(IH.GE.1) DF = - PM + P11                                       
-          IF(ABSC(DF).LT.ACCH) DF = ZERO                                
+      IF(ABSC(DF).LT.ACCH) DF = ZERO                                
 !-----------------------------------------------------------------------
 ! *** Normalisations for spherical or cylindrical Bessel functions      
 !-----------------------------------------------------------------------
-                          ALPHA = ZERO                                  
-          IF(KFN  .EQ. 1) ALPHA = XI                                    
-          IF(KFN  .GE. 2) ALPHA = XI*HALF                               
-                          BETA  = ONE                                   
-          IF(KFN  .EQ. 1) BETA  = XI                                    
-          IF(KFN  .GE. 2) BETA  = SQRT(XI/HPI)                          
-          IF(KFN  .GE. 2 .AND. REAL(BETA).LT.ZERO) BETA  = - BETA       
+      ALPHA = ZERO                                  
+      IF(KFN .EQ. 1) ALPHA = XI                                    
+      IF(KFN .GE. 2) ALPHA = XI*HALF                               
+      BETA  = ONE                                   
+      IF(KFN .EQ. 1) BETA  = XI                                    
+      IF(KFN .GE. 2) BETA  = SQRT(XI/HPI)                          
+      IF(KFN .GE. 2 .AND. REAL(BETA).LT.ZERO) BETA  = - BETA       
 !-----------------------------------------------------------------------
       AA = ONE                                                          
       IF(KFN.GT.0) AA = -P11 * BETA                                     
@@ -641,91 +641,93 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
 ! Calculate rescaling factors for I & K output                          
 !-----------------------------------------------------------------------
-         P = EXP((ZLM+DELL) * HPI * CIK)                                
-         AA= BETA * HPI * P                                             
-         BETA = BETA / P                                                
-         Q = CIK * ID                                                   
-        ENDIF                                                           
+        P = EXP((ZLM+DELL) * HPI * CIK)                                
+        AA= BETA * HPI * P                                             
+        BETA = BETA / P                                                
+        Q = CIK * ID                                                   
+      END IF                                                           
 !-----------------------------------------------------------------------
 ! Calculate rescaling factors for GC output      
 !-----------------------------------------------------------------------
       IF(IH.EQ.0) THEN                                                  
-         TA = ABS(SCALE) + IMAG(PM)*SCALE                               
-         RK = ZERO                                                      
-         IF(TA.LT.FPLMAX) RK = EXP(-TA)                                 
-       ELSE                                                             
-         TA = ABS(SCALE) + IMAG(P11)*SCALE                              
+        TA = ABS(SCALE) + IMAG(PM)*SCALE                               
+        RK = ZERO                                                      
+        IF(TA.LT.FPLMAX) RK = EXP(-TA)                                 
+      ELSE                                                             
+        TA = ABS(SCALE) + IMAG(P11)*SCALE                              
 !-----------------------------------------------------------------------
-         IF(ABSC(DF).GT.ACCH .AND. TA.GT.FPLMAX) GO TO 320              
-         IF(ABSC(DF).GT.ACCH) DF = DF * EXP(TA)                         
-         SF = TWO * (LH-IH) * SCALE                                     
-         RK = ZERO                                                      
-         IF(SF.GT.FPLMAX) GO TO 320                                     
-         IF(SF.GT.FPLMIN) RK = EXP(SF)                                  
-      ENDIF                                                             
+        IF(ABSC(DF).GT.ACCH .AND. TA.GT.FPLMAX) GO TO 320              
+        IF(ABSC(DF).GT.ACCH) DF = DF * EXP(TA)                         
+        SF = TWO * (LH-IH) * SCALE                                     
+        RK = ZERO                                                      
+        IF(SF.GT.FPLMAX) GO TO 320                                     
+        IF(SF.GT.FPLMIN) RK = EXP(SF)                                  
+      END IF                                                             
 !-----------------------------------------------------------------------
-         KAS((3-ID)/2) = KASE                                           
+      KAS((3-ID)/2) = KASE                                           
       W = FCM / FCL                                                     
-         IF(LOG(ABSC(W))+LOG(ABSC(FC(LF))) .LT. FPLMIN) GO TO 340       
-         IF(MODE.GE.3) GO TO 240                                        
-            IF(ABSC(F-PQ1) .LT. ACCH*ABSC(F) .AND. PR)          &       
-     &                             WRITE(6,1020) LH,ZLM+DELL            
+      IF(LOG(ABSC(W))+LOG(ABSC(FC(LF))) .LT. FPLMIN) GO TO 340       
+      IF(MODE.GE.3) GO TO 240                                        
+      IF(ABSC(F-PQ1) .LT. ACCH*ABSC(F) .AND. PR) WRITE(6,1020) LH,ZLM+DELL
       HPL = HCL * PQ1                                                   
-         IF(ABSC(HPL).LT.FPMIN.OR.ABSC(HCL).LT.FPMIN) GO TO 330         
+      IF(ABSC(HPL).LT.FPMIN.OR.ABSC(HCL).LT.FPMIN) GO TO 330         
 !-----------------------------------------------------------------------
 ! *** IDward recurrence from HCL,HPL(LF) (stored GC(L) is RL if reqd)   
 ! *** renormalise FC,FCP at each lambda                                 
 ! ***    ZL   = ZLM - MIN(ID,0) here                                    
 !-----------------------------------------------------------------------
   240 DO 270 L = LF,L1,ID                                               
-                     FCL = W* FC(L)                                     
-                      IF(ABSC(FCL).LT.FPMIN) GO TO 340                  
-            IF(IFCP) FPL = W*FCP(L)                                     
-                     FC(L)  = BETA * FCL                                
-            IF(IFCP) FCP(L) = BETA * (FPL - ALPHA * FCL) * CIK          
-                     FC(L)  = TIDY(FC(L),ACCUR)                         
-            IF(IFCP) FCP(L) = TIDY(FCP(L),ACCUR)                        
-       IF(MODE .GE. 3) GO TO 260                                        
-       IF(L.EQ.LF)  GO TO 250                                           
-                      ZL = ZL + ID                                      
-                      ZID= ZL * ID                                      
-                      RL = GC(L)                                        
-         IF(ETANE0)   THEN                                              
-                      SL = ETA + ZL*ZL*XI                               
-            IF(MODE.EQ.1) THEN                                          
-              PL = GCP(L)                                               
-            ELSE                                                        
-              PL = ZERO                                                 
-              IF(ABSC(ZL).GT.ACCH) PL = (SL*SL - RL*RL)/ZID             
-            ENDIF                                                       
-           HCL1     = (SL*HCL - ZID*HPL) / RL                           
-           HPL      = (SL*HPL - PL *HCL) / RL                           
-         ELSE                                                           
-           HCL1 = RL * HCL - HPL * ID                                   
-           HPL  = (HCL - RL * HCL1) * ID                                
-         ENDIF                                                          
-         HCL      = HCL1                                                
-         IF(ABSC(HCL).GT.FPMAX) GO TO 320                               
-  250    GC(L) = AA * (RK * HCL + DF * FCL)                             
-      IF(MODE.EQ.1) GCP(L) = (AA *(RK*HPL +DF*FPL) - ALPHA * GC(L)) *CIK
-         GC(L) = TIDY(GC(L),ACCUR)                                      
-      IF(MODE.EQ.1) GCP(L) = TIDY(GCP(L),ACCUR)                         
-         IF(KFN.GE.3) AA = AA * Q                                       
-  260    IF(KFN.GE.3) BETA = - BETA * Q                                 
-  270  LAST = MIN(LAST,(L1 - L)*ID)                                     
+!-----------------------------------------------------------------------
+        FCL = W* FC(L)                                     
+        IF(ABSC(FCL).LT.FPMIN) GO TO 340                  
+        IF(IFCP) FPL = W*FCP(L)                                     
+        FC(L)  = BETA * FCL                                
+        IF(IFCP) FCP(L) = BETA * (FPL - ALPHA * FCL) * CIK          
+        FC(L)  = TIDY(FC(L),ACCUR)                         
+        IF(IFCP) FCP(L) = TIDY(FCP(L),ACCUR)                        
+        IF(MODE .GE. 3) GO TO 260                                        
+        IF(L.EQ.LF)  GO TO 250                                           
+        ZL = ZL + ID                                      
+        ZID= ZL * ID                                      
+        RL = GC(L)                                        
+        IF(ETANE0) THEN                                              
+          SL = ETA + ZL*ZL*XI                               
+          IF(MODE.EQ.1) THEN                                          
+            PL = GCP(L)                                               
+          ELSE                                                        
+            PL = ZERO                                                 
+            IF(ABSC(ZL).GT.ACCH) PL = (SL*SL - RL*RL)/ZID             
+          END IF                                                       
+          HCL1= (SL*HCL - ZID*HPL) / RL                           
+          HPL = (SL*HPL - PL *HCL) / RL                           
+        ELSE                                                           
+          HCL1= RL * HCL - HPL * ID                                   
+          HPL = (HCL - RL * HCL1) * ID                                
+        END IF                                                          
+        HCL = HCL1                                                
+        IF(ABSC(HCL).GT.FPMAX) GO TO 320                               
+  250   GC(L) = AA * (RK * HCL + DF * FCL)                             
+        IF(MODE.EQ.1) GCP(L) = (AA*(RK*HPL+DF*FPL)-ALPHA*GC(L))*CIK
+        GC(L) = TIDY(GC(L),ACCUR)                                      
+        IF(MODE.EQ.1) GCP(L) = TIDY(GCP(L),ACCUR)                         
+        IF(KFN.GE.3) AA = AA * Q                                       
+  260   IF(KFN.GE.3) BETA = - BETA * Q                                 
+!-----------------------------------------------------------------------
+  270 LAST = MIN(LAST,(L1-L)*ID)                                     
 !-----------------------------------------------------------------------
 ! *** Come here after all soft errors to determine how many L values ok 
 !-----------------------------------------------------------------------
-  280  IF(ID.GT.0 .OR.  LAST.EQ.0) IFAIL = LAST                         
-       IF(ID.LT.0 .AND. LAST.NE.0) IFAIL = -3                           
+  280 IF(ID.GT.0 .OR.  LAST.EQ.0) IFAIL = LAST                         
+      IF(ID.LT.0 .AND. LAST.NE.0) IFAIL = -3                           
 !-----------------------------------------------------------------------
 ! *** Come here after ALL errors for this L range (ZLM,ZLL)             
 !-----------------------------------------------------------------------
   290 IF(ID.GT.0 .AND. LF.NE.M1) GO TO 300                              
-         IF(IFAIL.LT.0) RETURN                                          
-         IF(RERR.GT.ACCB) WRITE(6,1070) RERR                            
-         IF(RERR.GT.0.1) IFAIL = -4                                     
-         RETURN                                                         
+      IF(IFAIL.LT.0) RETURN                                          
+      IF(RERR.GT.ACCB) WRITE(6,1070) RERR                            
+      IF(RERR.GT.0.1) IFAIL = -4                                     
+!-----------------------------------------------------------------------
+      RETURN                                                         
 !-----------------------------------------------------------------------
 ! *** so on first block, 'F' started decreasing monotonically,          
 !                        or hit bound states for low ZL.                
@@ -737,15 +739,27 @@ MODULE FBN_COULCC
       DONEM = UNSTAB                                                    
       LF = MIN(LF,L1)                                                   
       L1 = M1                                                           
+!-----------------------------------------------------------------------
       GO TO 10                                                          
 !-----------------------------------------------------------------------
 ! ***    error messages                                                 
 !-----------------------------------------------------------------------
-  310 IF(PR) WRITE (6,1000) XX                                          
  1000 FORMAT(/' COULCC: CANNOT CALCULATE IRREGULAR SOLUTIONS FOR X =',1P,2D10.2,', AS ABS(X) IS TOO SMALL'/)
+ 1010 FORMAT(' COULCC: AT ZL =',2F8.3,' ',A2,'REGULAR SOLUTION (',1P,2E10.1,') WILL BE ',A4,' THAN',E10.1)
+ 1020 FORMAT('0COULCC WARNING: LINEAR INDEPENDENCE BETWEEN ''F'' AND ''H(',I1,')'' &
+             & IS LOST AT ZL =',2F7.2,' (EG. COULOMB EIGENSTATE, OR CF1 UNSTABLE)'/)
+ 1030 FORMAT(' COULCC: (ETA&L)/X TOO LARGE FOR CF1A, AND CF1 UNSTABLE ATL =',2F8.2)
+ 1040 FORMAT(' COULCC: OVERFLOW IN 1F1 SERIES AT ZL =',2F8.3,' AT TERM',I5)
+ 1050 FORMAT(' COULCC: BOTH BOUND-STATE POLES AND F-INSTABILITIES OCCUR'&
+        &  ,', OR MULTIPLE INSTABILITIES PRESENT.'                         &
+        & ,/,' TRY CALLING TWICE,  FIRST FOR ZL FROM',2F8.3,' TO',2F8.3,   &
+        &  ' (INCL.)',/,20X,     'SECOND FOR ZL FROM',2F8.3,' TO',2F8.3)   
+ 1060 FORMAT('0COULCC WARNING: AS ''',A2,''' REFLECTION RULES NOT USED,ERRORS CAN BE UP TO',1P,D12.2/)
+ 1070 FORMAT('0COULCC WARNING: OVERALL ROUNDOFF ERROR APPROX.',1P,E11.1)
+!-----------------------------------------------------------------------
+  310 IF(PR) WRITE (6,1000) XX                                          
       RETURN                                                            
   320 IF(PR) WRITE(6,1010) ZL+DELL,'IR',HCL,'MORE',FPMAX                
- 1010 FORMAT(' COULCC: AT ZL =',2F8.3,' ',A2,'REGULAR SOLUTION (',1P,2E10.1,') WILL BE ',A4,' THAN',E10.1)
       GO TO 280                                                         
   330 IF(PR) WRITE(6,1010) ZL+DELL,'IR',HCL,'LESS',FPMIN                
       GO TO 280                                                         
@@ -753,110 +767,102 @@ MODULE FBN_COULCC
       GO TO 280                                                         
   350 IF(PR) WRITE(6,1010) ZL+DELL,'  ',FCL,'MORE',FPMAX                
       GO TO 280                                                         
- 1020 FORMAT('0COULCC WARNING: LINEAR INDEPENDENCE BETWEEN ''F'' AND ''H(',I1,')'' &
- & IS LOST AT ZL =',2F7.2,' (EG. COULOMB EIGENSTATE, OR CF1 UNSTABLE)'/)
   360 IF(PR) WRITE(6,1030) ZLL+DELL                                     
- 1030 FORMAT(' COULCC: (ETA&L)/X TOO LARGE FOR CF1A, AND CF1 UNSTABLE ATL =',2F8.2)
       GO TO 280                                                         
   370 IF(PR) WRITE(6,1040) Z11,I                                        
- 1040 FORMAT(' COULCC: OVERFLOW IN 1F1 SERIES AT ZL =',2F8.3,' AT TERM',I5)
       GO TO 390                                                         
   380 IF(PR) WRITE(6,1050) ZLMIN,ZLM,ZLM+ONE,ZLMIN+NL-ONE               
- 1050 FORMAT(' COULCC: BOTH BOUND-STATE POLES AND F-INSTABILITIES OCCUR'&
-     &  ,', OR MULTIPLE INSTABILITIES PRESENT.'                         &
-     & ,/,' TRY CALLING TWICE,  FIRST FOR ZL FROM',2F8.3,' TO',2F8.3,   &
-     &  ' (INCL.)',/,20X,     'SECOND FOR ZL FROM',2F8.3,' TO',2F8.3)   
-!     GO TO 390                                                         
   390 IFAIL = -1                                                        
       GO TO 290                                                         
- 1060 FORMAT('0COULCC WARNING: AS ''',A2,''' REFLECTION RULES NOT USED,ERRORS CAN BE UP TO',1P,D12.2/)
- 1070 FORMAT('0COULCC WARNING: OVERALL ROUNDOFF ERROR APPROX.',1P,E11.1)
-      END                                                               
 !-----------------------------------------------------------------------
-      FUNCTION CF1C(X,ETA,ZL,EPS,FCL,TPK1,ETANE0,LIMIT,ERR,NFP, &        
-     &              ACCH,FPMIN,FPMAX,PR,CALLER)                         
+    END SUBROUTINE COULCC                                             
+!-----------------------------------------------------------------------
+    COMPLEX(dpf) FUNCTION CF1C(X,ETA,ZL,EPS,FCL,TPK1,ETANE0,LIMIT,ERR,NFP &
+                            &, ACCH,FPMIN,FPMAX,PR,CALLER)              
 !-----------------------------------------------------------------------
       IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
       LOGICAL PR,ETANE0                                                 
       REAL(dpf) ONE,TWO,EPS,ERR,ACCH,FPMIN,FPMAX,ABSC,SMALL,RK,PX          
-      CHARACTER*6 CALLER                                                
+      CHARACTER(len=6) CALLER                                                
       DATA ONE,TWO / 1D+0, 2D+0 /                                       
       ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
 !-----------------------------------------------------------------------
-! ***    Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)               
-!                                                                       
-!        using complex arithmetic                                       
+ 1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,13D9.2/)
+ 1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
+!-----------------------------------------------------------------------
+! *** Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)               
+!     using complex arithmetic                                       
 !-----------------------------------------------------------------------
       FCL = ONE                                                         
-      XI = ONE/X                                                        
+      XI  = ONE/X                                                        
       PK  = ZL + ONE                                                    
       PX  = PK  + LIMIT                                                 
-   10 EK  = ETA / PK                                                    
-        RK2 =          ONE + EK*EK                                      
+  10  EK  = ETA / PK                                                    
+      RK2 = ONE + EK*EK                                      
       F   = (EK + PK*XI)*FCL + (FCL - ONE)*XI                           
       PK1 =  PK + ONE                                                   
-         TPK1 = PK + PK1                                                
+      TPK1 = PK + PK1                                                
       TK  = TPK1*(XI + EK/PK1)                                          
       IF(ETANE0) THEN                                                   
 !-----------------------------------------------------------------------
 ! ***   test ensures b1 .ne. zero for negative ETA etc.; fixup is exact.
 !-----------------------------------------------------------------------
-             IF(ABSC(TK) .GT. ACCH)  GO TO 20                           
-             FCL  = RK2/(ONE + (ETA/PK1)**2)                            
-             SL   = TPK1*XI * (TPK1+TWO)*XI                             
-             PK   =  TWO + PK                                           
-             GO TO 10                                                   
-         ENDIF                                                          
-   20 D   =  ONE/TK                                                     
-      DF  = -FCL*RK2*D                                                  
-            IF(REAL(PK).GT.REAL(ZL)+TWO) FCL = - RK2 * SL               
-            FCL = FCL * D * TPK1 * XI                                   
+        IF(ABSC(TK) .GT. ACCH) GO TO 20                           
+        FCL  = RK2/(ONE + (ETA/PK1)**2)                            
+        SL   = TPK1*XI * (TPK1+TWO)*XI                             
+        PK   =  TWO + PK                                           
+        GO TO 10                                                   
+      END IF                                                          
+  20  D  =  ONE/TK                                                     
+      DF = -FCL*RK2*D                                                  
+      IF(REAL(PK).GT.REAL(ZL)+TWO) FCL = - RK2 * SL               
+      FCL = FCL * D * TPK1 * XI                                   
       F   =  F  + DF                                                    
 !-----------------------------------------------------------------------
-! ***   begin CF1 loop on PK = k = lambda + 1                           
+! *** begin CF1 loop on PK = k = lambda + 1                           
 !-----------------------------------------------------------------------
       RK    = ONE                                                       
-      SMALL    = SQRT(FPMIN)                                            
-   30 PK    = PK1                                                       
-        PK1 = PK1 + ONE                                                 
-         TPK1 = PK + PK1                                                
-         IF(ETANE0) THEN                                                
-           EK  = ETA / PK                                               
-           RK2 =          ONE + EK*EK                                   
-          ENDIF                                                         
-        TK  = TPK1*(XI + EK/PK1)                                        
-        D   =  TK - D*RK2                                               
-              IF(ABSC(D) .GT. ACCH)             GO TO 40                
-              IF(PR) WRITE (6,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X        
-              RK= RK +   ONE                                            
-              IF( RK .GT. TWO )                  GO TO 50               
-   40 D     = ONE/D                                                     
-            FCL = FCL * D * TPK1*XI                                     
-            IF(ABSC(FCL).LT.SMALL) FCL = FCL / SMALL                    
-            IF(ABSC(FCL).GT.FPMAX) FCL = FCL / FPMAX                    
-        DF  = DF*(D*TK - ONE)                                           
-        F   = F  + DF                                                   
-              IF( REAL(PK) .GT. PX ) GO TO 50                           
-      IF(ABSC(DF) .GE. ABSC(F)*EPS)             GO TO 30                
-                NFP = PK - ZL - 1                                       
-                  ERR = EPS * SQRT(REAL(NFP))                           
+      SMALL = SQRT(FPMIN)                                            
+  30  PK    = PK1                                                       
+      PK1 = PK1 + ONE                                                 
+      TPK1 = PK + PK1                                                
+      IF(ETANE0) THEN                                                
+        EK  = ETA / PK                                               
+        RK2 = ONE + EK*EK                                   
+      END IF                                                         
+      TK = TPK1*(XI + EK/PK1)                                        
+      D  =  TK - D*RK2                                               
+      IF(ABSC(D) .GT. ACCH) GO TO 40                
+      IF(PR) WRITE (6,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X        
+      RK= RK +   ONE                                            
+      IF( RK .GT. TWO) GO TO 50               
+  40  D = ONE/D                                                     
+      FCL = FCL * D * TPK1*XI                                     
+      IF(ABSC(FCL).LT.SMALL) FCL = FCL / SMALL                    
+      IF(ABSC(FCL).GT.FPMAX) FCL = FCL / FPMAX                    
+      DF = DF*(D*TK - ONE)                                           
+      F  = F  + DF                                                   
+      IF( REAL(PK) .GT. PX ) GO TO 50                           
+      IF(ABSC(DF) .GE. ABSC(F)*EPS) GO TO 30                
+      NFP = PK - ZL - 1                                       
+      ERR = EPS * SQRT(REAL(NFP))                           
       CF1C = F                                                          
+!-----------------------------------------------------------------------
       RETURN                                                            
- 1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,13D9.2/)
-   50 IF(PR) WRITE (6,1010) CALLER,LIMIT,ABS(X)                         
- 1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
+!-----------------------------------------------------------------------
+  50  IF(PR) WRITE (6,1010) CALLER,LIMIT,ABS(X)                         
       ERR = TWO                                                         
-      RETURN                                                            
-      END                                                               
 !-----------------------------------------------------------------------
-      FUNCTION CF2(X,ETA,ZL,PM,EPS,LIMIT,ERR,NPQ,ACC8,ACCH,  &          
-     &             PR,ACCUR,DELL,CALLER)                                
+    END FUNCTION CF1C                                                              
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
+    COMPLEX(dpf) FUNCTION CF2(X,ETA,ZL,PM,EPS,LIMIT,ERR,NPQ,ACC8,ACCH  & 
+                            &, PR,ACCUR,DELL,CALLER)                                
+!-----------------------------------------------------------------------
+      IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                    
       LOGICAL PR                                                        
-      REAL(dpf) EPS,ERR,ACC8,ACCH,ACCUR,TA,RK                              
-      REAL(dpf) ABSC,ZERO,HALF,ONE,TWO                                     
-      CHARACTER*6 CALLER                                                
+      REAL(dpf) EPS,ERR,ACC8,ACCH,ACCUR,TA,RK                           
+      REAL(dpf) ABSC,ZERO,HALF,ONE,TWO                                  
+      CHARACTER(len=6) CALLER                                           
       DATA ZERO,HALF,ONE,TWO / 0D+0, .5D+0, 1D+0, 2D+0 /                
       ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
 !-----------------------------------------------------------------------
@@ -874,40 +880,41 @@ MODULE FBN_COULCC
       PQ = (ONE - ETA*XI) * PM                                          
       AA = -E2MM1 + ETAP                                                
       BB = TWO*(X - ETA + PM)                                           
-         RL = XI * PM                                                   
+      RL = XI * PM                                                   
       IF(ABSC(BB).LT.ACCH) THEN                                         
-         RL = RL * AA / (AA + RK + WI)                                  
-         PQ = PQ + RL * (BB + TWO*PM)                                   
-            AA = AA + TWO*(RK+ONE+WI)                                   
-            BB = BB + (TWO+TWO)*PM                                      
-            RK = RK + (TWO+TWO)                                         
-         ENDIF                                                          
+        RL = RL * AA / (AA + RK + WI)                                  
+        PQ = PQ + RL * (BB + TWO*PM)                                   
+        AA = AA + TWO*(RK+ONE+WI)                                   
+        BB = BB + (TWO+TWO)*PM                                      
+        RK = RK + (TWO+TWO)                                         
+      END IF                                                          
       DD = ONE/BB                                                       
       DL = AA*DD* RL                                                    
-   10 PQ    = PQ + DL                                                   
-         RK = RK + TWO                                                  
-         AA = AA + RK + WI                                              
-         BB = BB + TWO*PM                                               
-         DD = ONE/(AA*DD + BB)                                          
-         DL = DL*(BB*DD - ONE)                                          
-            ERR = ABSC(DL)/ABSC(PQ)                                     
-         IF(ERR.GE.MAX(EPS,ACC8*RK*HALF) .AND. RK.LE.TA) GO TO 10       
+  10  PQ = PQ + DL                                                   
+      RK = RK + TWO                                                  
+      AA = AA + RK + WI                                              
+      BB = BB + TWO*PM                                               
+      DD = ONE/(AA*DD + BB)                                          
+      DL = DL*(BB*DD - ONE)                                          
+      ERR = ABSC(DL)/ABSC(PQ)                                     
+      IF(ERR.GE.MAX(EPS,ACC8*RK*HALF) .AND. RK.LE.TA) GO TO 10       
 !-----------------------------------------------------------------------
-         NPQ   = RK/TWO                                                 
-         PQ    = PQ + DL                                                
-           IF(PR.AND.NPQ.GE.LIMIT-1 .AND. ERR.GT.ACCUR)  &              
-     &             WRITE(6,1000) CALLER,INT(IMAG(PM)),NPQ,ERR,ZL+DELL   
+      NPQ = RK/TWO                                                 
+      PQ  = PQ + DL                                                
+!-----------------------------------------------------------------------
  1000 FORMAT(' ',A6,': CF2(',I2,') NOT CONVERGED FULLY IN ',I7,         &
      & ' ITERATIONS, SO ERROR IN IRREGULAR SOLUTION =',1P,D11.2,' AT ZL &
-     & =', 0P,2F8.3)                                                     
-      CF2 = PQ                                                          
-      RETURN                                                            
-      END                                                               
+     & =', 0P,2F8.3)  
 !-----------------------------------------------------------------------
-      FUNCTION F11(X,ETA,ZL,P,EPS,LIMIT,KIND,ERR,NITS,FPMAX,ACC8,ACC16) 
+      IF(PR.AND.NPQ.GE.LIMIT-1 .AND. ERR.GT.ACCUR) WRITE(6,1000) CALLER,INT(IMAG(PM)),NPQ,ERR,ZL+DELL
+      CF2 = PQ                                                          
+!-----------------------------------------------------------------------
+    END FUNCTION CF2                                                  
+!-----------------------------------------------------------------------
+    COMPLEX(dpf) FUNCTION F11(X,ETA,ZL,P,EPS,LIMIT,KIND,ERR,NITS,FPMAX,ACC8,ACC16)
 !-----------------------------------------------------------------------
       IMPLICIT REAL(dpf)(A-H,O-Z)                                       
-      COMPLEX(dpf) X,ETA,ZL,P,AA,BB,Z,F11,CI                       
+      COMPLEX(dpf) X,ETA,ZL,P,AA,BB,Z,CI                       
       COMPLEX(dpf) DD,G,F,AI,BI,T                                       
       LOGICAL ZLLIN                                                     
       REAL(qpf) AR,BR,GR,GI,DR,DI,TR,TI,UR,UI,FI,FI1,DEN                
@@ -926,99 +933,103 @@ MODULE FBN_COULCC
 !   or       2 : using normal complex arithmetic, but with CDIGAM factor
 !-----------------------------------------------------------------------
 !  where                                                                
-         AA = ZL+ONE - ETA*P                                            
-         BB = TWO*(ZL+ONE)                                              
+      AA = ZL+ONE - ETA*P                                            
+      BB = TWO*(ZL+ONE)                                              
 !  and                                                                  
-         Z  = TWO*P*X                                                   
+      Z  = TWO*P*X                                                   
 !-----------------------------------------------------------------------
-         ZLLIN = REAL(BB).LE.ZERO .AND. ABS(BB-NINTC(BB)).LT.ACC8**0.25 
-             IF(.NOT.ZLLIN.OR.REAL(BB)+LIMIT.LT.1.5) GO TO 10           
-                NITS = -1                                               
-                RETURN                                                  
-   10 IF(LIMIT.LE.0) THEN                                               
-         F11 = ZERO                                                     
-         ERR = ZERO                                                     
-         NITS= 1                                                        
-         RETURN                                                         
-         ENDIF                                                          
+      ZLLIN = REAL(BB).LE.ZERO .AND. ABS(BB-NINTC(BB)).LT.ACC8**0.25 
+      IF(.NOT.ZLLIN.OR.REAL(BB)+LIMIT.LT.1.5) GO TO 10           
+      NITS = -1                                               
+      RETURN                                                  
+  10  IF(LIMIT.LE.0) THEN                                               
+        F11 = ZERO                                                     
+        ERR = ZERO                                                     
+        NITS= 1                                                        
+        RETURN                                                         
+      END IF                                                          
       TA = ONE                                                          
       RK = ONE                                                          
-      IF(KIND.LE.0.AND.ABSC(Z)*ABSC(AA).GT.ABSC(BB) * 1.0) THEN         
-         DR = ONE                                                       
-         DI = ZERO                                                      
-         GR = ONE                                                       
-         GI = ZERO                                                      
-         AR = REAL(AA)                                                  
-         BR = REAL(BB)                                                  
-         FI = ZERO                                                      
-      DO 20 I=2,LIMIT                                                   
-         FI1 = FI + ONE                                                 
-         TR = BR * FI1                                                  
-         TI = IMAG(BB) * FI1                                            
-         DEN= ONE / (TR*TR + TI*TI)                                     
-         UR = (AR*TR + IMAG(AA)*TI) * DEN                               
-         UI = (IMAG(AA)*TR - AR*TI) * DEN                               
-         TR = UR*GR - UI*GI                                             
-         TI = UR*GI + UI*GR                                             
-         GR = REAL(Z) * TR - IMAG(Z)*TI                                 
-         GI = REAL(Z) * TI + IMAG(Z)*TR                                 
-         DR = DR + GR                                                   
-         DI = DI + GI                                                   
-            ERR = ABS(GR) + ABS(GI)                                     
-               IF(ERR.GT.FPMAX) GO TO 60                                
-            RK  = ABS(DR) + ABS(DI)                                     
-            TA = MAX(TA,RK)                                             
-         IF(ERR.LT.RK*EPS .OR. I.GE.4.AND.ERR.LT.ACC16) GO TO 30        
-         FI = FI1                                                       
-         AR = AR + ONE                                                  
-   20    BR = BR + ONE                                                  
+      IF(KIND.LE.0.AND.ABSC(Z)*ABSC(AA).GT.ABSC(BB)*1.0) THEN         
+        DR = ONE                                                       
+        DI = ZERO                                                      
+        GR = ONE                                                       
+        GI = ZERO                                                      
+        AR = REAL(AA)                                                  
+        BR = REAL(BB)                                                  
+        FI = ZERO                                                      
+        DO 20 I=2,LIMIT                                                   
+          FI1 = FI + ONE                                                 
+          TR = BR * FI1                                                  
+          TI = IMAG(BB) * FI1                                            
+          DEN= ONE / (TR*TR + TI*TI)                                     
+          UR = (AR*TR + IMAG(AA)*TI) * DEN                               
+          UI = (IMAG(AA)*TR - AR*TI) * DEN                               
+          TR = UR*GR - UI*GI                                             
+          TI = UR*GI + UI*GR                                             
+          GR = REAL(Z) * TR - IMAG(Z)*TI                                 
+          GI = REAL(Z) * TI + IMAG(Z)*TR                                 
+          DR = DR + GR                                                   
+          DI = DI + GI                                                   
+          ERR = ABS(GR) + ABS(GI)                                     
+          IF(ERR.GT.FPMAX) GO TO 60                                
+          RK  = ABS(DR) + ABS(DI)                                     
+          TA = MAX(TA,RK)                                             
+          IF(ERR.LT.RK*EPS .OR. I.GE.4.AND.ERR.LT.ACC16) GO TO 30        
+          FI = FI1                                                       
+          AR = AR + ONE                                                  
+  20    BR = BR + ONE                                                  
 !-----------------------------------------------------------------------
-   30    F11 = DR + CI * DI                                             
-         ERR = ACC16 * TA / RK                                          
+  30    F11 = DR + CI * DI                                             
+        ERR = ACC16 * TA / RK                                          
 !-----------------------------------------------------------------------
       ELSE                                                              
 !-----------------------------------------------------------------------
 !* -------------------alternative code----------------------------------
+!-----------------------------------------------------------------------
 !*    If REAL*16 arithmetic is not available, (or already using it]),   
 !*    then use KIND > 0                                                 
 !-----------------------------------------------------------------------
-         G = ONE                                                        
-          F = ONE                                                       
-          IF(KIND.GE.2) F = CDIGAM(AA) - CDIGAM(BB) - CDIGAM(G)         
-         DD = F                                                         
-         DO 40 I=2,LIMIT                                                
-            AI = AA + (I-2)                                             
-            BI = BB + (I-2)                                             
-            R  = I-ONE                                                  
-         G = G * Z * AI / (BI * R)                                      
+        G = ONE                                                        
+        F = ONE                                                       
+        IF(KIND.GE.2) F = CDIGAM(AA) - CDIGAM(BB) - CDIGAM(G)         
+        DD = F                                                         
+        DO 40 I=2,LIMIT                                                
+          AI = AA + (I-2)                                             
+          BI = BB + (I-2)                                             
+          R  = I-ONE                                                  
+          G = G * Z * AI / (BI * R)                                      
 !-----------------------------------------------------------------------
 !  multiply by (psi(a+r)-psi(b+r)-psi(1+r))                             
 !-----------------------------------------------------------------------
-         IF(KIND.GE.2) F = F + ONE/AI - ONE/BI - ONE/R                 
-         T  = G * F                                                     
-         DD = DD + T                                                    
-            ERR = ABSC(T)                                               
-               IF(ERR.GT.FPMAX) GO TO 60                                
-            RK = ABSC(DD)                                               
-         TA = MAX(TA,RK)                                                
-         IF(ERR.LT.RK*EPS.OR.ERR.LT.ACC8.AND.I.GE.4) GO TO 50           
-   40    CONTINUE                                                       
+          IF(KIND.GE.2) F = F + ONE/AI - ONE/BI - ONE/R                 
+          T  = G * F                                                     
+          DD = DD + T                                                    
+          ERR = ABSC(T)                                               
+          IF(ERR.GT.FPMAX) GO TO 60                                
+          RK = ABSC(DD)                                               
+          TA = MAX(TA,RK)                                                
+          IF(ERR.LT.RK*EPS.OR.ERR.LT.ACC8.AND.I.GE.4) GO TO 50           
+  40    CONTINUE                                                       
 !-----------------------------------------------------------------------
-   50    ERR = ACC8 * TA / RK                                           
-         F11 = DD                                                       
+  50    ERR = ACC8 * TA / RK                                           
+        F11 = DD                                                       
 !* --------------------------------------------- end of alternative code
-      ENDIF                                                             
-   60    NITS = I                                                       
-      RETURN                                                            
-      END                                                               
+      END IF                                                             
+  60  NITS = I                                                       
 !-----------------------------------------------------------------------
-      FUNCTION CF1R(X,ETA,ZL,EPS,FCL,TPK1,ETANE0,LIMIT,ERR,NFP, &       
-     &              ACCH,FPMIN,FPMAX,PR,CALLER)                         
+    END FUNCTION F11                                                              
+!-----------------------------------------------------------------------
+    REAL(dpf) FUNCTION CF1R(X,ETA,ZL,EPS,FCL,TPK1,ETANE0,LIMIT,ERR,NFP &       
+                         &,  ACCH,FPMIN,FPMAX,PR,CALLER)                         
 !-----------------------------------------------------------------------
       IMPLICIT REAL(dpf)(A-H,O-Z)                                          
       LOGICAL PR,ETANE0                                                 
       CHARACTER(len=6) CALLER                                                
       DATA ONE,TWO / 1D+0, 2D+0 /                                       
+!-----------------------------------------------------------------------
+ 1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,7D9.2/)
+ 1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
 !-----------------------------------------------------------------------
 ! ***    Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)               
 !        using real arithmetic                                          
@@ -1027,65 +1038,65 @@ MODULE FBN_COULCC
       XI = ONE/X                                                        
       PK  = ZL + ONE                                                    
       PX  = PK  + LIMIT                                                 
-   10 EK  = ETA / PK                                                    
-        RK2 =          ONE + EK*EK                                      
+  10  EK  = ETA / PK                                                    
+      RK2 = ONE + EK*EK                                      
       F   = (EK + PK*XI)*FCL + (FCL - ONE)*XI                           
       PK1 =  PK + ONE                                                   
-         TPK1 = PK + PK1                                                
+      TPK1 = PK + PK1                                                
       TK  = TPK1*(XI + EK/PK1)                                          
       IF(ETANE0) THEN                                                   
 !-----------------------------------------------------------------------
 ! ***   test ensures b1 .ne. zero for negative ETA etc.; fixup is exact.
 !-----------------------------------------------------------------------
-             IF(ABS(TK) .GT. ACCH)  GO TO 20                            
-             FCL  = RK2/(ONE + (ETA/PK1)**2)                            
-             SL   = TPK1*XI * (TPK1+TWO)*XI                             
-             PK   =  TWO + PK                                           
-             GO TO 10                                                   
-         ENDIF                                                          
-   20 D   =  ONE/TK                                                     
-      DF  = -FCL*RK2*D                                                  
-            IF(PK.GT.ZL+TWO) FCL = - RK2 * SL                           
-            FCL = FCL * D * TPK1 * XI                                   
-      F   =  F  + DF                                                    
+        IF(ABS(TK) .GT. ACCH)  GO TO 20                            
+        FCL  = RK2/(ONE + (ETA/PK1)**2)                            
+        SL   = TPK1*XI * (TPK1+TWO)*XI                             
+        PK   =  TWO + PK                                           
+        GO TO 10                                                   
+      END IF                                                          
+  20  D =  ONE/TK                                                     
+      DF= -FCL*RK2*D                                                  
+      IF(PK.GT.ZL+TWO) FCL = - RK2 * SL                           
+      FCL=FCL * D * TPK1 * XI                                   
+      F  = F  + DF                                                    
 !-----------------------------------------------------------------------
 ! ***   begin CF1 loop on PK = k = lambda + 1                           
 !-----------------------------------------------------------------------
       RK    = ONE                                                       
-      SMALL    = SQRT(FPMIN)                                            
-   30 PK    = PK1                                                       
-        PK1 = PK1 + ONE                                                 
-         TPK1 = PK + PK1                                                
-         IF(ETANE0) THEN                                                
-           EK  = ETA / PK                                               
-           RK2 =          ONE + EK*EK                                   
-          ENDIF                                                         
-        TK  = TPK1*(XI + EK/PK1)                                        
-        D   =  TK - D*RK2                                               
-              IF(ABS(D) .GT. ACCH)             GO TO 40                 
-              IF(PR) WRITE (6,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X        
-              RK= RK +   ONE                                            
-              IF( RK .GT. TWO )                  GO TO 50               
-   40 D     = ONE/D                                                     
-            FCL = FCL * D * TPK1*XI                                     
-            IF(ABS(FCL).LT.SMALL) FCL = FCL / SMALL                     
-            IF(ABS(FCL).GT.FPMAX) FCL = FCL / FPMAX                     
-        DF  = DF*(D*TK - ONE)                                           
-        F   = F  + DF                                                   
-              IF( PK .GT. PX ) GO TO 50                                 
-      IF(ABS(DF) .GE. ABS(F)*EPS)             GO TO 30                  
-                NFP = PK - ZL - 1                                       
-                  ERR = EPS * SQRT(REAL(NFP))                           
+      SMALL = SQRT(FPMIN)                                            
+  30  PK    = PK1                                                       
+      PK1   = PK1 + ONE                                                 
+      TPK1 = PK + PK1                                                
+      IF(ETANE0) THEN                                                
+        EK  = ETA / PK                                               
+        RK2 = ONE + EK*EK                                   
+      END IF                                                         
+      TK=TPK1*(XI + EK/PK1)                                        
+      D = TK - D*RK2                                               
+      IF(ABS(D) .GT. ACCH) GO TO 40                 
+      IF(PR) WRITE (6,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X        
+      RK= RK + ONE                                            
+      IF( RK .GT. TWO ) GO TO 50               
+  40  D = ONE/D                                                     
+      FCL = FCL * D * TPK1*XI                                     
+      IF(ABS(FCL).LT.SMALL) FCL = FCL / SMALL                     
+      IF(ABS(FCL).GT.FPMAX) FCL = FCL / FPMAX                     
+      DF  = DF*(D*TK - ONE)                                           
+      F   = F  + DF                                                   
+      IF( PK .GT. PX ) GO TO 50                                 
+      IF(ABS(DF) .GE. ABS(F)*EPS) GO TO 30                  
+      NFP = PK - ZL - 1                                       
+      ERR = EPS * SQRT(REAL(NFP))                           
       CF1R = F                                                          
-      RETURN                                                            
- 1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,7D9.2/)
-   50 IF(PR) WRITE (6,1010) CALLER,LIMIT,ABS(X)                         
- 1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
-      ERR = TWO                                                         
-      RETURN                                                            
-      END                                                               
 !-----------------------------------------------------------------------
-      FUNCTION F20(AA,BB,Z,EPS,JMAX,RE,FPMAX,N,X)                       
+      RETURN                                                            
+!-----------------------------------------------------------------------
+  50  IF(PR) WRITE (6,1010) CALLER,LIMIT,ABS(X)                         
+      ERR = TWO                                                         
+!-----------------------------------------------------------------------
+    END FUNCTION CF1R                                                   
+!-----------------------------------------------------------------------
+    COMPLEX(dpf) FUNCTION F20(AA,BB,Z,EPS,JMAX,RE,FPMAX,N,X)            
 !-----------------------------------------------------------------------
 !     evaluate the HYPERGEOMETRIC FUNCTION 2F0                          
 !-----------------------------------------------------------------------
@@ -1105,6 +1116,7 @@ MODULE FBN_COULCC
       LOGICAL FINITE                                                    
       REAL(dpf) EP,EPS,AT,ATL,ABSC,RE,FPMAX                                
       DATA ONE,ZERO / (1D+0,0D+0), (0D+0,0D+0) /                        
+!-----------------------------------------------------------------------
       ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
       NINTC(W) = NINT(REAL(REAL(W)))                                    
 !-----------------------------------------------------------------------
@@ -1112,9 +1124,9 @@ MODULE FBN_COULCC
       X(1,1) = ONE                                                      
       SUM = X(1,1)                                                      
       ATL = ABSC(X(1,1))                                                
-         F    = SUM                                                     
-         D = ONE                                                        
-         DF   = SUM                                                     
+      F = SUM                                                     
+      D = ONE                                                        
+      DF= SUM                                                     
       J = 0                                                             
       EP = EPS * JMAX *10.                                              
       MA = - NINTC(AA)                                                  
@@ -1125,41 +1137,46 @@ MODULE FBN_COULCC
       IF(FINITE.AND.MA.GE.0) IMAX = MIN(MA+1,IMAX)                      
       IF(FINITE.AND.MB.GE.0) IMAX = MIN(MB+1,IMAX)                      
       DO 10 I=2,IMAX                                                    
-      X(I,1) = X(I-1,1) * Z * (AA+I-2) * (BB+I-2) / (I-1)               
-         IF(ABSC(X(I,1)).GT.FPMAX) GO TO 40                             
-      AT = ABSC(X(I,1))                                                 
-         IF(J.EQ.0) THEN                                                
-                 SUM = SUM + X(I,1)                                     
-                 IF(AT .LT. ABSC(SUM)*EPS) GO TO 20                     
-               ENDIF                                                    
-      IF(FINITE) GO TO 10                                               
-      IF(J.GT.0 .OR. AT.GT.ATL .OR. I.GE.JMAX-2) J = J + 1              
-         IF(J.EQ.0) GO TO 10                                            
-         CALL RCF(X(1,1),X(1,2),J,I,X(1,3),EPS)                         
-              IF(I.LT.0) GO TO 40                                       
-            DO 50 K=MAX(J,2),I                                          
-            D = ONE/(D*X(K,2) + ONE)                                    
-            DF = DF*(D - ONE)                                           
-            F = F + DF                                                  
-            IF(ABSC(DF) .LT. ABSC(F)*EPS) GO TO 30                      
-            IF(DF.EQ.ZERO.AND.F.EQ.ZERO.AND.I.GE.4) GO TO 30            
-   50       CONTINUE                                                    
-         J = I                                                          
-   10 ATL = AT                                                          
+        X(I,1) = X(I-1,1) * Z * (AA+I-2) * (BB+I-2) / (I-1)               
+        IF(ABSC(X(I,1)).GT.FPMAX) GO TO 40                             
+        AT = ABSC(X(I,1))                                                 
+        IF(J.EQ.0) THEN                                                
+          SUM = SUM + X(I,1)                                     
+          IF(AT .LT. ABSC(SUM)*EPS) GO TO 20                     
+        END IF                                                    
+        IF(FINITE) GO TO 10                                               
+        IF(J.GT.0 .OR. AT.GT.ATL .OR. I.GE.JMAX-2) J = J + 1              
+        IF(J.EQ.0) GO TO 10                                            
+        CALL RCF(X(1,1),X(1,2),J,I,X(1,3),EPS)                         
+        IF(I.LT.0) GO TO 40                                       
+        DO 50 K=MAX(J,2),I                                          
+          D = ONE/(D*X(K,2) + ONE)                                    
+          DF = DF*(D - ONE)                                           
+          F = F + DF                                                  
+          IF(ABSC(DF) .LT. ABSC(F)*EPS) GO TO 30                      
+          IF(DF.EQ.ZERO.AND.F.EQ.ZERO.AND.I.GE.4) GO TO 30            
+    50  CONTINUE                                                    
+!-----------------------------------------------------------------------
+        J = I                                                          
+  10  ATL = AT                                                          
+!-----------------------------------------------------------------------
       IF(.NOT.FINITE) I = -JMAX                                         
-   20 N = I                                                             
-       F20 = SUM                                                        
-       IF(.NOT.FINITE) RE  = AT / ABSC(SUM)                             
-       RETURN                                                           
-   30 F20 = F                                                           
+  20  N = I                                                             
+      F20 = SUM                                                        
+      IF(.NOT.FINITE) RE  = AT / ABSC(SUM)                             
+      RETURN                                                           
+!-----------------------------------------------------------------------
+  30  F20 = F                                                           
       RE = ABSC(DF) / ABSC(F)                                           
       N = K                                                             
       RETURN                                                            
-   40 I = 0                                                             
-      GO TO 20                                                          
-      END                                                               
 !-----------------------------------------------------------------------
-      FUNCTION CF1A(RHO,ETA,XL,PSI,EPS,NMAX,NUSED,FCL,RE,FPMAX,XX,G,C)  
+  40  I = 0                                                             
+      GO TO 20                                                          
+!-----------------------------------------------------------------------
+    END FUNCTION F20                                                  
+!-----------------------------------------------------------------------
+    COMPLEX(dpf) FUNCTION CF1A(RHO,ETA,XL,PSI,EPS,NMAX,NUSED,FCL,RE,FPMAX,XX,G,C)
 !-----------------------------------------------------------------------
 !     evaluate the ASYMPTOTIC EXPANSION for the                         
 !            LOGARITHMIC DERIVATIVE OF THE REGULAR SOLUTION             
@@ -1184,6 +1201,7 @@ MODULE FBN_COULCC
       DIMENSION XX(2,NMAX),G(NMAX),C(NMAX)                              
       REAL(dpf) RE,EPS,T1,T2,T3,ZERO,ONE,TWO,AT,ATL,ABSC,FPMAX             
       DATA ZERO,ONE,TWO,CI / 0D+0, 1D+0, 2D+0, (0D+0,1D+0) /            
+!-----------------------------------------------------------------------
       ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
 !-----------------------------------------------------------------------
       HPI = TWO*ATAN(ONE)                                               
@@ -1210,69 +1228,72 @@ MODULE FBN_COULCC
       G(1) = (TC + SC*TANL) / FCL                                       
       GLAST = G(1)                                                      
       ATL = ABSC(GLAST)                                                 
-         F    = GLAST                                                   
-         D = ONE                                                        
-         DF   = GLAST                                                   
+      F    = GLAST                                                   
+      D = ONE                                                        
+      DF   = GLAST                                                   
       J = 0                                                             
       DO 10 N=2,NMAX                                                    
-      T1=N-1                                                            
-      T2=TWO*T1-ONE                                                     
-      T3=T1*(T1-ONE)                                                    
-      DENOM=TWO*RHO*T1                                                  
-      C1=(ETA*T2)/DENOM                                                 
-      C2=(ETASQ+XLL1-T3)/DENOM                                          
-      SL2=C1*SL1-C2*TL1                                                 
-      TL2=C1*TL1+C2*SL1                                                 
-      SC2=C1*SC1-C2*TC1-SL2/RHO                                         
-      TC2=C1*TC1+C2*SC1-TL2/RHO                                         
-      SL=SL+SL2                                                         
-      TL=TL+TL2                                                         
-      SC=SC+SC2                                                         
-      TC=TC+TC2                                                         
-      SL1=SL2                                                           
-      TL1=TL2                                                           
-      SC1=SC2                                                           
-      TC1=TC2                                                           
-      FCL  =  TL + SL*TANL                                              
-         IF(ABSC(FCL).GT.FPMAX .OR. ABSC(FCL).LT.1./FPMAX) GO TO 40     
-      GSUM = (TC + SC*TANL) / FCL                                       
-      G(N) = GSUM - GLAST                                               
-      GLAST = GSUM                                                      
-         AT = ABSC(G(N))                                                
-         IF(AT.LT.ABSC(GSUM)*EPS) GO TO 20                              
-      IF(J.GT.0 .OR. AT.GT.ATL .OR. N.GE.NMAX-2) J = J + 1              
-         IF(J.EQ.0) GO TO 10                                            
-            CALL RCF(G,C,J,N,XX,EPS)                                    
-              IF(N.LT.0) GO TO 40                                       
-            DO 60 K=MAX(J,2),N                                          
-               D = ONE/(D*C(K) + ONE)                                   
-               DF = DF*(D - ONE)                                        
-               F = F + DF                                               
-         IF(ABSC(DF) .LT. ABSC(F)*EPS) GO TO 30                         
-         IF(DF.EQ.ZERO.AND.F.EQ.ZERO.AND.N.GE.4) GO TO 30               
-   60         CONTINUE                                                  
-         J = N                                                          
-   10    ATL = AT                                                       
+        T1=N-1                                                            
+        T2=TWO*T1-ONE                                                     
+        T3=T1*(T1-ONE)                                                    
+        DENOM=TWO*RHO*T1                                                  
+        C1=(ETA*T2)/DENOM                                                 
+        C2=(ETASQ+XLL1-T3)/DENOM                                          
+        SL2=C1*SL1-C2*TL1                                                 
+        TL2=C1*TL1+C2*SL1                                                 
+        SC2=C1*SC1-C2*TC1-SL2/RHO                                         
+        TC2=C1*TC1+C2*SC1-TL2/RHO                                         
+        SL=SL+SL2                                                         
+        TL=TL+TL2                                                         
+        SC=SC+SC2                                                         
+        TC=TC+TC2                                                         
+        SL1=SL2                                                           
+        TL1=TL2                                                           
+        SC1=SC2                                                           
+        TC1=TC2                                                           
+        FCL  =  TL + SL*TANL                                              
+        IF(ABSC(FCL).GT.FPMAX .OR. ABSC(FCL).LT.1./FPMAX) GO TO 40     
+        GSUM = (TC + SC*TANL) / FCL                                       
+        G(N) = GSUM - GLAST                                               
+        GLAST = GSUM                                                      
+        AT = ABSC(G(N))                                                
+        IF(AT.LT.ABSC(GSUM)*EPS) GO TO 20                              
+        IF(J.GT.0 .OR. AT.GT.ATL .OR. N.GE.NMAX-2) J = J + 1              
+        IF(J.EQ.0) GO TO 10                                            
+        CALL RCF(G,C,J,N,XX,EPS)                                    
+        IF(N.LT.0) GO TO 40                                       
+        DO 60 K=MAX(J,2),N                                          
+          D = ONE/(D*C(K) + ONE)                                   
+          DF = DF*(D - ONE)                                        
+          F = F + DF                                               
+          IF(ABSC(DF) .LT. ABSC(F)*EPS) GO TO 30                         
+          IF(DF.EQ.ZERO.AND.F.EQ.ZERO.AND.N.GE.4) GO TO 30               
+  60    CONTINUE                                                  
+        J = N                                                          
+  10  ATL = AT                                                       
       K = -NMAX                                                         
       GO TO 30                                                          
-   20 FCL = FCL * COSL                                                  
-         CF1A = GSUM                                                    
-         RE = AT / ABSC(GSUM)                                           
-         NUSED = N                                                      
-         RETURN                                                         
-   30 CF1A = F                                                          
+!-----------------------------------------------------------------------
+  20  FCL = FCL * COSL                                                  
+      CF1A = GSUM                                                    
+      RE = AT / ABSC(GSUM)                                           
+      NUSED = N                                                      
+      RETURN                                                         
+!-----------------------------------------------------------------------
+  30  CF1A = F                                                          
       FCL = FCL * COSL                                                  
-         RE = ABSC(DF) / ABSC(F)                                        
-         NUSED = K                                                      
+      RE = ABSC(DF) / ABSC(F)                                        
+      NUSED = K                                                      
       RETURN                                                            
-   40 CF1A = G(1)                                                       
+!-----------------------------------------------------------------------
+  40  CF1A = G(1)                                                       
       FCL = 1.0                                                         
       RE = 1.0                                                          
       NUSED = 0                                                         
-      RETURN                                                            
-      END                                                               
 !-----------------------------------------------------------------------
-      SUBROUTINE RCF(A,B,IBEG,INUM,XX,EPS)                              
+    END FUNCTION CF1A                                                 
+!-----------------------------------------------------------------------
+    SUBROUTINE RCF(A,B,IBEG,INUM,XX,EPS)                              
 !-----------------------------------------------------------------------
 !  RCF converts polynomial A to the corresponding continued             
 !         fraction, in 'normal'  form with coefficients B               
@@ -1310,6 +1331,7 @@ MODULE FBN_COULCC
       DIMENSION A(100),B(100),XX(2,100)                                 
       LOGICAL EVEN                                                      
       REAL(dpf) EPS                                                        
+!-----------------------------------------------------------------------
       COMMON /RCFCM2/ X1,M2M1,MP12,EVEN,M                               
 !-----------------------------------------------------------------------
 !     ibn = ibeg + inum - 1                                             
@@ -1337,49 +1359,53 @@ MODULE FBN_COULCC
       MP12 = 2                                                          
       EVEN = .TRUE.                                                     
       IF(IBN.GT.3) GO TO 20                                             
-   10 RETURN                                                            
-   20 IF(ABS(B(3)) .LT. EPS*ABS(X0)) GOTO 80                            
+!-----------------------------------------------------------------------
+  10  RETURN                                                            
+!-----------------------------------------------------------------------
+  20  IF(ABS(B(3)) .LT. EPS*ABS(X0)) GO TO 80                            
       M = 4                                                             
-   30 X1 = A(M)                                                         
+  30  X1 = A(M)                                                         
       M2M1 = MP12                                                       
       MP12 = M2M1 + 1                                                   
       IF(EVEN) MP12 = M2M1                                              
       DO 40 K=2,MP12                                                    
-   40 X1 = X1 + A(M-K+1) * XX(1,K-1)                                    
+  40  X1 = X1 + A(M-K+1) * XX(1,K-1)                                    
       B(M) = - X1/X0                                                    
+!-----------------------------------------------------------------------
       IF(M.GE.IBN) RETURN                                               
-   50 IF(ABS(B(M)).LT.EPS*ABS(X0)) GO TO 80                             
+!-----------------------------------------------------------------------
+  50  IF(ABS(B(M)).LT.EPS*ABS(X0)) GO TO 80                             
       K = M2M1                                                          
-   60 XX(2,K) = XX(1,K) + B(M) * XX(2,K-1)                              
+  60  XX(2,K) = XX(1,K) + B(M) * XX(2,K-1)                              
       K = K-1                                                           
       IF(K.GT.1) GO TO 60                                               
       XX(2,1) = XX(1,1) + B(M)                                          
       DO 70 K=1,M2M1                                                    
-      X0 = XX(2,K)                                                      
-      XX(2,K) = XX(1,K)                                                 
-   70 XX(1,K) = X0                                                      
+        X0 = XX(2,K)                                                      
+        XX(2,K) = XX(1,K)                                                 
+  70  XX(1,K) = X0                                                      
       X0 = X1                                                           
       XX(1,M2M1+1) = 0.                                                 
       M = M+1                                                           
       EVEN = .NOT.EVEN                                                  
       GO TO 30                                                          
-   80 INUM = -M                                                         
-!     XX(1,1) = 1.E-50                                                  
-!     PRINT 1000,M                                                      
-! 1000 FORMAT('0RCF: ZERO CF COEFFICIENT AT POSITION ',I4/)              
-      RETURN                                                            
-   90 PRINT 1000,M,IBEG-1                                               
- 1000 FORMAT('0RCF: LAST CALL SET M =',I4,', BUT RESTART REQUIRES',I4)  
-      STOP                                                              
-      END                                                               
+  80  INUM = -M                                                         
 !-----------------------------------------------------------------------
-      FUNCTION CLOGAM(Z)                         
+      RETURN                                                            
+!-----------------------------------------------------------------------
+ 1000 FORMAT('0RCF: LAST CALL SET M =',I4,', BUT RESTART REQUIRES',I4)  
+   90 WRITE(6,1000),M,IBEG-1                                            
+      STOP ("RCF HAS FAILED")                                           
+!-----------------------------------------------------------------------
+    END SUBROUTINE RCF                                                  
+!-----------------------------------------------------------------------
+    COMPLEX(dpf) FUNCTION CLOGAM(Z)                         
 !-----------------------------------------------------------------------
 !     this routine computes the logarithm of the gamma function gamma(z)
 !     for any complex argument 'Z' to any accuracy preset by CALL LOGAM 
 !-----------------------------------------------------------------------
       IMPLICIT REAL(dpf)(A-H,O-Z)                                          
-      COMPLEX(dpf) Z,U,V,H,R,CLOGAM,SER
+      COMPLEX(dpf) Z,U,V,H,R,SER
       DIMENSION B(15),BN(15),BD(15)                                     
 !-----------------------------------------------------------------------
       DATA LERR /6/, NX0 /6/, NB /15/, &                                
@@ -1402,7 +1428,7 @@ MODULE FBN_COULCC
       DATA FPLMIN / -140D+0 /                                           
       DATA ACCUR, ACC8, ACC16 / 1D-14, 2D-16, 3D-33 /                   
 !-----------------------------------------------------------------------
-! INLINE INIT FOR NOW
+! INLINE INIT FOR NOW -- A.R. FLORES
 !-----------------------------------------------------------------------
       ACC=ACC8
 !-----------------------------------------------------------------------
@@ -1413,14 +1439,13 @@ MODULE FBN_COULCC
       HL2P = LOG(TWO*PI) * HALF                                         
       ACCUR = ACC                                                       
       DO 120 K=1,NB                                                     
-       F21 = K*2 - ONE                                                  
-       B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
-       ERR = ABS(B(K)) * K*TWO / X0**F21                                
+        F21 = K*2 - ONE                                                  
+        B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
+        ERR = ABS(B(K)) * K*TWO / X0**F21                                
   120 IF(ERR.LT.ACC) GO TO 130                                          
-       NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
-       K = NB                                                           
+      NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
+      K = NB                                                           
   130 NT = K                                                            
-!     print *,' logam requires k = ',k ,' with cutoff at x =',nx0+1  
 !-----------------------------------------------------------------------
       X=REAL(Z)                                                         
       T=IMAG(Z)                                                         
@@ -1441,42 +1466,41 @@ MODULE FBN_COULCC
       C=C+ONE                                                           
       V=DCMPLX(C,D)                                                     
       H=H*V                                                             
-   10 A=A+ATAN2(D,C)                                                    
-   20 H=DCMPLX(HALF*LOG(REAL(H)**2+IMAG(H)**2),A)                       
+  10  A=A+ATAN2(D,C)                                                    
+  20  H=DCMPLX(HALF*LOG(REAL(H)**2+IMAG(H)**2),A)                       
       V=V+ONE                                                           
-   30 R=ONE/V**2                                                        
+  30  R=ONE/V**2                                                        
       SER = B(NT)                                                       
       DO 40 J=2,NT                                                      
         K = NT+1 - J                                                    
-   40 SER = B(K) + R*SER                                                
+  40  SER = B(K) + R*SER                                                
       CLOGAM = HL2P+(V-HALF)*LOG(V)-V + SER/V - H                       
       IF(X .GE. ZERO) GO TO 50                                          
 !-----------------------------------------------------------------------
       A= INT(X)-ONE                                                     
       C=PI*(X-A)                                                        
       D=PI*F                                                            
-!     E=EXP(-TWO*D)                                                     
-        E = ZERO                                                        
-        F = -TWO*D                                                      
-        IF(F.GT.FPLMIN) E = EXP(F)                                      
+      E = ZERO                                                        
+      F = -TWO*D                                                      
+      IF(F.GT.FPLMIN) E = EXP(F)                                      
       F=SIN(C)                                                          
       E= D + HALF*LOG(E*F**2+QUART*(ONE-E)**2)                          
       F=ATAN2(COS(C)*TANH(D),F)-A*PI                                    
       CLOGAM=ALPI-DCMPLX(E,F)-CLOGAM                                  
 !-----------------------------------------------------------------------
-   50 IF(SIGN(ONE,T) .LT. -HALF) CLOGAM=CONJG(CLOGAM)                 
+  50  IF(SIGN(ONE,T) .LT. -HALF) CLOGAM=CONJG(CLOGAM)                 
       RETURN                                                            
 !-----------------------------------------------------------------------
-   60 WRITE(LERR,1000) 'CLOGAM',X                                       
  1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
-      CLOGAM = ZERO                                                    
-      RETURN                                                            
-      END
+  60  WRITE(LERR,1000) 'CLOGAM',X                                       
+      CLOGAM = ZERO                                                     
 !-----------------------------------------------------------------------
-      FUNCTION CDIGAM(Z)                                                
+    END FUNCTION CLOGAM                                                 
 !-----------------------------------------------------------------------
-      IMPLICIT REAL(dpf)(A-H,O-Z)                                          
-      COMPLEX(dpf) Z,U,V,H,R,CDIGAM,SER
+    COMPLEX(dpf) FUNCTION CDIGAM(Z)                                     
+!-----------------------------------------------------------------------
+      IMPLICIT REAL(dpf)(A-H,O-Z)                                       
+      COMPLEX(dpf) Z,U,V,H,R,SER
       DIMENSION B(15),BN(15),BD(15)                                     
 !-----------------------------------------------------------------------
       DATA LERR /6/, NX0 /6/, NB /15/, &                                
@@ -1510,14 +1534,13 @@ MODULE FBN_COULCC
       HL2P = LOG(TWO*PI) * HALF                                         
       ACCUR = ACC                                                       
       DO 120 K=1,NB                                                     
-       F21 = K*2 - ONE                                                  
-       B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
-       ERR = ABS(B(K)) * K*TWO / X0**F21                                
+        F21 = K*2 - ONE                                                  
+        B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
+        ERR = ABS(B(K)) * K*TWO / X0**F21                                
   120 IF(ERR.LT.ACC) GO TO 130                                          
-       NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
-       K = NB                                                           
+      NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
+      K = NB                                                           
   130 NT = K                                                            
-!     print *,' logam requires k = ',k ,' with cutoff at x =',nx0+1  
 !-----------------------------------------------------------------------
 !     this routine computes the logarithmic derivative of the gamma     
 !     function  psi(Z) = digamma(Z) = d (ln gamma(Z))/dZ  for any       
@@ -1536,26 +1559,29 @@ MODULE FBN_COULCC
       IF(N .EQ. 0) GO TO 80                                             
       DO 70 I = 1,N                                                     
       V=V+ONE                                                           
-   70 H=H+ONE/V                                                         
-   80 V=V+ONE                                                           
-   90 R=ONE/V**2                                                        
+  70  H=H+ONE/V                                                         
+  80  V=V+ONE                                                           
+  90  R=ONE/V**2                                                        
       SER = B(NT) * (2*NT-1)                                            
       DO 100 J=2,NT                                                     
         K = NT+1 - J                                                    
   100 SER = B(K)*(2*K-1) + R*SER                                        
       CDIGAM = LOG(V) - HALF/V - R*SER - H                              
+!-----------------------------------------------------------------------
       IF(X .GE. ZERO) RETURN                                            
+!-----------------------------------------------------------------------
       H=PI*U                                                            
       CDIGAM = CDIGAM + ONE/U + PI*COS(H)/SIN(H)                      
+!-----------------------------------------------------------------------
       RETURN                                                            
 !-----------------------------------------------------------------------
  1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
   110 WRITE(LERR,1000) 'CDIGAM',X                                       
       CDIGAM=ZERO                                                      
-      RETURN                                                            
-      END
 !-----------------------------------------------------------------------
-      SUBROUTINE LOGAM(ACC)                                               
+    END FUNCTION CDIGAM
+!-----------------------------------------------------------------------
+    SUBROUTINE LOGAM(ACC)                                               
 !-----------------------------------------------------------------------
       IMPLICIT REAL(dpf)(A-H,O-Z)                                          
       COMPLEX(dpf) Z,U,V,H,R,SER
@@ -1582,7 +1608,7 @@ MODULE FBN_COULCC
 !-----------------------------------------------------------------------
 !  initialisation call for calculations to accuracy 'ACC'               
 !-----------------------------------------------------------------------
-    NX0 = 6                                                           
+      NX0 = 6                                                           
       X0  = NX0 + ONE                                                   
       PI = FOUR*ATAN(ONE)                                               
       ALPI = LOG(PI)                                                    
@@ -1593,19 +1619,18 @@ MODULE FBN_COULCC
        B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
        ERR = ABS(B(K)) * K*TWO / X0**F21                                
   120 IF(ERR.LT.ACC) GO TO 130                                          
-       NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
-       K = NB                                                           
+      NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
+      K = NB                                                           
   130 NT = K                                                            
-!     print *,' logam requires k = ',k ,' with cutoff at x =',nx0+1     
-      RETURN                                                            
-      END                                                               
 !-----------------------------------------------------------------------
-      FUNCTION TIDY(Z,ACC)                                              
+    END SUBROUTINE LOGAM                                                
+!-----------------------------------------------------------------------
+    COMPLEX(dpf) FUNCTION TIDY(Z,ACC)                                   
 !-----------------------------------------------------------------------
 !     TIDY A COMPLEX NUMBER                                             
 !-----------------------------------------------------------------------
-      REAL(dpf) X,Y,ACC,AZ                                                 
-      COMPLEX(dpf) Z,TIDY                                                 
+      REAL(dpf) X,Y,ACC,AZ                                              
+      COMPLEX(dpf) Z                                                    
 !-----------------------------------------------------------------------
       X = REAL(Z)                                                       
       Y = IMAG(Z)                                                       
@@ -1613,31 +1638,30 @@ MODULE FBN_COULCC
       IF(ABS(X) .LT. AZ) X = 0D+0                                       
       IF(ABS(Y) .LT. AZ) Y = 0D+0                                       
       TIDY = DCMPLX(X,Y)                                                
-      RETURN                                                            
-      END                                                               
 !-----------------------------------------------------------------------
-END MODULE FBN_COULCC
+    END FUNCTION TIDY                                                   
 !-----------------------------------------------------------------------
-PROGRAM TEST
+END MODULE COULCC_M
+!-----------------------------------------------------------------------
+PROGRAM CCTEST
 !-----------------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64
 !-----------------------------------------------------------------------
-  USE FBN_COULCC
+  USE COULCC_M                                               
 !-----------------------------------------------------------------------
-! CCTEST OF COULCC27                                                    
+  IMPLICIT REAL(dpf) (A-H,O-Z)                                         
 !-----------------------------------------------------------------------
-      IMPLICIT REAL(dpf) (A-H,O-Z)                                         
-      COMPLEX(dpf) X,ETA,ZLMIN,FC(201),GC(201),FCP(201),GCP(201), &       
-     &           SIG(201),ZL,WS,CI                                      
+      COMPLEX(dpf) X,ETA,ZLMIN,ZL,WS,CI      
+      COMPLEX(dpf) FC(201),GC(201),FCP(201),GCP(201),SIG(201)               
       INTEGER LDISP(8)                                                  
       LOGICAL WHIT                                                      
-      COMMON       /STEED/ RERR,NFP(2),NPQ(3),KASE(2)                   
+      COMMON /STEED/ RERR,NFP(2),NPQ(3),KASE(2)                   
       CHARACTER(len=20) NOTE                                                 
       CHARACTER(len=4) WHO(2,4,3),IRREG,REG                                  
       DATA ZERO,HALF,ONE,FOUR,CI / 0D+0,0.5D+0,1D+0,4D+0,(0D+0,1D+0) /  
       DATA WHO / 'F','G','j','y','J','Y','I','K' ,          &           
-     &           'F','H+','j','h(1)','J','H(1)','?','?' ,   &           
-     &           'F','H-','j','h(2)','J','H(2)','?','?' /               
+       &           'F','H+','j','h(1)','J','H(1)','?','?' ,   &           
+       &           'F','H-','j','h(2)','J','H(2)','?','?' /               
       DATA LDISP / 1,2,4,11,31,101,301,1001 /                           
 !-----------------------------------------------------------------------
  1000 FORMAT('1TEST OF THE CONTINUED-FRACTION COULOMB & BESSEL ROUTINES'/)
@@ -1650,7 +1674,7 @@ PROGRAM TEST
       PI = FOUR * ATAN(ONE)                                             
       WRITE(6,1000)                                                     
 !-----------------------------------------------------------------------
-   10 READ(5,*,END=40) X,ETA,ZLMIN,NL,MODE,KFN,WHIT,NOTE                
+  10  READ(5,*,END=40) X,ETA,ZLMIN,NL,MODE,KFN,WHIT,NOTE                
       IF(NL.LE.0) GO TO 40                                              
       IFAIL = 1                                                         
       MD = MOD(ABS(MODE),10)                                            
@@ -1664,27 +1688,27 @@ PROGRAM TEST
       WRITE(6,1020) IFAIL,RERR,NFP,NPQ,KASE                             
       IF(IFAIL.LT.0) GO TO 30                                           
       DO 20 I=1,8                                                       
-      L = LDISP(I)                                                      
-      IF(L.GT.NL-IFAIL) GO TO 20                                        
-         ZL = ZLMIN + L - 1                                             
-         IF(KFN.NE.0) SIG(L) = ZERO                                     
-         IRREG = WHO(2,MAX(KFN+1,1),IH+1)                               
-           REG = WHO(1,MAX(KFN+1,1),1)                                  
-         IF(WHIT) THEN                                                  
-            IRREG = 'WHIT'                                              
-            WS = EXP(-HALF*PI*(ETA - CI*ZL)  - CI*SIG(L))               
-            GC(L)  = WS * GC(L)                                         
-            IF(MD.EQ.1) GCP(L) = CI*WS * GCP(L)                         
-            FC(L)  = CI/WS * FC(L)                                      
-            IF(MOD(MD,2).EQ.1) FCP(L)  = FCP(L) / WS                    
-             REG = 'WH-F'                                               
-           ENDIF                                                        
-      WRITE(6,1030) ZL,REG,FC(L),IRREG,GC(L)                            
-      IF(MD.EQ.1)WRITE(6,1040)            FCP(L),GCP(L)                 
-      IF(SIG(L).NE.ZERO.AND.KFIN.EQ.0) WRITE(6,1050) SIG(L)             
-   20 CONTINUE                                                          
-   30 CONTINUE                                                          
+        L = LDISP(I)                                                      
+        IF(L.GT.NL-IFAIL) GO TO 20                                        
+        ZL = ZLMIN + L - 1                                             
+        IF(KFN.NE.0) SIG(L) = ZERO                                     
+        IRREG = WHO(2,MAX(KFN+1,1),IH+1)                               
+        REG = WHO(1,MAX(KFN+1,1),1)                                  
+        IF(WHIT) THEN                                                  
+          IRREG = 'WHIT'                                              
+          WS = EXP(-HALF*PI*(ETA - CI*ZL)  - CI*SIG(L))               
+          GC(L)  = WS * GC(L)                                         
+          IF(MD.EQ.1) GCP(L) = CI*WS * GCP(L)                         
+          FC(L)  = CI/WS * FC(L)                                      
+          IF(MOD(MD,2).EQ.1) FCP(L)  = FCP(L) / WS                    
+          REG = 'WH-F'                                               
+        END IF                                                        
+        WRITE(6,1030) ZL,REG,FC(L),IRREG,GC(L)                            
+        IF(MD.EQ.1)WRITE(6,1040) FCP(L),GCP(L)                 
+        IF(SIG(L).NE.ZERO.AND.KFIN.EQ.0) WRITE(6,1050) SIG(L)             
+  20  CONTINUE                                                          
+  30  CONTINUE                                                          
       GO TO 10                                                          
-   40 STOP                                                              
+  40  STOP                                                              
 !-----------------------------------------------------------------------
-END PROGRAM TEST
+END PROGRAM CCTEST
