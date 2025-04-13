@@ -1395,7 +1395,7 @@ MODULE COULCC_M
       RETURN                                                            
 !-----------------------------------------------------------------------
  1000 FORMAT('0RCF: LAST CALL SET M =',I4,', BUT RESTART REQUIRES',I4)  
-   90 WRITE(STDOUT,1000),M,IBEG-1                                            
+   90 WRITE(STDOUT,1000) M,IBEG-1                                            
       STOP ("RCF HAS FAILED")                                           
 !-----------------------------------------------------------------------
     END SUBROUTINE RCF                                                  
@@ -1405,39 +1405,62 @@ MODULE COULCC_M
 !     this routine computes the logarithm of the gamma function gamma(z)
 !     for any complex argument 'Z' to any accuracy preset by CALL LOGAM 
 !-----------------------------------------------------------------------
-      IMPLICIT REAL(dpf)(A-H,O-Z)                                          
-      COMPLEX(dpf) Z,U,V,H,R,SER
-      DIMENSION B(15),BN(15),BD(15)                                     
+      IMPLICIT NONE
+      REAL(dpf),   PARAMETER :: ACC8=(2._dpf)*(10._dpf)**(-16_dpf)  !2D-16
+      REAL(dpf),   PARAMETER :: ACC16=(3._dpf)*(10._dpf)**(-33_dpf) !3D-33_dpf
+      REAL(dpf),   PARAMETER :: FPLMIN=-140._dpf 
+      REAL(dpf),   PARAMETER :: ZERO=0._dpf
+      REAL(dpf),   PARAMETER :: HALF=0.5_dpf
+      REAL(dpf),   PARAMETER :: QUART=0.25_dpf
+      REAL(dpf),   PARAMETER :: ONE=1._dpf
+      REAL(dpf),   PARAMETER :: TWO=2._dpf
+      REAL(dpf),   PARAMETER :: FOUR=4._dpf
+      REAL(dpf),   PARAMETER :: PI=FOUR*ATAN(ONE)
+      REAL(dpf),   PARAMETER :: ALPI = LOG(PI)
+      REAL(dpf),   PARAMETER :: HL2P = LOG(TWO*PI)*HALF
+      INTEGER(spi),PARAMETER :: NB=15
+      REAL(dpf),DIMENSION(NB) :: B
+      COMPLEX(dpf) :: Z,V,H,R,SER
+      INTEGER(spi) :: NX0,N,J,K,NT,I,MX
+      REAL(dpf) :: ACCUR,ACC,X0,X,A,C,D,E,F,T,F21,ERR
+!-----------------------------------------------------------------------                           
+      REAL(dpf),DIMENSION(NB),PARAMETER :: BN= [             +1._dpf &
+                                               &,            -1._dpf &
+                                               &,            +1._dpf &
+                                               &,            -1._dpf &
+                                               &,            +5._dpf &
+                                               &,          -691._dpf &
+                                               &,          +  7._dpf &
+                                               &,         -3617._dpf &
+                                               &,         43867._dpf &
+                                               &,       -174611._dpf &
+                                               &,        854513._dpf &
+                                               &,    -236364091._dpf &
+                                               &,     + 8553103._dpf &
+                                               &,  -23749461029._dpf &
+                                               &, 8615841276005._dpf] 
+      REAL(dpf),DIMENSION(NB),PARAMETER :: BD= [              6._dpf &
+                                               &,            30._dpf &
+                                               &,            42._dpf &
+                                               &,            30._dpf &
+                                               &,            66._dpf &
+                                               &,          2730._dpf &
+                                               &,             6._dpf &
+                                               &,           510._dpf &
+                                               &,           798._dpf &
+                                               &,           330._dpf &
+                                               &,           138._dpf &
+                                               &,          2730._dpf &
+                                               &,             6._dpf &
+                                               &,           870._dpf &
+                                               &,         14322._dpf]
 !-----------------------------------------------------------------------
-      DATA LERR /6/, NX0 /6/, NB /15/, &                                
-     &  ZERO,ONE,TWO,FOUR,HALF,QUART /0D+0,1D+0,2D+0,4D+0,.5D+0,.25D+0/ 
-      DATA BN(1),BD(1)    / +1D+0,   6D+0 /,             &              
-     &     BN(2),BD(2)    / -1D+0,  30D+0 /,             &              
-     &     BN(3),BD(3)    / +1D+0,  42D+0 /,             &              
-     &     BN(4),BD(4)    / -1D+0,  30D+0 /,             &              
-     &     BN(5),BD(5)    / +5D+0,  66D+0 /,             &              
-     &     BN(6),BD(6)    /          -691D+0,  2730D+0/, &              
-     &     BN(7),BD(7)    /          +  7D+0,     6D+0/, &              
-     &     BN(8),BD(8)    /         -3617D+0,   510D+0/, &              
-     &     BN(9),BD(9)    /         43867D+0,   798D+0/, &              
-     &     BN(10),BD(10)  /       -174611D+0,   330D+0/, &              
-     &     BN(11),BD(11)  /        854513D+0,   138D+0/, &              
-     &     BN(12),BD(12)  /    -236364091D+0,  2730D+0/, &              
-     &     BN(13),BD(13)  /     + 8553103D+0,     6D+0/, &              
-     &     BN(14),BD(14)  /  -23749461029D+0,   870D+0/, &              
-     &     BN(15),BD(15)  / 8615841276005D+0, 14322D+0/                 
-      DATA FPLMIN / -140D+0 /                                           
-      DATA ACCUR, ACC8, ACC16 / 1D-14, 2D-16, 3D-33 /                   
-!-----------------------------------------------------------------------
-! INLINE INIT FOR NOW -- A.R. FLORES
+! INLINE INIT FOR NOW (logam entry)
 !-----------------------------------------------------------------------
       ACC=ACC8
 !-----------------------------------------------------------------------
       NX0 = 6                                                           
       X0  = NX0 + ONE                                                   
-      PI = FOUR*ATAN(ONE)                                               
-      ALPI = LOG(PI)                                                    
-      HL2P = LOG(TWO*PI) * HALF                                         
       ACCUR = ACC                                                       
       DO 120 K=1,NB                                                     
         F21 = K*2 - ONE                                                  
@@ -1500,39 +1523,59 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
     COMPLEX(dpf) FUNCTION CDIGAM(Z)                                     
 !-----------------------------------------------------------------------
-      IMPLICIT REAL(dpf)(A-H,O-Z)                                       
-      COMPLEX(dpf) Z,U,V,H,R,SER
-      DIMENSION B(15),BN(15),BD(15)                                     
+      IMPLICIT NONE
+      REAL(dpf),   PARAMETER :: ACC8=(2._dpf)*(10._dpf)**(-16_dpf)  !2D-16
+      REAL(dpf),   PARAMETER :: ACC16=(3._dpf)*(10._dpf)**(-33_dpf) !3D-33_dpf
+      REAL(dpf),   PARAMETER :: ZERO=0._dpf
+      REAL(dpf),   PARAMETER :: HALF=0.5_dpf
+      REAL(dpf),   PARAMETER :: QUART=0.25_dpf
+      REAL(dpf),   PARAMETER :: ONE=1._dpf
+      REAL(dpf),   PARAMETER :: TWO=2._dpf
+      REAL(dpf),   PARAMETER :: FOUR=4._dpf
+      REAL(dpf),   PARAMETER :: PI=FOUR*ATAN(ONE)
+      INTEGER(spi),PARAMETER :: NB=15
+      REAL(dpf),DIMENSION(NB) :: B
+      COMPLEX(dpf) :: Z,U,V,H,R,SER
+      INTEGER(spi) :: NX0,N,J,K,NT,I
+      REAL(dpf) :: ACCUR,ACC,X0,X,A,F21,ERR
+!-----------------------------------------------------------------------                           
+      REAL(dpf),DIMENSION(NB),PARAMETER :: BN= [             +1._dpf &
+                                               &,            -1._dpf &
+                                               &,            +1._dpf &
+                                               &,            -1._dpf &
+                                               &,            +5._dpf &
+                                               &,          -691._dpf &
+                                               &,          +  7._dpf &
+                                               &,         -3617._dpf &
+                                               &,         43867._dpf &
+                                               &,       -174611._dpf &
+                                               &,        854513._dpf &
+                                               &,    -236364091._dpf &
+                                               &,     + 8553103._dpf &
+                                               &,  -23749461029._dpf &
+                                               &, 8615841276005._dpf] 
+      REAL(dpf),DIMENSION(NB),PARAMETER :: BD= [              6._dpf &
+                                               &,            30._dpf &
+                                               &,            42._dpf &
+                                               &,            30._dpf &
+                                               &,            66._dpf &
+                                               &,          2730._dpf &
+                                               &,             6._dpf &
+                                               &,           510._dpf &
+                                               &,           798._dpf &
+                                               &,           330._dpf &
+                                               &,           138._dpf &
+                                               &,          2730._dpf &
+                                               &,             6._dpf &
+                                               &,           870._dpf &
+                                               &,         14322._dpf]
 !-----------------------------------------------------------------------
-      DATA LERR /6/, NX0 /6/, NB /15/, &                                
-     &  ZERO,ONE,TWO,FOUR,HALF,QUART /0D+0,1D+0,2D+0,4D+0,.5D+0,.25D+0/ 
-      DATA BN(1),BD(1)    / +1D+0,   6D+0 /,             &              
-     &     BN(2),BD(2)    / -1D+0,  30D+0 /,             &              
-     &     BN(3),BD(3)    / +1D+0,  42D+0 /,             &              
-     &     BN(4),BD(4)    / -1D+0,  30D+0 /,             &              
-     &     BN(5),BD(5)    / +5D+0,  66D+0 /,             &              
-     &     BN(6),BD(6)    /          -691D+0,  2730D+0/, &              
-     &     BN(7),BD(7)    /          +  7D+0,     6D+0/, &              
-     &     BN(8),BD(8)    /         -3617D+0,   510D+0/, &              
-     &     BN(9),BD(9)    /         43867D+0,   798D+0/, &              
-     &     BN(10),BD(10)  /       -174611D+0,   330D+0/, &              
-     &     BN(11),BD(11)  /        854513D+0,   138D+0/, &              
-     &     BN(12),BD(12)  /    -236364091D+0,  2730D+0/, &              
-     &     BN(13),BD(13)  /     + 8553103D+0,     6D+0/, &              
-     &     BN(14),BD(14)  /  -23749461029D+0,   870D+0/, &              
-     &     BN(15),BD(15)  / 8615841276005D+0, 14322D+0/                 
-      DATA FPLMIN / -140D+0 /                                           
-      DATA ACCUR, ACC8, ACC16 / 1D-14, 2D-16, 3D-33 /                   
-!-----------------------------------------------------------------------
-! INLINE INIT FOR NOW
+! INLINE INIT FOR NOW (logam entry)
 !-----------------------------------------------------------------------
       ACC=ACC8
 !-----------------------------------------------------------------------
       NX0 = 6                                                           
       X0  = NX0 + ONE                                                   
-      PI = FOUR*ATAN(ONE)                                               
-      ALPI = LOG(PI)                                                    
-      HL2P = LOG(TWO*PI) * HALF                                         
       ACCUR = ACC                                                       
       DO 120 K=1,NB                                                     
         F21 = K*2 - ONE                                                  
@@ -1577,54 +1620,10 @@ MODULE COULCC_M
       RETURN                                                            
 !-----------------------------------------------------------------------
  1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
-  110 WRITE(STDOUT,1000) 'CDIGAM',X                                       
+  110 WRITE(STDOUT,1000) 'CDIGAM',X                                     
       CDIGAM=ZERO                                                      
 !-----------------------------------------------------------------------
     END FUNCTION CDIGAM
-!-----------------------------------------------------------------------
-    SUBROUTINE LOGAM(ACC)                                               
-!-----------------------------------------------------------------------
-      IMPLICIT REAL(dpf)(A-H,O-Z)                                       
-      COMPLEX(dpf) Z,U,V,H,R,SER
-      DIMENSION B(15),BN(15),BD(15)                                     
-!-----------------------------------------------------------------------
-      DATA LERR /6/, NX0 /6/, NB /15/, &                                
-     &  ZERO,ONE,TWO,FOUR,HALF,QUART /0D+0,1D+0,2D+0,4D+0,.5D+0,.25D+0/ 
-      DATA BN(1),BD(1)    / +1D+0,   6D+0 /,             &              
-     &     BN(2),BD(2)    / -1D+0,  30D+0 /,             &              
-     &     BN(3),BD(3)    / +1D+0,  42D+0 /,             &              
-     &     BN(4),BD(4)    / -1D+0,  30D+0 /,             &              
-     &     BN(5),BD(5)    / +5D+0,  66D+0 /,             &              
-     &     BN(6),BD(6)    /          -691D+0,  2730D+0/, &              
-     &     BN(7),BD(7)    /          +  7D+0,     6D+0/, &              
-     &     BN(8),BD(8)    /         -3617D+0,   510D+0/, &              
-     &     BN(9),BD(9)    /         43867D+0,   798D+0/, &              
-     &     BN(10),BD(10)  /       -174611D+0,   330D+0/, &              
-     &     BN(11),BD(11)  /        854513D+0,   138D+0/, &              
-     &     BN(12),BD(12)  /    -236364091D+0,  2730D+0/, &              
-     &     BN(13),BD(13)  /     + 8553103D+0,     6D+0/, &              
-     &     BN(14),BD(14)  /  -23749461029D+0,   870D+0/, &              
-     &     BN(15),BD(15)  / 8615841276005D+0, 14322D+0/                 
-      DATA FPLMIN / -140D+0 /                                           
-!-----------------------------------------------------------------------
-!  initialisation call for calculations to accuracy 'ACC'               
-!-----------------------------------------------------------------------
-      NX0 = 6                                                           
-      X0  = NX0 + ONE                                                   
-      PI = FOUR*ATAN(ONE)                                               
-      ALPI = LOG(PI)                                                    
-      HL2P = LOG(TWO*PI) * HALF                                         
-      ACCUR = ACC                                                       
-      DO 120 K=1,NB                                                     
-        F21 = K*2 - ONE                                                  
-        B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
-        ERR = ABS(B(K)) * K*TWO / X0**F21                                
-  120 IF(ERR.LT.ACC) GO TO 130                                          
-      NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
-      K = NB                                                           
-  130 NT = K                                                            
-!-----------------------------------------------------------------------
-    END SUBROUTINE LOGAM                                                
 !-----------------------------------------------------------------------
 !   TIDY A COMPLEX NUMBER                                             
 !-----------------------------------------------------------------------
