@@ -1402,8 +1402,8 @@ MODULE COULCC_M
         IF (FINITE) GO TO 10                                               
         IF (J.GT.0 .OR. AT.GT.ATL .OR. I.GE.JMAX-2) J = J + 1              
         IF (J.EQ.0) GO TO 10                                            
-        CALL RCF(X(1,1),X(1,2),J,I,X(1,3),EPS)                         
-        IF (I.LT.0) GO TO 40                                       
+        CALL RCF(X(1,1),X(1,2),J,I,X(1,3),EPS,IERROR)                         
+        IF (IERROR.LT.0) GO TO 40                                       
         DO 50 K=MAX(J,2),I                                          
           D = ONE/(D*X(K,2) + ONE)                                    
           DF = DF*(D - ONE)                                           
@@ -1515,8 +1515,8 @@ MODULE COULCC_M
         IF (AT.LT.ABSC(GSUM)*EPS) GO TO 20                              
         IF (J.GT.0 .OR. AT.GT.ATL .OR. N.GE.NMAX-2) J = J + 1              
         IF (J.EQ.0) GO TO 10                                            
-        CALL RCF(G,C,J,N,XX,EPS)                                    
-        IF (N.LT.0) GO TO 40                                       
+        CALL RCF(G,C,J,N,XX,EPS,IERROR)                                    
+        IF (IERROR.LT.0) GO TO 40                                       
         DO 60 K=MAX(J,2),N                                          
           D = ONE/(D*C(K) + ONE)                                   
           DF = DF*(D - ONE)                                        
@@ -1580,14 +1580,28 @@ MODULE COULCC_M
 !              Jnl. Computational Physics, vol 137, pp242-258 (1980)    
 !   note:      restart procedure modified by I.J.Thompson               
 !-----------------------------------------------------------------------
-    SUBROUTINE RCF(A,B,IBEG,INUM,XX,EPS)                              
+    SUBROUTINE RCF(A,B,IBEG,INUM,XX,EPS,IERROR)                         
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
-      DIMENSION A(100),B(100),XX(2,100)                                 
-      LOGICAL EVEN                                                      
-      REAL(dpf) EPS                                                        
+      IMPLICIT NONE
+!-----------------------------------------------------------------------
+      INTEGER(spi),                 INTENT(IN)    :: IBEG                
+      INTEGER(spi),                 INTENT(IN)    :: INUM                
+      COMPLEX(dpf),DIMENSION(100),  INTENT(IN)    :: A           
+      COMPLEX(dpf),DIMENSION(100),  INTENT(INOUT) :: B           
+      COMPLEX(dpf),DIMENSION(2,100),INTENT(INOUT) :: XX           
+      REAL(dpf),                    INTENT(IN)    :: EPS                
+      INTEGER(spi),                 INTENT(OUT)   :: IERROR             
+!-----------------------------------------------------------------------
+      INTEGER(spi) :: K,IBN
+      COMPLEX(dpf) :: X0
+!-----------------------------------------------------------------------
+      LOGICAL :: EVEN            
+      COMPLEX(dpf) :: X1                                       
+      INTEGER(spi) :: M2M1,MP12,M
 !-----------------------------------------------------------------------
       COMMON /RCFCM2/ X1,M2M1,MP12,EVEN,M                               
+!-----------------------------------------------------------------------
+      IERROR=0_spi
 !-----------------------------------------------------------------------
 !     ibn = ibeg + inum - 1                                             
 !-----------------------------------------------------------------------
@@ -1644,7 +1658,7 @@ MODULE COULCC_M
       M = M+1                                                           
       EVEN = .NOT.EVEN                                                  
       GO TO 30                                                          
-  80  INUM = -M                                                         
+  80  IERROR = -M                                                         
 !-----------------------------------------------------------------------
       RETURN                                                            
 !-----------------------------------------------------------------------
