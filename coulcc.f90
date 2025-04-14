@@ -17,10 +17,244 @@
 !  OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 !  OTHER DEALINGS IN THE SOFTWARE.
 !-----------------------------------------------------------------------
+MODULE LOGAM_M
+!-----------------------------------------------------------------------
+  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128 &
+                                        &, stdin=>input_unit,stdout=>output_unit
+!-----------------------------------------------------------------------
+  IMPLICIT NONE
+!-----------------------------------------------------------------------
+  INTEGER(spi),PARAMETER, PRIVATE :: NB=15
+  REAL(dpf),DIMENSION(NB),PRIVATE :: B
+  REAL(dpf),              PRIVATE :: ACCUR
+  INTEGER(spi),           PRIVATE :: NX0,NT
+!-----------------------------------------------------------------------
+  CONTAINS
+!-----------------------------------------------------------------------
+    SUBROUTINE LOGAM_INIT(ACC)
+!-----------------------------------------------------------------------
+      REAL(dpf),INTENT(IN),OPTIONAL :: ACC
+!-----------------------------------------------------------------------
+      REAL(dpf),   PARAMETER :: ACC8=(2._dpf)*(10._dpf)**(-16_dpf)  !2D-16
+      REAL(dpf),   PARAMETER :: ACC16=(3._dpf)*(10._dpf)**(-33_dpf) !3D-33_dpf
+      REAL(dpf),   PARAMETER :: ONE=1._dpf
+      REAL(dpf),   PARAMETER :: TWO=2._dpf
+      INTEGER(spi) :: K
+      REAL(dpf) :: X0,F21,ERR
+      LOGICAL :: ACCUR_REACHED
+!-----------------------------------------------------------------------
+      REAL(dpf),DIMENSION(NB),PARAMETER :: BN= [             +1._dpf &
+                                               &,            -1._dpf &
+                                               &,            +1._dpf &
+                                               &,            -1._dpf &
+                                               &,            +5._dpf &
+                                               &,          -691._dpf &
+                                               &,          +  7._dpf &
+                                               &,         -3617._dpf &
+                                               &,         43867._dpf &
+                                               &,       -174611._dpf &
+                                               &,        854513._dpf &
+                                               &,    -236364091._dpf &
+                                               &,     + 8553103._dpf &
+                                               &,  -23749461029._dpf &
+                                               &, 8615841276005._dpf] 
+      REAL(dpf),DIMENSION(NB),PARAMETER :: BD= [              6._dpf &
+                                               &,            30._dpf &
+                                               &,            42._dpf &
+                                               &,            30._dpf &
+                                               &,            66._dpf &
+                                               &,          2730._dpf &
+                                               &,             6._dpf &
+                                               &,           510._dpf &
+                                               &,           798._dpf &
+                                               &,           330._dpf &
+                                               &,           138._dpf &
+                                               &,          2730._dpf &
+                                               &,             6._dpf &
+                                               &,           870._dpf &
+                                               &,         14322._dpf]
+!-----------------------------------------------------------------------
+      IF (PRESENT(ACC)) THEN 
+        ACCUR=ACC
+      ELSE
+        ACCUR=ACC16
+      END IF
+!-----------------------------------------------------------------------
+      NX0 = 6                                                           
+      X0  = NX0 + ONE                                                   
+!-----------------------------------------------------------------------
+      ACCUR_REACHED=.FALSE.
+!-----------------------------------------------------------------------
+      LOOP_120: DO K=1,NB                                                     
+        F21 = K*2 - ONE                                                  
+        B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
+        ERR = ABS(B(K)) * K*TWO / X0**F21                                
+        IF (ERR.LT.ACCUR) THEN
+          ACCUR_REACHED=.TRUE.
+          EXIT LOOP_120
+        END IF                                          
+      END DO LOOP_120                                         
+!-----------------------------------------------------------------------
+      IF (.NOT.ACCUR_REACHED) THEN
+        NX0 = INT((ERR/ACCUR)**(ONE/F21) * X0)                             
+        K = NB                                                           
+      END IF
+      NT = K
+!-----------------------------------------------------------------------
+    END SUBROUTINE LOGAM_INIT
+!-----------------------------------------------------------------------
+!   this routine computes the logarithm of the gamma function gamma(z)
+!   for any complex argument 'Z' to any accuracy preset by CALL LOGAM 
+!-----------------------------------------------------------------------
+    COMPLEX(dpf) FUNCTION CLOGAM(Z)                         
+!-----------------------------------------------------------------------
+      IMPLICIT NONE
+!-----------------------------------------------------------------------
+      COMPLEX(dpf),INTENT(IN) :: Z
+!-----------------------------------------------------------------------
+      REAL(dpf), PARAMETER :: FPLMIN=-140._dpf 
+      REAL(dpf), PARAMETER :: ZERO=0._dpf
+      REAL(dpf), PARAMETER :: HALF=0.5_dpf
+      REAL(dpf), PARAMETER :: QUART=0.25_dpf
+      REAL(dpf), PARAMETER :: ONE=1._dpf
+      REAL(dpf), PARAMETER :: TWO=2._dpf
+      REAL(dpf), PARAMETER :: FOUR=4._dpf
+      REAL(dpf), PARAMETER :: PI=FOUR*ATAN(ONE)
+      REAL(dpf), PARAMETER :: ALPI = LOG(PI)
+      REAL(dpf), PARAMETER :: HL2P = LOG(TWO*PI)*HALF
+      COMPLEX(dpf) :: V,H,R,SER
+      INTEGER(spi) :: N,J,K,MX,I
+      REAL(dpf) :: X,A,C,D,E,F,T
+!-----------------------------------------------------------------------
+ 1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
+!-----------------------------------------------------------------------
+      X=Z%RE                                                         
+      T=Z%IM                                                         
+      MX=INT(REAL(ACCUR*100._dpf-X,KIND=dpf),KIND=spi)                                     
+      IF (ABS(ABS(X)-MX)+ABS(T).LT.ACCUR*50._dpf) THEN
+        WRITE(STDOUT,1000) 'CLOGAM',X                                       
+        CLOGAM = ZERO                                                     
+      ELSE                  
+        F=ABS(T)                                                          
+        V=CMPLX(X,F,KIND=dpf)                                                     
+        IF (X.LT.ZERO) V=ONE-V                                           
+        H=ZERO                                                            
+        C=V%RE                                                         
+        N=NX0-INT(C,KIND=spi)                                                      
+        IF (N.GE.0_spi) THEN                                             
+          H=V                                                               
+          D=V%IM                                                         
+          A=ATAN2(D,C)                                                      
+          IF (N.NE.0) THEN                                             
+            DO I = 1,N                                                     
+              C=C+ONE                                                           
+              V=CMPLX(C,D,KIND=dpf)                                                     
+              H=H*V                                                             
+              A=A+ATAN2(D,C)
+            END DO
+          END IF                                                    
+          H=CMPLX(HALF*LOG(H%RE**2+H%IM**2),A,KIND=dpf)                       
+          V=V+ONE                                                           
+        END IF
+        R=ONE/V**2                                                        
+        SER = B(NT)                                                       
+        DO J=2,NT                                                      
+          K = NT+1 - J                                                    
+          SER = B(K) + R*SER
+        END DO                                                
+!-----------------------------------------------------------------------
+        CLOGAM = HL2P+(V-HALF)*LOG(V)-V + SER/V - H                       
+!-----------------------------------------------------------------------
+        IF (X.LT.ZERO) THEN                                          
+!-----------------------------------------------------------------------
+          A=INT(X,KIND=spi)-ONE                                                     
+          C=PI*(X-A)                                                        
+          D=PI*F                                                            
+          E=ZERO                                                        
+          F=-TWO*D                                                      
+          IF (F.GT.FPLMIN) E = EXP(F)                                      
+          F=SIN(C)                                                          
+          E= D + HALF*LOG(E*F**2+QUART*(ONE-E)**2)                          
+          F=ATAN2(COS(C)*TANH(D),F)-A*PI                                    
+          CLOGAM=ALPI-CMPLX(E,F,KIND=dpf)-CLOGAM
+        END IF                                  
+!-----------------------------------------------------------------------
+        IF (SIGN(ONE,T).LT.-HALF) CLOGAM=CONJG(CLOGAM)                 
+      END IF
+!-----------------------------------------------------------------------
+    END FUNCTION CLOGAM                                                 
+!-----------------------------------------------------------------------
+!   this routine computes the logarithmic derivative of the gamma     
+!   function  psi(Z) = digamma(Z) = d (ln gamma(Z))/dZ  for any       
+!   complex argument Z, to any accuracy preset by CALL LOGAM(ACC)     
+!-----------------------------------------------------------------------
+    COMPLEX(dpf) FUNCTION CDIGAM(Z)                                     
+!-----------------------------------------------------------------------
+      IMPLICIT NONE
+!-----------------------------------------------------------------------
+      COMPLEX(dpf),INTENT(IN) :: Z
+!-----------------------------------------------------------------------
+      REAL(dpf), PARAMETER :: ZERO=0._dpf
+      REAL(dpf), PARAMETER :: HALF=0.5_dpf
+      REAL(dpf), PARAMETER :: QUART=0.25_dpf
+      REAL(dpf), PARAMETER :: ONE=1._dpf
+      REAL(dpf), PARAMETER :: TWO=2._dpf
+      REAL(dpf), PARAMETER :: FOUR=4._dpf
+      REAL(dpf), PARAMETER :: PI=FOUR*ATAN(ONE)
+      COMPLEX(dpf) :: U,V,H,R,SER
+      INTEGER(spi) :: N,J,K,I
+      REAL(dpf) :: X,A
+!-----------------------------------------------------------------------
+ 1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
+!-----------------------------------------------------------------------
+      U=Z                                                               
+      X=U%RE                                                         
+      A=ABS(X)                                                          
+      IF (ABS(U%IM) + ABS(A+INT(X,KIND=spi)).LT.ACCUR) THEN              
+!-----------------------------------------------------------------------
+        WRITE(STDOUT,1000) 'CDIGAM',X                                     
+        CDIGAM=ZERO
+!-----------------------------------------------------------------------
+      ELSE
+        IF (X.LT.ZERO) U=-U                                              
+        V=U                                                               
+        H=ZERO                                                            
+        N=NX0-INT(A,KIND=spi)                                             
+        IF (N.GE.0_spi) THEN                                             
+          H=ONE/V                                                           
+          IF (N.NE.0) THEN                                             
+            DO I = 1,N                                                     
+              V=V+ONE                                                           
+              H=H+ONE/V                                                         
+            END DO
+          END IF                                                        
+          V=V+ONE                                                           
+        END IF
+        R=ONE/V**2                                                        
+        SER = B(NT) * (2*NT-1)                                            
+        DO J=2,NT                                                     
+          K = NT+1 - J                                                    
+          SER = B(K)*(2*K-1) + R*SER
+        END DO                                        
+!-----------------------------------------------------------------------
+        CDIGAM = LOG(V) - HALF/V - R*SER - H                              
+!-----------------------------------------------------------------------
+        IF (X.LT.ZERO) THEN                                            
+          H=PI*U                                                            
+          CDIGAM = CDIGAM + ONE/U + PI*COS(H)/SIN(H) 
+        END IF                     
+!-----------------------------------------------------------------------
+      END IF                                                            
+!-----------------------------------------------------------------------
+    END FUNCTION CDIGAM
+!-----------------------------------------------------------------------
+END MODULE LOGAM_M
+!-----------------------------------------------------------------------
 MODULE COULCC_M
 !-----------------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128 &
                                         &, stdin=>input_unit,stdout=>output_unit
+  USE LOGAM_M
 !-----------------------------------------------------------------------
   CONTAINS
 !-----------------------------------------------------------------------
@@ -178,7 +412,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 !     initialise the log-gamma function
 !-----------------------------------------------------------------------
-!     DUMMY = LOGAM(ACC8)                                              
+      CALL LOGAM_INIT(ACC8)                                             
       ACCH  = SQRT(ACCUR)                                               
       ACCB  = SQRT(ACCH)                                                
       RERR = ACCT                                                       
@@ -1419,269 +1653,6 @@ MODULE COULCC_M
       STOP ("RCF HAS FAILED")                                           
 !-----------------------------------------------------------------------
     END SUBROUTINE RCF                                                  
-!-----------------------------------------------------------------------
-!   this routine computes the logarithm of the gamma function gamma(z)
-!   for any complex argument 'Z' to any accuracy preset by CALL LOGAM 
-!-----------------------------------------------------------------------
-    COMPLEX(dpf) FUNCTION CLOGAM(Z)                         
-!-----------------------------------------------------------------------
-      IMPLICIT NONE
-!-----------------------------------------------------------------------
-      COMPLEX(dpf),INTENT(IN) :: Z
-!-----------------------------------------------------------------------
-      REAL(dpf),   PARAMETER :: ACC8=(2._dpf)*(10._dpf)**(-16_dpf)  !2D-16
-      REAL(dpf),   PARAMETER :: ACC16=(3._dpf)*(10._dpf)**(-33_dpf) !3D-33_dpf
-      REAL(dpf),   PARAMETER :: FPLMIN=-140._dpf 
-      REAL(dpf),   PARAMETER :: ZERO=0._dpf
-      REAL(dpf),   PARAMETER :: HALF=0.5_dpf
-      REAL(dpf),   PARAMETER :: QUART=0.25_dpf
-      REAL(dpf),   PARAMETER :: ONE=1._dpf
-      REAL(dpf),   PARAMETER :: TWO=2._dpf
-      REAL(dpf),   PARAMETER :: FOUR=4._dpf
-      REAL(dpf),   PARAMETER :: PI=FOUR*ATAN(ONE)
-      REAL(dpf),   PARAMETER :: ALPI = LOG(PI)
-      REAL(dpf),   PARAMETER :: HL2P = LOG(TWO*PI)*HALF
-      INTEGER(spi),PARAMETER :: NB=15
-      REAL(dpf),DIMENSION(NB) :: B
-      COMPLEX(dpf) :: V,H,R,SER
-      INTEGER(spi) :: NX0,N,J,K,NT,I,MX
-      REAL(dpf) :: ACCUR,ACC,X0,X,A,C,D,E,F,T,F21,ERR
-      LOGICAL :: ACCUR_REACHED
-!-----------------------------------------------------------------------
-      REAL(dpf),DIMENSION(NB),PARAMETER :: BN= [             +1._dpf &
-                                               &,            -1._dpf &
-                                               &,            +1._dpf &
-                                               &,            -1._dpf &
-                                               &,            +5._dpf &
-                                               &,          -691._dpf &
-                                               &,          +  7._dpf &
-                                               &,         -3617._dpf &
-                                               &,         43867._dpf &
-                                               &,       -174611._dpf &
-                                               &,        854513._dpf &
-                                               &,    -236364091._dpf &
-                                               &,     + 8553103._dpf &
-                                               &,  -23749461029._dpf &
-                                               &, 8615841276005._dpf] 
-      REAL(dpf),DIMENSION(NB),PARAMETER :: BD= [              6._dpf &
-                                               &,            30._dpf &
-                                               &,            42._dpf &
-                                               &,            30._dpf &
-                                               &,            66._dpf &
-                                               &,          2730._dpf &
-                                               &,             6._dpf &
-                                               &,           510._dpf &
-                                               &,           798._dpf &
-                                               &,           330._dpf &
-                                               &,           138._dpf &
-                                               &,          2730._dpf &
-                                               &,             6._dpf &
-                                               &,           870._dpf &
-                                               &,         14322._dpf]
-!-----------------------------------------------------------------------
- 1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
-!-----------------------------------------------------------------------
-! INLINE INIT FOR NOW (logam entry)
-!-----------------------------------------------------------------------
-      ACC=ACC8
-!-----------------------------------------------------------------------
-      NX0 = 6                                                           
-      X0  = NX0 + ONE                                                   
-      ACCUR = ACC                                                       
-      ACCUR_REACHED=.FALSE.
-      LOOP_120: DO K=1,NB                                                     
-        F21 = K*2 - ONE                                                  
-        B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
-        ERR = ABS(B(K)) * K*TWO / X0**F21                                
-        IF (ERR.LT.ACC) THEN
-          ACCUR_REACHED=.TRUE.
-          EXIT LOOP_120
-        END IF                                          
-      END DO LOOP_120                                         
-      IF (.NOT.ACCUR_REACHED) THEN
-        NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
-        K = NB                                                           
-      END IF
-      NT = K                                                            
-!-----------------------------------------------------------------------
-      X=Z%RE                                                         
-      T=Z%IM                                                         
-      MX=INT(REAL(ACCUR*100._dpf-X,KIND=dpf),KIND=spi)                                     
-      IF (ABS(ABS(X)-MX)+ABS(T).LT.ACCUR*50._dpf) THEN
-        WRITE(STDOUT,1000) 'CLOGAM',X                                       
-        CLOGAM = ZERO                                                     
-      ELSE                  
-        F=ABS(T)                                                          
-        V=CMPLX(X,F,KIND=dpf)                                                     
-        IF (X.LT.ZERO) V=ONE-V                                           
-        H=ZERO                                                            
-        C=V%RE                                                         
-        N=NX0-INT(C,KIND=spi)                                                      
-        IF (N.GE.0_spi) THEN                                             
-          H=V                                                               
-          D=V%IM                                                         
-          A=ATAN2(D,C)                                                      
-          IF (N.NE.0) THEN                                             
-            DO I = 1,N                                                     
-              C=C+ONE                                                           
-              V=CMPLX(C,D,KIND=dpf)                                                     
-              H=H*V                                                             
-              A=A+ATAN2(D,C)
-            END DO
-          END IF                                                    
-          H=CMPLX(HALF*LOG(H%RE**2+H%IM**2),A,KIND=dpf)                       
-          V=V+ONE                                                           
-        END IF
-        R=ONE/V**2                                                        
-        SER = B(NT)                                                       
-        DO J=2,NT                                                      
-          K = NT+1 - J                                                    
-          SER = B(K) + R*SER
-        END DO                                                
-!-----------------------------------------------------------------------
-        CLOGAM = HL2P+(V-HALF)*LOG(V)-V + SER/V - H                       
-!-----------------------------------------------------------------------
-        IF (X.LT.ZERO) THEN                                          
-!-----------------------------------------------------------------------
-          A=INT(X,KIND=spi)-ONE                                                     
-          C=PI*(X-A)                                                        
-          D=PI*F                                                            
-          E=ZERO                                                        
-          F=-TWO*D                                                      
-          IF (F.GT.FPLMIN) E = EXP(F)                                      
-          F=SIN(C)                                                          
-          E= D + HALF*LOG(E*F**2+QUART*(ONE-E)**2)                          
-          F=ATAN2(COS(C)*TANH(D),F)-A*PI                                    
-          CLOGAM=ALPI-CMPLX(E,F,KIND=dpf)-CLOGAM
-        END IF                                  
-!-----------------------------------------------------------------------
-        IF (SIGN(ONE,T).LT.-HALF) CLOGAM=CONJG(CLOGAM)                 
-      END IF
-!-----------------------------------------------------------------------
-    END FUNCTION CLOGAM                                                 
-!-----------------------------------------------------------------------
-!   this routine computes the logarithmic derivative of the gamma     
-!   function  psi(Z) = digamma(Z) = d (ln gamma(Z))/dZ  for any       
-!   complex argument Z, to any accuracy preset by CALL LOGAM(ACC)     
-!-----------------------------------------------------------------------
-    COMPLEX(dpf) FUNCTION CDIGAM(Z)                                     
-!-----------------------------------------------------------------------
-      IMPLICIT NONE
-!-----------------------------------------------------------------------
-      COMPLEX(dpf),INTENT(IN) :: Z
-!-----------------------------------------------------------------------
-      REAL(dpf),   PARAMETER :: ACC8=(2._dpf)*(10._dpf)**(-16_dpf)  !2D-16
-      REAL(dpf),   PARAMETER :: ACC16=(3._dpf)*(10._dpf)**(-33_dpf) !3D-33_dpf
-      REAL(dpf),   PARAMETER :: ZERO=0._dpf
-      REAL(dpf),   PARAMETER :: HALF=0.5_dpf
-      REAL(dpf),   PARAMETER :: QUART=0.25_dpf
-      REAL(dpf),   PARAMETER :: ONE=1._dpf
-      REAL(dpf),   PARAMETER :: TWO=2._dpf
-      REAL(dpf),   PARAMETER :: FOUR=4._dpf
-      REAL(dpf),   PARAMETER :: PI=FOUR*ATAN(ONE)
-      INTEGER(spi),PARAMETER :: NB=15
-      REAL(dpf),DIMENSION(NB) :: B
-      COMPLEX(dpf) :: U,V,H,R,SER
-      INTEGER(spi) :: NX0,N,J,K,NT,I
-      REAL(dpf) :: ACCUR,ACC,X0,X,A,F21,ERR
-      LOGICAL :: ACCUR_REACHED
-!-----------------------------------------------------------------------                           
-      REAL(dpf),DIMENSION(NB),PARAMETER :: BN= [             +1._dpf &
-                                               &,            -1._dpf &
-                                               &,            +1._dpf &
-                                               &,            -1._dpf &
-                                               &,            +5._dpf &
-                                               &,          -691._dpf &
-                                               &,          +  7._dpf &
-                                               &,         -3617._dpf &
-                                               &,         43867._dpf &
-                                               &,       -174611._dpf &
-                                               &,        854513._dpf &
-                                               &,    -236364091._dpf &
-                                               &,     + 8553103._dpf &
-                                               &,  -23749461029._dpf &
-                                               &, 8615841276005._dpf] 
-      REAL(dpf),DIMENSION(NB),PARAMETER :: BD= [              6._dpf &
-                                               &,            30._dpf &
-                                               &,            42._dpf &
-                                               &,            30._dpf &
-                                               &,            66._dpf &
-                                               &,          2730._dpf &
-                                               &,             6._dpf &
-                                               &,           510._dpf &
-                                               &,           798._dpf &
-                                               &,           330._dpf &
-                                               &,           138._dpf &
-                                               &,          2730._dpf &
-                                               &,             6._dpf &
-                                               &,           870._dpf &
-                                               &,         14322._dpf]
-!-----------------------------------------------------------------------
- 1000 FORMAT(1X,A6,' ... ARGUMENT IS NON POSITIVE INTEGER = ',F20.2)    
-!-----------------------------------------------------------------------
-! INLINE INIT FOR NOW (logam entry)
-!-----------------------------------------------------------------------
-      ACC=ACC8
-!-----------------------------------------------------------------------
-      NX0 = 6                                                           
-      X0  = NX0 + ONE                                                   
-      ACCUR = ACC                                                       
-      ACCUR_REACHED=.FALSE.
-      LOOP_120: DO K=1,NB                                                     
-        F21 = K*2 - ONE                                                  
-        B(K) = BN(K) / (BD(K) * K*TWO * F21)                             
-        ERR = ABS(B(K)) * K*TWO / X0**F21                                
-        IF (ERR.LT.ACC) THEN
-          ACCUR_REACHED=.TRUE.
-          EXIT LOOP_120
-        END IF                                          
-      END DO LOOP_120                                         
-      IF (.NOT.ACCUR_REACHED) THEN
-        NX0 = INT((ERR/ACC)**(ONE/F21) * X0)                             
-        K = NB                                                           
-      END IF
-      NT = K                                                            
-!-----------------------------------------------------------------------
-      U=Z                                                               
-      X=U%RE                                                         
-      A=ABS(X)                                                          
-      IF (ABS(U%IM) + ABS(A+INT(X,KIND=spi)).LT.ACCUR) THEN              
-!-----------------------------------------------------------------------
-        WRITE(STDOUT,1000) 'CDIGAM',X                                     
-        CDIGAM=ZERO
-!-----------------------------------------------------------------------
-      ELSE
-        IF (X.LT.ZERO) U=-U                                              
-        V=U                                                               
-        H=ZERO                                                            
-        N=NX0-INT(A,KIND=spi)                                             
-        IF (N.GE.0_spi) THEN                                             
-          H=ONE/V                                                           
-          IF (N.NE.0) THEN                                             
-            DO I = 1,N                                                     
-              V=V+ONE                                                           
-              H=H+ONE/V                                                         
-            END DO
-          END IF                                                        
-          V=V+ONE                                                           
-        END IF
-        R=ONE/V**2                                                        
-        SER = B(NT) * (2*NT-1)                                            
-        DO J=2,NT                                                     
-          K = NT+1 - J                                                    
-          SER = B(K)*(2*K-1) + R*SER
-        END DO                                        
-!-----------------------------------------------------------------------
-        CDIGAM = LOG(V) - HALF/V - R*SER - H                              
-!-----------------------------------------------------------------------
-        IF (X.LT.ZERO) THEN                                            
-          H=PI*U                                                            
-          CDIGAM = CDIGAM + ONE/U + PI*COS(H)/SIN(H) 
-        END IF                     
-!-----------------------------------------------------------------------
-      END IF                                                            
-!-----------------------------------------------------------------------
-    END FUNCTION CDIGAM
 !-----------------------------------------------------------------------
 !   TIDY A COMPLEX NUMBER                                             
 !-----------------------------------------------------------------------
