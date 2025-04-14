@@ -108,8 +108,6 @@ MODULE LOGAM_M
 !-----------------------------------------------------------------------
     COMPLEX(dpf) FUNCTION CLOGAM(Z)                         
 !-----------------------------------------------------------------------
-      IMPLICIT NONE
-!-----------------------------------------------------------------------
       COMPLEX(dpf),INTENT(IN) :: Z
 !-----------------------------------------------------------------------
       REAL(dpf), PARAMETER :: FPLMIN=-140._dpf 
@@ -190,8 +188,6 @@ MODULE LOGAM_M
 !-----------------------------------------------------------------------
     COMPLEX(dpf) FUNCTION CDIGAM(Z)                                     
 !-----------------------------------------------------------------------
-      IMPLICIT NONE
-!-----------------------------------------------------------------------
       COMPLEX(dpf),INTENT(IN) :: Z
 !-----------------------------------------------------------------------
       REAL(dpf), PARAMETER :: ZERO=0._dpf
@@ -250,11 +246,140 @@ MODULE LOGAM_M
 !-----------------------------------------------------------------------
 END MODULE LOGAM_M
 !-----------------------------------------------------------------------
+MODULE RCF_M
+!-----------------------------------------------------------------------
+  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128 &
+                                        &, stdout=>output_unit
+!-----------------------------------------------------------------------
+  IMPLICIT NONE 
+!-----------------------------------------------------------------------
+  LOGICAL     , PRIVATE :: EVEN            
+  COMPLEX(dpf), PRIVATE :: X1                                       
+  INTEGER(spi), PRIVATE :: M2M1,MP12,M
+!-----------------------------------------------------------------------
+  CONTAINS
+!-----------------------------------------------------------------------
+!  RCF converts polynomial A to the corresponding continued             
+!         fraction, in 'normal'  form with coefficients B               
+!         by the 'P algorithmn' of Patry & Gupta                        
+!-----------------------------------------------------------------------
+!   A(z) = A1/z + A2/z**3 + A3/z**5 + ... + An/z**(2n-1)                
+!-----------------------------------------------------------------------
+!   B(z) = B1/z+ B2/z+ B3/z+ .../(z+ Bn/z)                              
+!-----------------------------------------------------------------------
+!  data:                                                                
+!   A     vector A(k), k=1,INUM         input                           
+!   B     vector B(k), k=IBEG,INUM      output                          
+!   IBEG  order of first coef. calc.    input                           
+!   INUM  order of A, even or odd       input                           
+!   XX    auxiliary vector of length .ge. length of vector B            
+!         caller provides space for A,B,XX                              
+!     Note that neither of the first two terms A(1) A(2) should be zero 
+!             & the user can start the calculation with any value of    
+!                IBEG provided the c.f. coefs have been already         
+!                calculated up to INUM = IBEG-1                         
+!             & the method breaks down as soon as the absolute value    
+!                of a c.f. coef. is less than EPS.    At the time of the
+!                break up XX(1) has been replaced by 1E-50, and INUM has
+!                been replaced by minus times the number of this coef.  
+!   algorithm: J.Patry & S.Gupta,                                       
+!              EIR-bericht nr. 247,                                     
+!              Eidg. Institut fur Reaktorforschung Wuerenlingen         
+!              Wueringlingen, Schweiz.                                  
+!              November 1973                                            
+!   see also:  Haenggi,Roesel & Trautmann,                              
+!              Jnl. Computational Physics, vol 137, pp242-258 (1980)    
+!   note:      restart procedure modified by I.J.Thompson               
+!-----------------------------------------------------------------------
+    SUBROUTINE RCF(A,B,IBEG,INUM,XX,EPS,IERROR)                         
+!-----------------------------------------------------------------------
+      INTEGER(spi),                 INTENT(IN)    :: IBEG                
+      INTEGER(spi),                 INTENT(IN)    :: INUM                
+      COMPLEX(dpf),DIMENSION(100),  INTENT(IN)    :: A           
+      COMPLEX(dpf),DIMENSION(100),  INTENT(INOUT) :: B           
+      COMPLEX(dpf),DIMENSION(2,100),INTENT(INOUT) :: XX           
+      REAL(dpf),                    INTENT(IN)    :: EPS                
+      INTEGER(spi),                 INTENT(OUT)   :: IERROR             
+!-----------------------------------------------------------------------
+      INTEGER(spi) :: K,IBN
+      COMPLEX(dpf) :: X0
+!-----------------------------------------------------------------------
+      IERROR=0_spi
+!-----------------------------------------------------------------------
+!     ibn = ibeg + inum - 1                                             
+!-----------------------------------------------------------------------
+      IBN = INUM                                                        
+!-----------------------------------------------------------------------
+!     B(IBN) is last value set on this call                             
+!-----------------------------------------------------------------------
+      IF (IBEG.GT.4 .AND. M .NE. IBEG-1) GO TO 90                        
+!-----------------------------------------------------------------------
+!     B(M) is last value set in previous call                           
+!-----------------------------------------------------------------------
+      IF (IBEG.GT.4) GO TO 50                                            
+      IF (IBEG.EQ.4) GO TO 20                                            
+      B(1) = A(1)                                                       
+      IF (IBN.GE.2) B(2) = - A(2)/A(1)                                   
+      IF (IBN.LT.3) GO TO 10                                             
+      X0 = A(3) / A(2)                                                  
+      XX(2,1) = B(2)                                                    
+      XX(1,1) = - X0                                                    
+      XX(1,2) = 0.                                                      
+      B(3) = -X0 - B(2)                                                 
+      X0 = -B(3) * A(2)                                                 
+      M = 3                                                             
+      MP12 = 2                                                          
+      EVEN = .TRUE.                                                     
+      IF (IBN.GT.3) GO TO 20                                             
+!-----------------------------------------------------------------------
+  10  RETURN                                                            
+!-----------------------------------------------------------------------
+  20  IF (ABS(B(3)) .LT. EPS*ABS(X0)) GO TO 80                            
+      M = 4                                                             
+  30  X1 = A(M)                                                         
+      M2M1 = MP12                                                       
+      MP12 = M2M1 + 1                                                   
+      IF (EVEN) MP12 = M2M1                                              
+      DO 40 K=2,MP12                                                    
+  40  X1 = X1 + A(M-K+1) * XX(1,K-1)                                    
+      B(M) = - X1/X0                                                    
+!-----------------------------------------------------------------------
+      IF (M.GE.IBN) RETURN                                               
+!-----------------------------------------------------------------------
+  50  IF (ABS(B(M)).LT.EPS*ABS(X0)) GO TO 80                             
+      K = M2M1                                                          
+  60  XX(2,K) = XX(1,K) + B(M) * XX(2,K-1)                              
+      K = K-1                                                           
+      IF (K.GT.1) GO TO 60                                               
+      XX(2,1) = XX(1,1) + B(M)                                          
+      DO 70 K=1,M2M1                                                    
+        X0 = XX(2,K)                                                      
+        XX(2,K) = XX(1,K)                                                 
+  70  XX(1,K) = X0                                                      
+      X0 = X1                                                           
+      XX(1,M2M1+1) = 0.                                                 
+      M = M+1                                                           
+      EVEN = .NOT.EVEN                                                  
+      GO TO 30                                                          
+  80  IERROR = -M                                                         
+!-----------------------------------------------------------------------
+      RETURN                                                            
+!-----------------------------------------------------------------------
+ 1000 FORMAT('0RCF: LAST CALL SET M =',I4,', BUT RESTART REQUIRES',I4)  
+   90 WRITE(STDOUT,1000) M,IBEG-1                                       
+      STOP ("RCF HAS FAILED")                                           
+!-----------------------------------------------------------------------
+    END SUBROUTINE RCF                                                  
+!-----------------------------------------------------------------------
+END MODULE RCF_M
+!-----------------------------------------------------------------------
 MODULE COULCC_M
 !-----------------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128 &
                                         &, stdin=>input_unit,stdout=>output_unit
+!-----------------------------------------------------------------------
   USE LOGAM_M
+  USE RCF_M
 !-----------------------------------------------------------------------
   CONTAINS
 !-----------------------------------------------------------------------
@@ -1547,126 +1672,6 @@ MODULE COULCC_M
       NUSED = 0                                                         
 !-----------------------------------------------------------------------
     END FUNCTION CF1A                                                 
-!-----------------------------------------------------------------------
-!  RCF converts polynomial A to the corresponding continued             
-!         fraction, in 'normal'  form with coefficients B               
-!         by the 'P algorithmn' of Patry & Gupta                        
-!-----------------------------------------------------------------------
-!   A(z) = A1/z + A2/z**3 + A3/z**5 + ... + An/z**(2n-1)                
-!-----------------------------------------------------------------------
-!   B(z) = B1/z+ B2/z+ B3/z+ .../(z+ Bn/z)                              
-!-----------------------------------------------------------------------
-!  data:                                                                
-!   A     vector A(k), k=1,INUM         input                           
-!   B     vector B(k), k=IBEG,INUM      output                          
-!   IBEG  order of first coef. calc.    input                           
-!   INUM  order of A, even or odd       input                           
-!   XX    auxiliary vector of length .ge. length of vector B            
-!         caller provides space for A,B,XX                              
-!     Note that neither of the first two terms A(1) A(2) should be zero 
-!             & the user can start the calculation with any value of    
-!                IBEG provided the c.f. coefs have been already         
-!                calculated up to INUM = IBEG-1                         
-!             & the method breaks down as soon as the absolute value    
-!                of a c.f. coef. is less than EPS.    At the time of the
-!                break up XX(1) has been replaced by 1E-50, and INUM has
-!                been replaced by minus times the number of this coef.  
-!   algorithm: J.Patry & S.Gupta,                                       
-!              EIR-bericht nr. 247,                                     
-!              Eidg. Institut fur Reaktorforschung Wuerenlingen         
-!              Wueringlingen, Schweiz.                                  
-!              November 1973                                            
-!   see also:  Haenggi,Roesel & Trautmann,                              
-!              Jnl. Computational Physics, vol 137, pp242-258 (1980)    
-!   note:      restart procedure modified by I.J.Thompson               
-!-----------------------------------------------------------------------
-    SUBROUTINE RCF(A,B,IBEG,INUM,XX,EPS,IERROR)                         
-!-----------------------------------------------------------------------
-      IMPLICIT NONE
-!-----------------------------------------------------------------------
-      INTEGER(spi),                 INTENT(IN)    :: IBEG                
-      INTEGER(spi),                 INTENT(IN)    :: INUM                
-      COMPLEX(dpf),DIMENSION(100),  INTENT(IN)    :: A           
-      COMPLEX(dpf),DIMENSION(100),  INTENT(INOUT) :: B           
-      COMPLEX(dpf),DIMENSION(2,100),INTENT(INOUT) :: XX           
-      REAL(dpf),                    INTENT(IN)    :: EPS                
-      INTEGER(spi),                 INTENT(OUT)   :: IERROR             
-!-----------------------------------------------------------------------
-      INTEGER(spi) :: K,IBN
-      COMPLEX(dpf) :: X0
-!-----------------------------------------------------------------------
-      LOGICAL :: EVEN            
-      COMPLEX(dpf) :: X1                                       
-      INTEGER(spi) :: M2M1,MP12,M
-!-----------------------------------------------------------------------
-      COMMON /RCFCM2/ X1,M2M1,MP12,EVEN,M                               
-!-----------------------------------------------------------------------
-      IERROR=0_spi
-!-----------------------------------------------------------------------
-!     ibn = ibeg + inum - 1                                             
-!-----------------------------------------------------------------------
-      IBN = INUM                                                        
-!-----------------------------------------------------------------------
-!     B(IBN) is last value set on this call                             
-!-----------------------------------------------------------------------
-      IF (IBEG.GT.4 .AND. M .NE. IBEG-1) GO TO 90                        
-!-----------------------------------------------------------------------
-!     B(M) is last value set in previous call                           
-!-----------------------------------------------------------------------
-      IF (IBEG.GT.4) GO TO 50                                            
-      IF (IBEG.EQ.4) GO TO 20                                            
-      B(1) = A(1)                                                       
-      IF (IBN.GE.2) B(2) = - A(2)/A(1)                                   
-      IF (IBN.LT.3) GO TO 10                                             
-      X0 = A(3) / A(2)                                                  
-      XX(2,1) = B(2)                                                    
-      XX(1,1) = - X0                                                    
-      XX(1,2) = 0.                                                      
-      B(3) = -X0 - B(2)                                                 
-      X0 = -B(3) * A(2)                                                 
-      M = 3                                                             
-      MP12 = 2                                                          
-      EVEN = .TRUE.                                                     
-      IF (IBN.GT.3) GO TO 20                                             
-!-----------------------------------------------------------------------
-  10  RETURN                                                            
-!-----------------------------------------------------------------------
-  20  IF (ABS(B(3)) .LT. EPS*ABS(X0)) GO TO 80                            
-      M = 4                                                             
-  30  X1 = A(M)                                                         
-      M2M1 = MP12                                                       
-      MP12 = M2M1 + 1                                                   
-      IF (EVEN) MP12 = M2M1                                              
-      DO 40 K=2,MP12                                                    
-  40  X1 = X1 + A(M-K+1) * XX(1,K-1)                                    
-      B(M) = - X1/X0                                                    
-!-----------------------------------------------------------------------
-      IF (M.GE.IBN) RETURN                                               
-!-----------------------------------------------------------------------
-  50  IF (ABS(B(M)).LT.EPS*ABS(X0)) GO TO 80                             
-      K = M2M1                                                          
-  60  XX(2,K) = XX(1,K) + B(M) * XX(2,K-1)                              
-      K = K-1                                                           
-      IF (K.GT.1) GO TO 60                                               
-      XX(2,1) = XX(1,1) + B(M)                                          
-      DO 70 K=1,M2M1                                                    
-        X0 = XX(2,K)                                                      
-        XX(2,K) = XX(1,K)                                                 
-  70  XX(1,K) = X0                                                      
-      X0 = X1                                                           
-      XX(1,M2M1+1) = 0.                                                 
-      M = M+1                                                           
-      EVEN = .NOT.EVEN                                                  
-      GO TO 30                                                          
-  80  IERROR = -M                                                         
-!-----------------------------------------------------------------------
-      RETURN                                                            
-!-----------------------------------------------------------------------
- 1000 FORMAT('0RCF: LAST CALL SET M =',I4,', BUT RESTART REQUIRES',I4)  
-   90 WRITE(STDOUT,1000) M,IBEG-1                                       
-      STOP ("RCF HAS FAILED")                                           
-!-----------------------------------------------------------------------
-    END SUBROUTINE RCF                                                  
 !-----------------------------------------------------------------------
 !   TIDY A COMPLEX NUMBER                                             
 !-----------------------------------------------------------------------
