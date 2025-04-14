@@ -290,6 +290,7 @@ MODULE RCF_M
 !   see also:  Haenggi,Roesel & Trautmann,                              
 !              Jnl. Computational Physics, vol 137, pp242-258 (1980)    
 !   note:      restart procedure modified by I.J.Thompson               
+!   note:      ierror added by A.R. Flores                              
 !-----------------------------------------------------------------------
     SUBROUTINE RCF(A,B,IBEG,INUM,XX,EPS,IERROR)                         
 !-----------------------------------------------------------------------
@@ -301,73 +302,98 @@ MODULE RCF_M
       REAL(dpf),                    INTENT(IN)    :: EPS                
       INTEGER(spi),                 INTENT(OUT)   :: IERROR             
 !-----------------------------------------------------------------------
-      INTEGER(spi) :: K,IBN
+      INTEGER(spi) :: K,IBN,II
       COMPLEX(dpf) :: X0
+!-----------------------------------------------------------------------
+ 1000 FORMAT('0RCF: LAST CALL SET M =',I4,', BUT RESTART REQUIRES',I4)  
 !-----------------------------------------------------------------------
       IERROR=0_spi
 !-----------------------------------------------------------------------
-!     ibn = ibeg + inum - 1                                             
+      IF (IBEG.GT.4 .AND. M .NE. IBEG-1) THEN
+        WRITE(STDOUT,1000) M,IBEG-1
+        STOP ("RCF HAS FAILED")
+      END IF
+!-----------------------------------------------------------------------
+!     B(IBN) is last value set on this call                             
+!     B(M) is last value set in previous call                           
 !-----------------------------------------------------------------------
       IBN = INUM                                                        
 !-----------------------------------------------------------------------
-!     B(IBN) is last value set on this call                             
+      IF (IBEG.GT.4) THEN 
 !-----------------------------------------------------------------------
-      IF (IBEG.GT.4 .AND. M .NE. IBEG-1) GO TO 90                        
+        DO K=M2M1,2,-1                                                          
+          XX(2,K) = XX(1,K) + B(M) * XX(2,K-1)                              
+        END DO                                                           
+        XX(2,1) = XX(1,1) + B(M)                                          
+        DO K=1,M2M1                                                    
+          X0 = XX(2,K)                                                      
+          XX(2,K) = XX(1,K)                                                 
+          XX(1,K) = X0
+        END DO                                                      
+        X0 = X1                                                           
+        XX(1,M2M1+1) = 0.                                                 
+        M = M+1                                                           
+        EVEN = .NOT.EVEN                                  
 !-----------------------------------------------------------------------
-!     B(M) is last value set in previous call                           
+      ELSE !IBEG.LE.4                                       
 !-----------------------------------------------------------------------
-      IF (IBEG.GT.4) GO TO 50                                            
-      IF (IBEG.EQ.4) GO TO 20                                            
-      B(1) = A(1)                                                       
-      IF (IBN.GE.2) B(2) = - A(2)/A(1)                                   
-      IF (IBN.LT.3) GO TO 10                                             
-      X0 = A(3) / A(2)                                                  
-      XX(2,1) = B(2)                                                    
-      XX(1,1) = - X0                                                    
-      XX(1,2) = 0.                                                      
-      B(3) = -X0 - B(2)                                                 
-      X0 = -B(3) * A(2)                                                 
-      M = 3                                                             
-      MP12 = 2                                                          
-      EVEN = .TRUE.                                                     
-      IF (IBN.GT.3) GO TO 20                                             
+        IF (IBEG.LT.4) THEN                                            
+          B(1) = A(1)                                                       
+          IF (IBN.GE.2) B(2) = - A(2)/A(1)                                   
+          IF (IBN.LT.3) RETURN                                             
+          X0 = A(3) / A(2)                                                  
+          XX(2,1) = B(2)                                                    
+          XX(1,1) = - X0                                                    
+          XX(1,2) = 0.                                                      
+          B(3) = -X0 - B(2)                                                 
+          X0 = -B(3) * A(2)                                                 
+          M = 3                                                             
+          MP12 = 2                                                          
+          EVEN = .TRUE.                                                     
+          IF (IBN.LE.3) RETURN
+        END IF                                             
 !-----------------------------------------------------------------------
-  10  RETURN                                                            
+        IF (ABS(B(3)) .LT. EPS*ABS(X0)) THEN
+          IERROR = -M
+          RETURN
+        END IF                            
 !-----------------------------------------------------------------------
-  20  IF (ABS(B(3)) .LT. EPS*ABS(X0)) GO TO 80                            
-      M = 4                                                             
-  30  X1 = A(M)                                                         
-      M2M1 = MP12                                                       
-      MP12 = M2M1 + 1                                                   
-      IF (EVEN) MP12 = M2M1                                              
-      DO 40 K=2,MP12                                                    
-  40  X1 = X1 + A(M-K+1) * XX(1,K-1)                                    
-      B(M) = - X1/X0                                                    
+        M = 4
 !-----------------------------------------------------------------------
-      IF (M.GE.IBN) RETURN                                               
+      END IF                                                             
 !-----------------------------------------------------------------------
-  50  IF (ABS(B(M)).LT.EPS*ABS(X0)) GO TO 80                             
-      K = M2M1                                                          
-  60  XX(2,K) = XX(1,K) + B(M) * XX(2,K-1)                              
-      K = K-1                                                           
-      IF (K.GT.1) GO TO 60                                               
-      XX(2,1) = XX(1,1) + B(M)                                          
-      DO 70 K=1,M2M1                                                    
-        X0 = XX(2,K)                                                      
-        XX(2,K) = XX(1,K)                                                 
-  70  XX(1,K) = X0                                                      
-      X0 = X1                                                           
-      XX(1,M2M1+1) = 0.                                                 
-      M = M+1                                                           
-      EVEN = .NOT.EVEN                                                  
-      GO TO 30                                                          
-  80  IERROR = -M                                                         
+      LOOP_RCF: DO II=1,IBN-M+1
+        X1 = A(M)                                                         
+        M2M1 = MP12                                                       
+        MP12 = M2M1 + 1                                                   
+        IF (EVEN) MP12 = M2M1                                              
+        DO K=2,MP12                                                    
+          X1 = X1 + A(M-K+1) * XX(1,K-1)                   
+        END DO                 
+        B(M) = - X1/X0                                                    
 !-----------------------------------------------------------------------
-      RETURN                                                            
+        IF (M.GE.IBN) EXIT LOOP_RCF                                               
 !-----------------------------------------------------------------------
- 1000 FORMAT('0RCF: LAST CALL SET M =',I4,', BUT RESTART REQUIRES',I4)  
-   90 WRITE(STDOUT,1000) M,IBEG-1                                       
-      STOP ("RCF HAS FAILED")                                           
+        IF (ABS(B(M)).LT.EPS*ABS(X0)) THEN
+          IERROR = -M
+          EXIT LOOP_RCF
+        END IF                             
+!-----------------------------------------------------------------------
+        DO K=M2M1,2,-1                                                          
+          XX(2,K) = XX(1,K) + B(M) * XX(2,K-1)                              
+        END DO                                                           
+        XX(2,1) = XX(1,1) + B(M)                                          
+        DO K=1,M2M1                                                    
+          X0 = XX(2,K)                                                      
+          XX(2,K) = XX(1,K)                                                 
+          XX(1,K) = X0
+        END DO                                                      
+        X0 = X1                                                           
+        XX(1,M2M1+1) = 0.                                                 
+        M = M+1                                                           
+        EVEN = .NOT.EVEN                                                  
+!-----------------------------------------------------------------------
+      END DO LOOP_RCF
 !-----------------------------------------------------------------------
     END SUBROUTINE RCF                                                  
 !-----------------------------------------------------------------------
@@ -1137,7 +1163,7 @@ MODULE COULCC_M
  1060 FORMAT('0COULCC WARNING: AS ''',A2,''' REFLECTION RULES NOT USED,ERRORS CAN BE UP TO',1P,D12.2/)
  1070 FORMAT('0COULCC WARNING: OVERALL ROUNDOFF ERROR APPROX.',1P,E11.1)
 !-----------------------------------------------------------------------
-  310 IF (PR) WRITE (6,1000) XX                                          
+  310 IF (PR) WRITE(STDOUT,1000) XX                                          
       RETURN                                                            
   320 IF (PR) WRITE(STDOUT,1010) ZL+DELL,'IR',HCL,'MORE',FPMAX                
       GO TO 280                                                         
