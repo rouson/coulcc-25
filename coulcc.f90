@@ -1518,14 +1518,24 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 !      useful number also input:  FPMAX = near-largest f.p. number
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX(dpf)(A-H,O-Z)
-      DIMENSION X(JMAX,4)
-      LOGICAL :: FINITE
-      REAL(dpf) :: EP,EPS,AT,ATL,RE,FPMAX !ABSC
-      DATA ONE,ZERO / (1D+0,0D+0), (0D+0,0D+0) /
+      IMPLICIT NONE
 !-----------------------------------------------------------------------
-      !ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))
-      !NINTC(W) = NINT(REAL(REAL(W)))
+      COMPLEX(dpf),                  INTENT(IN)    :: AA,BB,Z
+      COMPLEX(dpf),DIMENSION(JMAX,4),INTENT(INOUT) :: X
+      INTEGER(spi),                  INTENT(IN)    :: JMAX
+      INTEGER(spi),                  INTENT(OUT)   :: N
+      REAL(dpf),                     INTENT(INOUT) :: RE
+      REAL(dpf),                     INTENT(IN)    :: FPMAX
+!-----------------------------------------------------------------------
+      REAL(dpf), PARAMETER :: ZERO=0._dpf
+      REAL(dpf), PARAMETER :: ONE=1._dpf
+!-----------------------------------------------------------------------
+      COMPLEX(dpf) :: SUM,F,D,DF
+      REAL(dpf)    :: EP,EPS,AT,ATL
+      INTEGER(spi) :: I,J,K,MA,MB,IMAX,IERROR,EXIT_COND
+      LOGICAL      :: FINITE
+!-----------------------------------------------------------------------
+      EXIT_COND=20 !DEFAULT
 !-----------------------------------------------------------------------
       RE = 0.0
       X(1,1) = ONE
@@ -1535,7 +1545,7 @@ MODULE COULCC_M
       D = ONE
       DF= SUM
       J = 0
-      EP = EPS * JMAX *10.
+      EP = EPS * JMAX*10._dpf
       MA = - NINTC(AA)
       MB = - NINTC(BB)
       FINITE = ABS(ABS(REAL(AA))-MA).LT.EP .AND. ABS(IMAG(AA)).LT.EP &
@@ -1543,43 +1553,64 @@ MODULE COULCC_M
       IMAX = JMAX
       IF (FINITE.AND.MA.GE.0) IMAX = MIN(MA+1,IMAX)
       IF (FINITE.AND.MB.GE.0) IMAX = MIN(MB+1,IMAX)
-      DO 10 I=2,IMAX
+      LOOP_10: DO I=2,IMAX
         X(I,1) = X(I-1,1) * Z * (AA+I-2) * (BB+I-2) / (I-1)
-        IF (ABSC(X(I,1)).GT.FPMAX) GO TO 40
+        IF (ABSC(X(I,1)).GT.FPMAX) THEN
+          EXIT_COND=-1
+          EXIT LOOP_10
+        END IF
         AT = ABSC(X(I,1))
         IF (J.EQ.0) THEN
           SUM = SUM + X(I,1)
-          IF (AT .LT. ABSC(SUM)*EPS) GO TO 20
+          IF (AT.LT.ABSC(SUM)*EPS) EXIT LOOP_10
         END IF
-        IF (FINITE) GO TO 10
+        IF (FINITE) THEN
+          ATL = AT
+          CYCLE LOOP_10
+        END IF
         IF (J.GT.0 .OR. AT.GT.ATL .OR. I.GE.JMAX-2) J = J + 1
-        IF (J.EQ.0) GO TO 10
+        IF (J.EQ.0) THEN
+          ATL = AT
+          CYCLE LOOP_10
+        END IF
         CALL RCF(X(1,1),X(1,2),J,I,X(1,3),EPS,IERROR)
-        IF (IERROR.LT.0) GO TO 40
-        DO 50 K=MAX(J,2),I
+        IF (IERROR.LT.0) THEN
+          EXIT_COND=-1
+          EXIT LOOP_10
+        END IF
+        DO K=MAX(J,2),I
           D = ONE/(D*X(K,2) + ONE)
           DF = DF*(D - ONE)
           F = F + DF
-          IF (ABSC(DF) .LT. ABSC(F)*EPS) GO TO 30
-          IF (DF.EQ.ZERO.AND.F.EQ.ZERO.AND.I.GE.4) GO TO 30
-    50  CONTINUE
-!-----------------------------------------------------------------------
+          IF (ABSC(DF) .LT. ABSC(F)*EPS) THEN
+            EXIT_COND=0
+            EXIT LOOP_10
+          END IF
+          IF (DF.EQ.ZERO.AND.F.EQ.ZERO.AND.I.GE.4) THEN
+            EXIT_COND=0
+            EXIT LOOP_10
+          END IF
+        END DO
         J = I
-  10  ATL = AT
+        ATL = AT
+      END DO LOOP_10
 !-----------------------------------------------------------------------
-      IF(.NOT.FINITE) I = -JMAX
-  20  N = I
-      F20 = SUM
-      IF(.NOT.FINITE) RE  = AT / ABSC(SUM)
-      RETURN
+      IF(.NOT.FINITE.AND.I.EQ.IMAX+1) I = -JMAX
 !-----------------------------------------------------------------------
-  30  F20 = F
-      RE = ABSC(DF) / ABSC(F)
-      N = K
-      RETURN
-!-----------------------------------------------------------------------
-  40  I = 0
-      GO TO 20
+      SELECT CASE(EXIT_COND)
+        CASE(0)
+          F20 = F
+          RE = ABSC(DF) / ABSC(F)
+          N = K
+        CASE(-1) !BAD_EXIT
+          N = 0
+          F20 = SUM
+          IF(.NOT.FINITE) RE  = AT / ABSC(SUM)
+        CASE DEFAULT
+          N = I
+          F20 = SUM
+          IF(.NOT.FINITE) RE  = AT / ABSC(SUM)
+      END SELECT
 !-----------------------------------------------------------------------
     END FUNCTION F20
 !-----------------------------------------------------------------------
