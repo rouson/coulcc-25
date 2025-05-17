@@ -1427,22 +1427,33 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
     END FUNCTION F11
 !-----------------------------------------------------------------------
-    REAL(dpf) FUNCTION CF1R(X,ETA,ZL,EPS,FCL,TPK1,ETANE0,LIMIT,ERR,NFP &
+    REAL(dpf) FUNCTION CF1R(X,ETA,ZL,EPS,FCL,TPK1,ETANE0,LIMIT,ERROR,NFP &
                          &,  ACCH,FPMIN,FPMAX,PR,CALLER)
-!-----------------------------------------------------------------------
-      IMPLICIT REAL(dpf)(A-H,O-Z)
-      LOGICAL PR,ETANE0
-      CHARACTER(len=6) CALLER
-      DATA ONE,TWO / 1D+0, 2D+0 /
-!-----------------------------------------------------------------------
- 1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,7D9.2/)
- 1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
 !-----------------------------------------------------------------------
 ! ***    Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)
 !        using real arithmetic
 !-----------------------------------------------------------------------
+      IMPLICIT NONE
+!-----------------------------------------------------------------------
+      REAL(dpf),   INTENT(IN)     :: X,ETA,ZL,EPS
+      REAL(dpf),   INTENT(INOUT)  :: FCL,TPK1,ERROR
+      REAL(dpf),   INTENT(IN)     :: ACCH,FPMIN,FPMAX
+      INTEGER(spi),INTENT(IN)     :: LIMIT
+      INTEGER(spi),INTENT(INOUT)  :: NFP
+      LOGICAL,     INTENT(IN)     :: PR,ETANE0
+      CHARACTER(len=6),INTENT(IN) :: CALLER
+!-----------------------------------------------------------------------
+      REAL(dpf),PARAMETER :: ONE=1._dpf
+      REAL(dpf),PARAMETER :: TWO=2._dpf
+!-----------------------------------------------------------------------
+      REAL(dpf) :: XI,PK,PX,EK,RK2,F,PK1,TK,D,DF,RK,SMALL,SL
+      !INTEGER(spi) ::
+!-----------------------------------------------------------------------
+ 1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,7D9.2/)
+ 1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
+!-----------------------------------------------------------------------
       FCL = ONE
-      XI = ONE/X
+      XI  = ONE/X
       PK  = ZL + ONE
       PX  = PK  + LIMIT
   10  EK  = ETA / PK
@@ -1493,13 +1504,13 @@ MODULE COULCC_M
       IF( PK .GT. PX ) GO TO 50
       IF (ABS(DF) .GE. ABS(F)*EPS) GO TO 30
       NFP = PK - ZL - 1
-      ERR = EPS * SQRT(REAL(NFP))
+      ERROR = EPS * SQRT(REAL(NFP))
       CF1R = F
 !-----------------------------------------------------------------------
       RETURN
 !-----------------------------------------------------------------------
   50  IF (PR) WRITE (6,1010) CALLER,LIMIT,ABS(X)
-      ERR = TWO
+      ERROR = TWO
 !-----------------------------------------------------------------------
     END FUNCTION CF1R
 !-----------------------------------------------------------------------
