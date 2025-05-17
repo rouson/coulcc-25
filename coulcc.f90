@@ -1322,13 +1322,6 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
     COMPLEX(dpf) FUNCTION F11(X,ETA,ZL,P,EPS,LIMIT,KIND,ERR,NITS,FPMAX,ACC8,ACC16)
 !-----------------------------------------------------------------------
-      IMPLICIT REAL(dpf)(A-H,O-Z)
-      COMPLEX(dpf) X,ETA,ZL,P,AA,BB,Z,CI
-      COMPLEX(dpf) DD,G,F,AI,BI,T
-      LOGICAL ZLLIN
-      REAL(qpf) AR,BR,GR,GI,DR,DI,TR,TI,UR,UI,FI,FI1,DEN
-      DATA ZERO,ONE,TWO / 0D+0, 1D+0, 2D+0 /, CI / (0D+0, 1D+0) /
-!-----------------------------------------------------------------------
 ! *** evaluate the HYPERGEOMETRIC FUNCTION 1F1
 !                                        i
 !            F (AA;BB; Z) = SUM  (AA)   Z / ( (BB)  i] )
@@ -1339,10 +1332,30 @@ MODULE COULCC_M
 !            1 : using normal precision in complex arithmetic,
 !   or       2 : using normal complex arithmetic, but with CDIGAM factor
 !-----------------------------------------------------------------------
-!  where
+      IMPLICIT NONE
+!-----------------------------------------------------------------------
+      COMPLEX(dpf),INTENT(IN)  :: X,ETA,ZL,P
+      REAL(dpf),   INTENT(IN)  :: EPS,FPMAX,ACC8,ACC16
+      REAL(dpf),   INTENT(OUT) :: ERR
+      INTEGER(spi),INTENT(OUT) :: NITS
+      INTEGER(spi),INTENT(IN)  :: LIMIT,KIND
+!-----------------------------------------------------------------------
+      COMPLEX(dpf) :: L,AA,BB,Z,DD,G,F,AI,BI,T
+      REAL(dpf)    :: R,RK,TA
+      INTEGER(spi) :: I
+      LOGICAL      :: ZLLIN
+!-----------------------------------------------------------------------
+      REAL(qpf) :: AR,BR,GR,GI,DR,DI,TR,TI,UR,UI,FI,FI1,DEN !128 bit real
+!-----------------------------------------------------------------------
+      REAL(dpf),   PARAMETER :: ZERO=0._dpf
+      REAL(dpf),   PARAMETER :: ONE=1._dpf
+      REAL(dpf),   PARAMETER :: TWO=2._dpf
+      COMPLEX(dpf),PARAMETER :: CI=CMPLX(0._dpf,1._dpf,KIND=dpf)
+!-----------------------------------------------------------------------
+!  FUNCTION INPUTS
+!-----------------------------------------------------------------------
       AA = ZL+ONE - ETA*P
       BB = TWO*(ZL+ONE)
-!  and
       Z  = TWO*P*X
 !-----------------------------------------------------------------------
       ZLLIN = REAL(BB).LE.ZERO .AND. ABS(BB-NINTC(BB)).LT.ACC8**0.25
@@ -1447,7 +1460,6 @@ MODULE COULCC_M
       REAL(dpf),PARAMETER :: TWO=2._dpf
 !-----------------------------------------------------------------------
       REAL(dpf) :: XI,PK,PX,EK,RK2,F,PK1,TK,D,DF,RK,SMALL,SL
-      !INTEGER(spi) ::
 !-----------------------------------------------------------------------
  1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,7D9.2/)
  1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
