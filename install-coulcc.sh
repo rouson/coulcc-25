@@ -54,9 +54,6 @@ while [ "$1" != "" ]; do
     -v | --verbose)
       VERBOSE=" --verbose"
       ;;
-    -r | --phi_r4)
-      PHI_R4=$VALUE
-      ;;
     *)
       echo "ERROR: unknown parameter \"$PARAM\""
       usage

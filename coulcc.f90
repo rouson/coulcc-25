@@ -27,16 +27,20 @@ MODULE LOGAM_M
   INTEGER(spi),PARAMETER, PRIVATE :: NB=15
   REAL(dpf),DIMENSION(NB),PRIVATE :: B
   REAL(dpf),              PRIVATE :: ACCUR
+  REAL(dpf),              PRIVATE :: FPLMIN
   INTEGER(spi),           PRIVATE :: NX0,NT
+
 !-----------------------------------------------------------------------
   CONTAINS
 !-----------------------------------------------------------------------
-    SUBROUTINE LOGAM_INIT(ACC)
+    SUBROUTINE LOGAM_INIT(ACC,FPLMIN_IN)
 !-----------------------------------------------------------------------
       REAL(dpf),INTENT(IN),OPTIONAL :: ACC
+      REAL(dpf),INTENT(IN),OPTIONAL :: FPLMIN_IN
 !-----------------------------------------------------------------------
       REAL(dpf),   PARAMETER :: ACC8=(2._dpf)*(10._dpf)**(-16_dpf)  !2D-16
       REAL(dpf),   PARAMETER :: ACC16=(3._dpf)*(10._dpf)**(-33_dpf) !3D-33_dpf
+      REAL(dpf),   PARAMETER :: FPLMIN_DEFAULT=-140._dpf
       REAL(dpf),   PARAMETER :: ONE=1._dpf
       REAL(dpf),   PARAMETER :: TWO=2._dpf
       INTEGER(spi) :: K
@@ -80,6 +84,12 @@ MODULE LOGAM_M
         ACCUR=ACC16
       END IF
 !-----------------------------------------------------------------------
+      IF (PRESENT(FPLMIN_IN)) THEN 
+        FPLMIN=FPLMIN_IN
+      ELSE
+        FPLMIN=FPLMIN_DEFAULT
+      END IF
+!-----------------------------------------------------------------------
       NX0 = 6                                                           
       X0  = NX0 + ONE                                                   
 !-----------------------------------------------------------------------
@@ -110,7 +120,6 @@ MODULE LOGAM_M
 !-----------------------------------------------------------------------
       COMPLEX(dpf),INTENT(IN) :: Z
 !-----------------------------------------------------------------------
-      REAL(dpf), PARAMETER :: FPLMIN=-140._dpf 
       REAL(dpf), PARAMETER :: ZERO=0._dpf
       REAL(dpf), PARAMETER :: HALF=0.5_dpf
       REAL(dpf), PARAMETER :: QUART=0.25_dpf
@@ -524,7 +533,7 @@ MODULE COULCC_M
       PARAMETER(JMAX=50)                                                
       DIMENSION FC(NL),GC(NL),FCP(NL),GCP(NL),SIG(NL),XRCF(JMAX,4)      
       LOGICAL PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2,NPINT  
-      REAL(dpf) ERR,RERR,ABSC,ACCUR,ACCT,ACC8,ACCH,ACC16,ACCB, XNEAR    
+      REAL(dpf) ERR,RERR,ACCUR,ACCT,ACC8,ACCH,ACC16,ACCB, XNEAR   !ABSC 
       REAL(dpf) ZERO,ONE,TWO,HALF,HPI,TLOG,FPMAX,FPMIN,FPLMIN,FPLMAX    
       REAL(dpf) PACCQ,EPS,OFF,SCALE,SF,SFSH,TA,RK,OMEGA,R20,ASYM,ABSX   
 !-----------------------------------------------------------------------
@@ -542,7 +551,7 @@ MODULE COULCC_M
       DATA ACCUR, ACC8, ACC16 / 1D-14, 2D-16, 3D-33 /                   
 !-----------------------------------------------------------------------
       NINTC(W) = NINT(REAL(REAL(W)))                                    
-      ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
+      !ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
       NPINT(W,ACCB) = ABSC(NINTC(W)-W).LT.ACCB .AND. REAL(W).LT.HALF    
 !-----------------------------------------------------------------------
       MODE = MOD(ABS(MODE1),10)                                         
@@ -563,7 +572,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 !     initialise the log-gamma function
 !-----------------------------------------------------------------------
-      CALL LOGAM_INIT(ACC8)                                             
+      CALL LOGAM_INIT(ACC8,FPLMIN)                                             
       ACCH  = SQRT(ACCUR)                                               
       ACCB  = SQRT(ACCH)                                                
       RERR = ACCT                                                       
@@ -1188,10 +1197,10 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
       LOGICAL PR,ETANE0                                                 
-      REAL(dpf) ONE,TWO,EPS,ERR,ACCH,FPMIN,FPMAX,ABSC,SMALL,RK,PX          
+      REAL(dpf) ONE,TWO,EPS,ERR,ACCH,FPMIN,FPMAX,SMALL,RK,PX   !ABSC       
       CHARACTER(len=6) CALLER                                                
       DATA ONE,TWO / 1D+0, 2D+0 /                                       
-      ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
+      !ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
 !-----------------------------------------------------------------------
  1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,13D9.2/)
  1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
@@ -1267,10 +1276,10 @@ MODULE COULCC_M
       IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                    
       LOGICAL PR                                                        
       REAL(dpf) EPS,ERR,ACC8,ACCH,ACCUR,TA,RK                           
-      REAL(dpf) ABSC,ZERO,HALF,ONE,TWO                                  
+      REAL(dpf) ZERO,HALF,ONE,TWO !ABSC                                  
       CHARACTER(len=6) CALLER                                           
       DATA ZERO,HALF,ONE,TWO / 0D+0, .5D+0, 1D+0, 2D+0 /                
-      ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
+      !ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
 !-----------------------------------------------------------------------
 !                                    (omega)        (omega)             
 ! *** Evaluate  CF2  = p + PM.q  =  H   (ETA,X)' / H   (ETA,X)          
@@ -1325,7 +1334,7 @@ MODULE COULCC_M
       LOGICAL ZLLIN                                                     
       REAL(qpf) AR,BR,GR,GI,DR,DI,TR,TI,UR,UI,FI,FI1,DEN                
       DATA ZERO,ONE,TWO / 0D+0, 1D+0, 2D+0 /, CI / (0D+0, 1D+0) /       
-      ABSC(AA) = ABS(REAL(AA)) + ABS(IMAG(AA))                          
+      !ABSC(AA) = ABS(REAL(AA)) + ABS(IMAG(AA))                          
       NINTC(AA) = NINT(REAL(REAL(AA)))                                  
 !-----------------------------------------------------------------------
 ! *** evaluate the HYPERGEOMETRIC FUNCTION 1F1                          
@@ -1520,10 +1529,10 @@ MODULE COULCC_M
       IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
       DIMENSION X(JMAX,4)                                               
       LOGICAL FINITE                                                    
-      REAL(dpf) EP,EPS,AT,ATL,ABSC,RE,FPMAX                                
+      REAL(dpf) EP,EPS,AT,ATL,RE,FPMAX !ABSC                                
       DATA ONE,ZERO / (1D+0,0D+0), (0D+0,0D+0) /                        
 !-----------------------------------------------------------------------
-      ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
+      !ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
       NINTC(W) = NINT(REAL(REAL(W)))                                    
 !-----------------------------------------------------------------------
       RE = 0.0                                                          
@@ -1603,22 +1612,39 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 !      useful number also input:  FPMAX = near-largest f.p. number      
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX(dpf)(A-H,O-Z)                                      
-      DIMENSION XX(2,NMAX),G(NMAX),C(NMAX)                              
-      REAL(dpf) RE,EPS,T1,T2,T3,ZERO,ONE,TWO,AT,ATL,ABSC,FPMAX             
-      DATA ZERO,ONE,TWO,CI / 0D+0, 1D+0, 2D+0, (0D+0,1D+0) /            
+      IMPLICIT NONE                                      
 !-----------------------------------------------------------------------
-      ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))                             
+      COMPLEX(dpf),                   INTENT(IN)    :: RHO,ETA,XL,PSI
+      COMPLEX(dpf),                   INTENT(INOUT) :: FCL
+      INTEGER(spi),                   INTENT(IN)    :: NMAX
+      INTEGER(spi),                   INTENT(OUT)   :: NUSED
+      COMPLEX(dpf), DIMENSION(2,NMAX),INTENT(INOUT) :: XX
+      COMPLEX(dpf), DIMENSION(NMAX)  ,INTENT(INOUT) :: G,C
+      REAL(dpf),                      INTENT(OUT)   :: RE
+      REAL(dpf),                      INTENT(IN)    :: EPS,FPMAX
 !-----------------------------------------------------------------------
-      HPI = TWO*ATAN(ONE)                                               
-      T1 = SIN(REAL(PSI))                                               
-      T2 = COS(REAL(PSI))                                               
-      ATL= TANH(IMAG(PSI))                                              
+      REAL(dpf),    PARAMETER :: ZERO=0._dpf
+      REAL(dpf),    PARAMETER :: ONE=1._dpf
+      REAL(dpf),    PARAMETER :: TWO=2._dpf
+      COMPLEX(dpf), PARAMETER :: CI=CMPLX(0._dpf,1._dpf,KIND=dpf)
+!-----------------------------------------------------------------------
+      COMPLEX(dpf) :: GLAST,GSUM,XLL1,SL1,SL2,SL,SC1,SC,TL1,TL,TC1,TC
+      COMPLEX(dpf) :: SC2,TC2,TL2,F,D,DF,COSL,TANL,C1,C2,DENOM,ETASQ
+      REAL(dpf)    :: T1,T2,T3,AT,ATL
+      INTEGER(spi) :: K,N,J,IERROR
+      LOGICAL :: BAD_EXIT
+!-----------------------------------------------------------------------
+      BAD_EXIT=.FALSE.
+!-----------------------------------------------------------------------
+      T1 = SIN(PSI%RE)                                               
+      T2 = COS(PSI%RE)                                               
+      ATL= TANH(PSI%IM)                                              
 !-----------------------------------------------------------------------
 ! GIVE COS(PSI)/COSH(IM(PSI)), WHICH ALWAYS HAS CORRECT SIGN
 !-----------------------------------------------------------------------
-      COSL = DCMPLX( T2 , -T1 * ATL )                               
-      TANL = DCMPLX(T1,T2*ATL) / COSL                                   
+      COSL = CMPLX(T2,-T1*ATL,KIND=dpf)                               
+      TANL = CMPLX(T1, T2*ATL,KIND=dpf) / COSL                          
+!-----------------------------------------------------------------------
       RE = ZERO                                                         
       XLL1= XL*(XL+ONE)                                                 
       ETASQ = ETA*ETA                                                   
@@ -1634,11 +1660,12 @@ MODULE COULCC_M
       G(1) = (TC + SC*TANL) / FCL                                       
       GLAST = G(1)                                                      
       ATL = ABSC(GLAST)                                                 
-      F    = GLAST                                                   
-      D = ONE                                                        
-      DF   = GLAST                                                   
+      F   = GLAST                                                   
+      D   = ONE                                                        
+      DF  = GLAST                                                   
       J = 0                                                             
-      DO 10 N=2,NMAX                                                    
+!-----------------------------------------------------------------------
+      LOOP_10: DO N=2,NMAX                                                    
         T1=N-1                                                            
         T2=TWO*T1-ONE                                                     
         T3=T1*(T1-ONE)                                                    
@@ -1658,46 +1685,63 @@ MODULE COULCC_M
         SC1=SC2                                                           
         TC1=TC2                                                           
         FCL  =  TL + SL*TANL                                              
-        IF (ABSC(FCL).GT.FPMAX .OR. ABSC(FCL).LT.1./FPMAX) GO TO 40     
+        IF (ABSC(FCL).GT.FPMAX .OR. ABSC(FCL).LT.1./FPMAX) THEN !GO TO 40 
+          BAD_EXIT=.TRUE.
+          EXIT LOOP_10
+        END IF
         GSUM = (TC + SC*TANL) / FCL                                       
         G(N) = GSUM - GLAST                                               
         GLAST = GSUM                                                      
         AT = ABSC(G(N))                                                
-        IF (AT.LT.ABSC(GSUM)*EPS) GO TO 20                              
+        IF (AT.LT.ABSC(GSUM)*EPS) THEN
+          FCL = FCL * COSL                                                  
+          CF1A = GSUM                                                    
+          RE = AT / ABSC(GSUM)                                           
+          NUSED = N                                                      
+          RETURN 
+        END IF                              
         IF (J.GT.0 .OR. AT.GT.ATL .OR. N.GE.NMAX-2) J = J + 1              
-        IF (J.EQ.0) GO TO 10                                            
+        IF (J.EQ.0) THEN
+          ATL=AT
+          CYCLE LOOP_10
+        END IF
         CALL RCF(G,C,J,N,XX,EPS,IERROR)                                    
-        IF (IERROR.LT.0) GO TO 40                                       
-        DO 60 K=MAX(J,2),N                                          
+        IF (IERROR.LT.0) THEN !GO TO 40 
+          BAD_EXIT=.TRUE.
+          EXIT LOOP_10
+        END IF                                      
+        DO K=MAX(J,2),N                                          
           D = ONE/(D*C(K) + ONE)                                   
           DF = DF*(D - ONE)                                        
           F = F + DF                                               
-          IF (ABSC(DF) .LT. ABSC(F)*EPS) GO TO 30                         
-          IF (DF.EQ.ZERO.AND.F.EQ.ZERO.AND.N.GE.4) GO TO 30               
-  60    CONTINUE                                                  
+          IF (ABSC(DF) .LT. ABSC(F)*EPS) EXIT LOOP_10 !GO TO 30                         
+          IF (DF.EQ.ZERO.AND.F.EQ.ZERO.AND.N.GE.4) EXIT LOOP_10 !GO TO 30               
+        END DO                                                  
         J = N                                                          
-  10  ATL = AT                                                       
-      K = -NMAX                                                         
-      GO TO 30                                                          
+        ATL = AT                                                       
+      END DO LOOP_10                                                       
 !-----------------------------------------------------------------------
-  20  FCL = FCL * COSL                                                  
-      CF1A = GSUM                                                    
-      RE = AT / ABSC(GSUM)                                           
-      NUSED = N                                                      
-      RETURN                                                         
+      IF (N.EQ.NMAX+1) K = -NMAX                                                                                                                
 !-----------------------------------------------------------------------
-  30  CF1A = F                                                          
-      FCL = FCL * COSL                                                  
-      RE = ABSC(DF) / ABSC(F)                                        
-      NUSED = K                                                      
-      RETURN                                                            
-!-----------------------------------------------------------------------
-  40  CF1A = G(1)                                                       
-      FCL = 1.0                                                         
-      RE = 1.0                                                          
-      NUSED = 0                                                         
+      IF (BAD_EXIT) THEN
+        CF1A = G(1) !40 MARKER                                                       
+        FCL = 1.0                                                         
+        RE = 1.0                                                          
+        NUSED = 0 
+      ELSE
+        CF1A = F  !30 MARKER                                                         
+        FCL = FCL * COSL                                                  
+        RE = ABSC(DF) / ABSC(F)                                        
+        NUSED = K                                                      
+      END IF                                                           
 !-----------------------------------------------------------------------
     END FUNCTION CF1A                                                 
+!-----------------------------------------------------------------------
+    PURE REAL(dpf) FUNCTION ABSC(Z)
+      IMPLICIT NONE
+      COMPLEX(dpf),INTENT(IN) :: Z
+      ABSC = ABS(Z%RE) + ABS(Z%IM)                             
+    END FUNCTION ABSC                                   
 !-----------------------------------------------------------------------
 !   TIDY A COMPLEX NUMBER                                             
 !-----------------------------------------------------------------------
@@ -1721,4 +1765,3 @@ MODULE COULCC_M
     END FUNCTION TIDY                                                   
 !-----------------------------------------------------------------------
 END MODULE COULCC_M
-!-----------------------------------------------------------------------
