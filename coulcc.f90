@@ -532,7 +532,7 @@ MODULE COULCC_M
       IMPLICIT COMPLEX(dpf) (A-H,O-Z)
       PARAMETER(JMAX=50)
       DIMENSION FC(NL),GC(NL),FCP(NL),GCP(NL),SIG(NL),XRCF(JMAX,4)
-      LOGICAL PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2,NPINT
+      LOGICAL PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2  !,NPINT
       REAL(dpf) ERR,RERR,ACCUR,ACCT,ACC8,ACCH,ACC16,ACCB, XNEAR   !ABSC
       REAL(dpf) ZERO,ONE,TWO,HALF,HPI,TLOG,FPMAX,FPMIN,FPLMIN,FPLMAX
       REAL(dpf) PACCQ,EPS,OFF,SCALE,SF,SFSH,TA,RK,OMEGA,R20,ASYM,ABSX
@@ -549,10 +549,6 @@ MODULE COULCC_M
       DATA FPMAX,FPMIN,FPLMAX,FPLMIN / 1D+60,1D-60 ,140D+0, -140D+0 /
       DATA R20,ASYM,XNEAR,NDROP / 3., 3., .5, 5 /
       DATA ACCUR, ACC8, ACC16 / 1D-14, 2D-16, 3D-33 /
-!-----------------------------------------------------------------------
-      NINTC(W) = NINT(REAL(REAL(W)))
-      !ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))
-      NPINT(W,ACCB) = ABSC(NINTC(W)-W).LT.ACCB .AND. REAL(W).LT.HALF
 !-----------------------------------------------------------------------
       MODE = MOD(ABS(MODE1),10)
       IFCP = MOD(MODE,2).EQ.1
@@ -1200,7 +1196,6 @@ MODULE COULCC_M
       REAL(dpf) ONE,TWO,EPS,ERR,ACCH,FPMIN,FPMAX,SMALL,RK,PX   !ABSC
       CHARACTER(len=6) CALLER
       DATA ONE,TWO / 1D+0, 2D+0 /
-      !ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))
 !-----------------------------------------------------------------------
  1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,13D9.2/)
  1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
@@ -1279,7 +1274,6 @@ MODULE COULCC_M
       REAL(dpf) ZERO,HALF,ONE,TWO !ABSC
       CHARACTER(len=6) CALLER
       DATA ZERO,HALF,ONE,TWO / 0D+0, .5D+0, 1D+0, 2D+0 /
-      !ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))
 !-----------------------------------------------------------------------
 !                                    (omega)        (omega)
 ! *** Evaluate  CF2  = p + PM.q  =  H   (ETA,X)' / H   (ETA,X)
@@ -1334,8 +1328,6 @@ MODULE COULCC_M
       LOGICAL ZLLIN
       REAL(qpf) AR,BR,GR,GI,DR,DI,TR,TI,UR,UI,FI,FI1,DEN
       DATA ZERO,ONE,TWO / 0D+0, 1D+0, 2D+0 /, CI / (0D+0, 1D+0) /
-      !ABSC(AA) = ABS(REAL(AA)) + ABS(IMAG(AA))
-      NINTC(AA) = NINT(REAL(REAL(AA)))
 !-----------------------------------------------------------------------
 ! *** evaluate the HYPERGEOMETRIC FUNCTION 1F1
 !                                        i
@@ -1528,12 +1520,12 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       IMPLICIT COMPLEX(dpf)(A-H,O-Z)
       DIMENSION X(JMAX,4)
-      LOGICAL FINITE
-      REAL(dpf) EP,EPS,AT,ATL,RE,FPMAX !ABSC
+      LOGICAL :: FINITE
+      REAL(dpf) :: EP,EPS,AT,ATL,RE,FPMAX !ABSC
       DATA ONE,ZERO / (1D+0,0D+0), (0D+0,0D+0) /
 !-----------------------------------------------------------------------
       !ABSC(W) = ABS(REAL(W)) + ABS(IMAG(W))
-      NINTC(W) = NINT(REAL(REAL(W)))
+      !NINTC(W) = NINT(REAL(REAL(W)))
 !-----------------------------------------------------------------------
       RE = 0.0
       X(1,1) = ONE
@@ -1737,15 +1729,29 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
     END FUNCTION CF1A
 !-----------------------------------------------------------------------
+    PURE LOGICAL FUNCTION NPINT(Z,ACCB)
+      IMPLICIT NONE
+      COMPLEX(dpf),INTENT(IN) :: Z
+      REAL(dpf),   INTENT(IN) :: ACCB
+      REAL(dpf), PARAMETER :: HALF=0.5_dpf
+      NPINT= ABSC(CMPLX(NINTC(Z),0._dpf,KIND=dpf)-Z).LT.ACCB .AND. Z%RE.LT.HALF
+    END FUNCTION NPINT
+!-----------------------------------------------------------------------
+    PURE INTEGER(spi) FUNCTION NINTC(Z)
+      !!integer nearest to a complex no.
+      IMPLICIT NONE
+      COMPLEX(dpf),INTENT(IN) :: Z
+      NINTC = NINT(Z%RE)
+    END FUNCTION NINTC
+!-----------------------------------------------------------------------
     PURE REAL(dpf) FUNCTION ABSC(Z)
       IMPLICIT NONE
       COMPLEX(dpf),INTENT(IN) :: Z
       ABSC = ABS(Z%RE) + ABS(Z%IM)
     END FUNCTION ABSC
 !-----------------------------------------------------------------------
-!   TIDY A COMPLEX NUMBER
-!-----------------------------------------------------------------------
     PURE COMPLEX(dpf) FUNCTION TIDY(Z,ACC)
+      !!tidy a complex number
 !-----------------------------------------------------------------------
       IMPLICIT NONE
 !-----------------------------------------------------------------------
