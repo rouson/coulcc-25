@@ -1685,7 +1685,7 @@ MODULE COULCC_M
         SC1=SC2                                                           
         TC1=TC2                                                           
         FCL  =  TL + SL*TANL                                              
-        IF (ABSC(FCL).GT.FPMAX .OR. ABSC(FCL).LT.1./FPMAX) THEN !GO TO 40 
+        IF (ABSC(FCL).GT.FPMAX .OR. ABSC(FCL).LT.1./FPMAX) THEN  
           BAD_EXIT=.TRUE.
           EXIT LOOP_10
         END IF
@@ -1706,7 +1706,7 @@ MODULE COULCC_M
           CYCLE LOOP_10
         END IF
         CALL RCF(G,C,J,N,XX,EPS,IERROR)                                    
-        IF (IERROR.LT.0) THEN !GO TO 40 
+        IF (IERROR.LT.0) THEN 
           BAD_EXIT=.TRUE.
           EXIT LOOP_10
         END IF                                      
@@ -1714,8 +1714,8 @@ MODULE COULCC_M
           D = ONE/(D*C(K) + ONE)                                   
           DF = DF*(D - ONE)                                        
           F = F + DF                                               
-          IF (ABSC(DF) .LT. ABSC(F)*EPS) EXIT LOOP_10 !GO TO 30                         
-          IF (DF.EQ.ZERO.AND.F.EQ.ZERO.AND.N.GE.4) EXIT LOOP_10 !GO TO 30               
+          IF (ABSC(DF) .LT. ABSC(F)*EPS) EXIT LOOP_10                          
+          IF (DF.EQ.ZERO.AND.F.EQ.ZERO.AND.N.GE.4) EXIT LOOP_10                
         END DO                                                  
         J = N                                                          
         ATL = AT                                                       
@@ -1724,12 +1724,12 @@ MODULE COULCC_M
       IF (N.EQ.NMAX+1) K = -NMAX                                                                                                                
 !-----------------------------------------------------------------------
       IF (BAD_EXIT) THEN
-        CF1A = G(1) !40 MARKER                                                       
+        CF1A = G(1)                                                       
         FCL = 1.0                                                         
         RE = 1.0                                                          
         NUSED = 0 
       ELSE
-        CF1A = F  !30 MARKER                                                         
+        CF1A = F                                                           
         FCL = FCL * COSL                                                  
         RE = ABSC(DF) / ABSC(F)                                        
         NUSED = K                                                      
