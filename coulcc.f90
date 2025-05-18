@@ -44,7 +44,7 @@ MODULE LOGAM_M
       REAL(dpf),   PARAMETER :: ONE=1._dpf
       REAL(dpf),   PARAMETER :: TWO=2._dpf
       INTEGER(spi) :: K
-      REAL(dpf) :: X0,F21,ERR
+      REAL(dpf) :: X0,F21,ERROR
       LOGICAL :: ACCUR_REACHED
 !-----------------------------------------------------------------------
       REAL(dpf),DIMENSION(NB),PARAMETER :: BN= [             +1._dpf &
@@ -98,15 +98,15 @@ MODULE LOGAM_M
       LOOP_120: DO K=1,NB
         F21 = K*2 - ONE
         B(K) = BN(K) / (BD(K) * K*TWO * F21)
-        ERR = ABS(B(K)) * K*TWO / X0**F21
-        IF (ERR.LT.ACCUR) THEN
+        ERROR = ABS(B(K)) * K*TWO / X0**F21
+        IF (ERROR.LT.ACCUR) THEN
           ACCUR_REACHED=.TRUE.
           EXIT LOOP_120
         END IF
       END DO LOOP_120
 !-----------------------------------------------------------------------
       IF (.NOT.ACCUR_REACHED) THEN
-        NX0 = INT((ERR/ACCUR)**(ONE/F21) * X0)
+        NX0 = INT((ERROR/ACCUR)**(ONE/F21) * X0)
         K = NB
       END IF
       NT = K
@@ -576,7 +576,7 @@ MODULE COULCC_M
       COMPLEX(dpf),DIMENSION(JMAX,4) :: XRCF
 !-----------------------------------------------------------------------
       LOGICAL      :: PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2
-      REAL(dpf)    :: ACCUR,ERR,ACCT,ACCH,ACCB,PACCQ,EPS,OFF,SCALE,SF
+      REAL(dpf)    :: ACCUR,ERROR,ACCT,ACCH,ACCB,PACCQ,EPS,OFF,SCALE,SF
       REAL(dpf)    :: SFSH,TA,RK,OMEGA,ABSX
       INTEGER(spi) :: ID,I,IH,KASE,L,L1,LAST,LF,LH,M1,MODE,MONO,N
       COMPLEX(dpf) :: X,ETA,ETAI,DELL,ZM1,AA,AB,ALPHA,BB,BETA,CHI,CIK
@@ -621,7 +621,7 @@ MODULE COULCC_M
       RLEL = ABS(ETA%IM) + ABS(ZM1%IM) .LT. ACC8
       ABSX = ABS(X)
       AXIAL = RLEL .AND. ABS(X%IM) .LT. ACC8 * ABSX
-      IF (MODE.LE.2 .AND. ABSX.LT.FPMIN) GO TO 310
+      IF (MODE.LE.2 .AND. ABSX.LT.FPMIN) GOTO 310
       XI  = ONE/X
       XLOG = LOG(X)
 !-----------------------------------------------------------------------
@@ -659,7 +659,7 @@ MODULE COULCC_M
       THETA  = X - ETA*(XLOG+TLOG) - ZLL*HPI + SIGMA
 !-----------------------------------------------------------------------
       TA = (AA%IM**2+AB%IM**2+ABS(AA%RE)+ABS(AB%RE))*HALF
-      IF (ID.GT.0 .AND. ABSX .LT. TA*ASYM .AND. .NOT.ZLNEG) GO TO 20
+      IF (ID.GT.0 .AND. ABSX .LT. TA*ASYM .AND. .NOT.ZLNEG) GOTO 20
 !-----------------------------------------------------------------------
 ! ***  use CF1 instead of CF1A, if predicted to converge faster,
 !          (otherwise using CF1A as it treats negative lambda &
@@ -668,14 +668,14 @@ MODULE COULCC_M
       RK = SIGN(ONE, X%RE + ACC8)
       P =  THETA
       IF (RK.LT.0) P = -X + ETA*(LOG(-X)+TLOG)-ZLL*HPI-SIGMA
-      F = RK * CF1A(X*RK,ETA*RK,ZLL,P,ACCT,JMAX,NFP,FEST,ERR,FPMAX,XRCF,XRCF(1,3), XRCF(1,4))
+      F = RK * CF1A(X*RK,ETA*RK,ZLL,P,ACCT,JMAX,NFP,FEST,ERROR,FPMAX,XRCF,XRCF(1,3), XRCF(1,4))
       FESL = LOG(FEST) + ABS(X%IM)
       NFP = - NFP
-      IF (NFP.LT.0   .OR.(UNSTAB.AND.ERR.LT.ACCB)) GO TO 40
-      IF(.NOT.ZLNEG .OR. UNSTAB.AND.ERR.GT.ACCB)  GO TO 20
-      IF (PR) WRITE(STDOUT,1060) '-L',ERR
-      IF (ERR.GT.ACCB) GO TO 280
-      GO TO 40
+      IF (NFP.LT.0   .OR.(UNSTAB.AND.ERROR.LT.ACCB)) GOTO 40
+      IF(.NOT.ZLNEG .OR. UNSTAB.AND.ERROR.GT.ACCB)  GOTO 20
+      IF (PR) WRITE(STDOUT,1060) '-L',ERROR
+      IF (ERROR.GT.ACCB) GOTO 280
+      GOTO 40
 !-----------------------------------------------------------------------
 ! ***  evaluate CF1  =  f   =  F'(ZLL,ETA,X)/F(ZLL,ETA,X)
 !-----------------------------------------------------------------------
@@ -683,27 +683,27 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 !  REAL VERSION
 !-----------------------------------------------------------------------
-        F = CF1R(X%RE,ETA%RE,ZLL%RE,ACC8,SF,RK,ETANE0,LIMIT,ERR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
+        F = CF1R(X%RE,ETA%RE,ZLL%RE,ACC8,SF,RK,ETANE0,LIMIT,ERROR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
         FCL = SF
         TPK1= RK
       ELSE
 !-----------------------------------------------------------------------
 !  COMPLEX VERSION
 !-----------------------------------------------------------------------
-        F = CF1C(X,ETA,ZLL,ACC8,FCL,TPK1,ETANE0,LIMIT,ERR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
+        F = CF1C(X,ETA,ZLL,ACC8,FCL,TPK1,ETANE0,LIMIT,ERROR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
       END IF
 !-----------------------------------------------------------------------
-      IF (ERR.GT.ONE) GO TO 390
+      IF (ERROR.GT.ONE) GOTO 390
 !-----------------------------------------------------------------------
 ! ***  Make a simple check for CF1 being badly unstable:
 !-----------------------------------------------------------------------
-      IF (ID.LT.0) GO TO 30
+      IF (ID.LT.0) GOTO 30
       UC = (CMPLX(ONE,0._dpf,KIND=dpf)-ETA*XI)*CI*THETA%IM/F
       UNSTAB = UC%RE.GT.ZERO     &
         & .AND. .NOT.AXIAL &
         & .AND. ABS(THETA%IM).GT.-LOG(ACC8)*HALF &
         & .AND. ABSC(ETA)+ABSC(ZLL).LT.ABSC(X)
-      IF (UNSTAB) GO TO 60
+      IF (UNSTAB) GOTO 60
 !-----------------------------------------------------------------------
 ! *** compare accumulated phase FCL with asymptotic phase for G(k+1) :
 !     to determine estimate of F(ZLL) (with correct sign) to start recur
@@ -715,7 +715,7 @@ MODULE COULCC_M
       FESL = CMPLX(MIN(RK,FPLMAX*HALF),FESL%IM,KIND=dpf)
       FEST = EXP(FESL)
 !-----------------------------------------------------------------------
-      RERR = MAX(RERR,ERR,ACC8*ABS(THETA%RE))
+      RERR = MAX(RERR,ERROR,ACC8*ABS(THETA%RE))
 !-----------------------------------------------------------------------
       FCL = FEST
       FPL = FCL*F
@@ -729,7 +729,7 @@ MODULE COULCC_M
       MONO = 0
       OFF = ABS(FCL)
       TA = ABSC(SIGMA)
-      DO 70  L  = L1-ID,LF,-ID
+      LOOP_70: DO L = L1-ID,LF,-ID
         IF (ETANE0) THEN
           IF (RLEL) THEN
             DSIG = ATAN2(ETA%RE,ZL%RE)
@@ -758,7 +758,7 @@ MODULE COULCC_M
           IF (ABSC(ZL).GT.ACCH) PL = (SL*SL - RL*RL)/ZL
           FCL1  = (FCL *SL + ID*ZL*FPL)/RL
           SF = ABS(FCL1)
-          IF (SF.GT.FPMAX) GO TO 350
+          IF (SF.GT.FPMAX) GOTO 350
           FPL   = (FPL *SL + ID*PL*FCL)/RL
           IF (MODE .LE. 1) GCP(L+ID)= PL * ID
         ELSE
@@ -768,7 +768,7 @@ MODULE COULCC_M
           RL = ZL* XI
           FCL1 = FCL * RL + FPL*ID
           SF = ABS(FCL1)
-          IF (SF.GT.FPMAX) GO TO 350
+          IF (SF.GT.FPMAX) GOTO 350
           FPL  =(FCL1* RL - FCL) * ID
         END IF
         IF (SF.LT.OFF) THEN
@@ -783,29 +783,29 @@ MODULE COULCC_M
         IF (KFN.EQ.0) SIG(L) = SIGMA
         IF (MODE .LE. 2) GC(L+ID) = RL
         ZL = ZL - ID
-        IF (MONO.LT.NDROP) GO TO 70
-        IF (AXIAL .OR. ZLM%RE*ID.GT.-NDROP.AND..NOT.ETANE0) GO TO 70
+        IF (MONO.LT.NDROP) CYCLE LOOP_70
+        IF (AXIAL .OR. ZLM%RE*ID.GT.-NDROP.AND..NOT.ETANE0) CYCLE LOOP_70
         UNSTAB = .TRUE.
 !-----------------------------------------------------------------------
 ! ***    take action if cannot or should not recur below this ZL:
 !-----------------------------------------------------------------------
   50    ZLM = ZL
         LF = L
-        IF (ID.LT.0) GO TO 380
+        IF (ID.LT.0) GOTO 380
         IF(.NOT.UNSTAB) LF = L + 1
-        IF (L+MONO.LT.L1-2 .OR. ID.LT.0 .OR. .NOT.UNSTAB) GO TO 80
+        IF (L+MONO.LT.L1-2 .OR. ID.LT.0 .OR. .NOT.UNSTAB) GOTO 80
 !-----------------------------------------------------------------------
 ! otherwise, all L values (for stability) should be done
 !            in the reverse direction:
 !-----------------------------------------------------------------------
-        GO TO 60
-  70  CONTINUE
-      GO TO 80
+        GOTO 60
+      END DO LOOP_70
+      GOTO 80
   60  ID = -1
       LF = L1
       L1 = M1
       RERR = ACCT
-      GO TO 10
+      GOTO 10
   80  IF (FCL .EQ. ZERO) FCL = + ACC8
       F = FPL/FCL
 !-----------------------------------------------------------------------
@@ -813,53 +813,54 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       IF (ID.GT.0) FIRST = F
       IF (DONEM) RERR = MAX(RERR, ABSC(F-FIRST)/ABSC(F))
-      IF (DONEM) GO TO 90
+      IF (.NOT.DONEM) THEN 
 !-----------------------------------------------------------------------
-      NOCF2 = .FALSE.
-      THETAM  = X - ETA*(XLOG+TLOG) - ZLM*HPI + SIGMA
+        NOCF2 = .FALSE.
+        THETAM  = X - ETA*(XLOG+TLOG) - ZLM*HPI + SIGMA
 !-----------------------------------------------------------------------
 ! *** on left x-plane, determine OMEGA by requiring cut on -x axis
 !     on right x-plane, choose OMEGA (using estimate based on THETAM)
 !       so H(omega) is smaller and recurs upwards accurately.
 !     (x-plane boundary is shifted to give CF2(LH) a chance to converge)
 !-----------------------------------------------------------------------
-      OMEGA = SIGN(ONE,X%IM+ACC8)
-      IF (X%RE.GE.XNEAR) OMEGA = SIGN(ONE,THETAM%IM+ACC8)
-      IF (AXIAL) OMEGA = ONE
+        OMEGA = SIGN(ONE,X%IM+ACC8)
+        IF (X%RE.GE.XNEAR) OMEGA = SIGN(ONE,THETAM%IM+ACC8)
+        IF (AXIAL) OMEGA = ONE
 !-----------------------------------------------------------------------
-      SFSH = EXP(OMEGA*SCALE - ABS(SCALE))
-      OFF = EXP(MIN(TWO*MAX(ABS(X%IM),ABS(THETAM%IM),ABS(ZLM%IM)*3),FPLMAX))
-      EPS = MAX(ACC8 , ACCT * HALF / OFF)
+        SFSH = EXP(OMEGA*SCALE - ABS(SCALE))
+        OFF = EXP(MIN(TWO*MAX(ABS(X%IM),ABS(THETAM%IM),ABS(ZLM%IM)*3),FPLMAX))
+        EPS = MAX(ACC8 , ACCT * HALF / OFF)
+      END IF
 !-----------------------------------------------------------------------
 ! ***    Try first estimated omega, then its opposite,
 !        to find the H(omega) linearly independent of F
 !        i.e. maximise  CF1-CF2 = 1/(F H(omega)) , to minimise H(omega)
 !-----------------------------------------------------------------------
-  90  DO 100 L=1,2
+      DO L=1,2
         LH = 1
         IF (OMEGA.LT.ZERO) LH = 2
         PM = CI*OMEGA
         ETAP = ETA * PM
-        IF (DONEM) GO TO 130
+        IF (DONEM) GOTO 130
         PQ1 = ZERO
         PACCQ = ONE
         KASE = 0
 !-----------------------------------------------------------------------
 ! ***   Check for small X, i.e. whether to avoid CF2 :
 !-----------------------------------------------------------------------
-        IF (MODE.GE.3 .AND. ABSX.LT.ONE ) GO TO 190
+        IF (MODE.GE.3 .AND. ABSX.LT.ONE ) GOTO 190
         IF (MODE.LT.3 .AND. (NOCF2 .OR. ABSX.LT.XNEAR .AND.  &
           &  ABSC(ETA)*ABSX .LT. 5 .AND. ABSC(ZLM).LT.4)) THEN
           KASE = 5
-          GO TO 120
+          GOTO 120
         END IF
 !-----------------------------------------------------------------------
 ! ***  Evaluate   CF2 : PQ1 = p + i.omega.q  at lambda = ZLM
 !-----------------------------------------------------------------------
-        PQ1 = CF2(X,ETA,ZLM,PM,EPS,LIMIT,ERR,NPQ(LH),ACC8,ACCH,PR,ACCUR,DELL,'COULCC')
+        PQ1 = CF2(X,ETA,ZLM,PM,EPS,LIMIT,ERROR,NPQ(LH),ACC8,ACCH,PR,ACCUR,DELL,'COULCC')
 !-----------------------------------------------------------------------
-        ERR = ERR * MAX(ONE,ABSC(PQ1)/MAX(ABSC(F-PQ1),ACC8) )
-        IF (ERR.LT.ACCH) GO TO 110
+        ERROR = ERROR * MAX(ONE,ABSC(PQ1)/MAX(ABSC(F-PQ1),ACC8) )
+        IF (ERROR.LT.ACCH) GOTO 110
 !-----------------------------------------------------------------------
 ! *** check if impossible to get F-PQ accurately because of cancellation
 !-----------------------------------------------------------------------
@@ -869,15 +870,15 @@ MODULE COULCC_M
 !     Use KASE 5 or 6 if necessary if Re(X) < XNEAR
 !-----------------------------------------------------------------------
         OMEGA = - OMEGA
-  100 CONTINUE
+      END DO
 !-----------------------------------------------------------------------
-      IF (UNSTAB) GO TO 360
-      IF (X%RE.LT.-XNEAR .AND. PR) WRITE(STDOUT,1060) '-X',ERR
-  110 RERR = MAX(RERR,ERR)
+      IF (UNSTAB) GOTO 360
+      IF (X%RE.LT.-XNEAR .AND. PR) WRITE(STDOUT,1060) '-X',ERROR
+  110 RERR = MAX(RERR,ERROR)
 !-----------------------------------------------------------------------
 ! ***  establish case of calculation required for irregular solution
 !-----------------------------------------------------------------------
-  120 IF (KASE.GE.5) GO TO 130
+  120 IF (KASE.GE.5) GOTO 130
       IF (X%RE .GT. XNEAR) THEN
 !-----------------------------------------------------------------------
 !  estimate errors if KASE 2 or 3 were to be used:
@@ -894,15 +895,28 @@ MODULE COULCC_M
 !  i.e. change to kase=4 if the 2F0 predicted to converge
 !-----------------------------------------------------------------------
       END IF
-  130 GO TO (190,140,150,170,190,190), ABS(KASE)
-  140 IF(.NOT.DONEM) PQ2 = CF2(X,ETA,ZLM,-PM,EPS,LIMIT,ERR,NPQ(3-LH),ACC8,ACCH,PR,ACCUR,DELL,'COULCC')
+  130 SELECT CASE(ABS(KASE))
+        CASE(1)
+          GOTO 190
+        CASE(2)
+          GOTO 140
+        CASE(3)
+          GOTO 150
+        CASE(4)
+          GOTO 170
+        CASE(5)
+          GOTO 190
+        CASE(6)
+          GOTO 190
+      END SELECT
+  140 IF(.NOT.DONEM) PQ2 = CF2(X,ETA,ZLM,-PM,EPS,LIMIT,ERROR,NPQ(3-LH),ACC8,ACCH,PR,ACCUR,DELL,'COULCC')
 !-----------------------------------------------------------------------
 ! ***  Evaluate   CF2 : PQ2 = p - i.omega.q  at lambda = ZLM   (Kase 2)
 !-----------------------------------------------------------------------
       P = (PQ2 + PQ1) * HALF
       Q = (PQ2 - PQ1) * HALF*PM
 !-----------------------------------------------------------------------
-      GO TO 160
+      GOTO 160
 !-----------------------------------------------------------------------
   150 P = PQ1%RE
       Q = PQ1%IM
@@ -930,28 +944,28 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 !  Consider a KASE = 1 Calculation
 !-----------------------------------------------------------------------
-        F11V= F11(X,ETA,Z11,P11,ACCT,LIMIT,0,ERR,N11,FPMAX,ACC8,ACC16)
-        IF (ERR.LT.PACCQ) GO TO 200
+        F11V= F11(X,ETA,Z11,P11,ACCT,LIMIT,0,ERROR,N11,FPMAX,ACC8,ACC16)
+        IF (ERROR.LT.PACCQ) GOTO 200
       END IF
       RERR=MAX(RERR,PACCQ)
 !-----------------------------------------------------------------------
-      GO TO 230
+      GOTO 230
 !-----------------------------------------------------------------------
 ! *** Arrive here if KASE = 4
 !     to evaluate the exponentially decreasing H(LH) directly.
 !-----------------------------------------------------------------------
-  170 IF (DONEM) GO TO 180
+  170 IF (DONEM) GOTO 180
       AA = ETAP - ZLM
       BB = ETAP + ZLM + ONE
-      F20V = F20(AA,BB,-HALF*PM*XI, ACCT,JMAX,ERR,FPMAX,N20,XRCF)
-      IF (N20.LE.0) GO TO 190
-      RERR = MAX(RERR,ERR)
+      F20V = F20(AA,BB,-HALF*PM*XI, ACCT,JMAX,ERROR,FPMAX,N20,XRCF)
+      IF (N20.LE.0) GOTO 190
+      RERR = MAX(RERR,ERROR)
       HCL = FPMIN
-      IF (ABS(REAL(PM*THETAM,KIND=dpf)+OMEGA*SCALE).GT.FPLMAX) GO TO 330
+      IF (ABS(REAL(PM*THETAM,KIND=dpf)+OMEGA*SCALE).GT.FPLMAX) GOTO 330
   180 HCL = F20V * EXP(PM * THETAM + OMEGA*SCALE)
       FCM = SFSH / ((F - PQ1) * HCL )
 !-----------------------------------------------------------------------
-      GO TO 230
+      GOTO 230
 !-----------------------------------------------------------------------
 ! *** Arrive here if KASE=1   (or if 2F0 tried mistakenly & failed)
 !-----------------------------------------------------------------------
@@ -959,31 +973,31 @@ MODULE COULCC_M
 !      using REAL*16 arithmetic if possible.
 !  where Z11 = ZLL if ID>0, or = ZLM if ID<0
 !-----------------------------------------------------------------------
-  190 F11V = F11(X,ETA,Z11,P11,ACCT,LIMIT,0,ERR,N11,FPMAX,ACC8,ACC16)
+  190 F11V = F11(X,ETA,Z11,P11,ACCT,LIMIT,0,ERROR,N11,FPMAX,ACC8,ACC16)
 !-----------------------------------------------------------------------
   200 IF (N11.LT.0) THEN
 !-----------------------------------------------------------------------
 !    F11 failed from BB = negative integer
 !-----------------------------------------------------------------------
         WRITE(STDOUT,1060) '-L',ONE
-        GO TO 390
+        GOTO 390
       END IF
 !-----------------------------------------------------------------------
-      IF (ERR.GT.PACCQ .AND. PACCQ.LT.ACCB) THEN
+      IF (ERROR.GT.PACCQ .AND. PACCQ.LT.ACCB) THEN
 !-----------------------------------------------------------------------
 !  Consider a KASE 2 or 3 calculation
 !-----------------------------------------------------------------------
         KASE = -2
         IF (AXIAL) KASE = -3
-        GO TO 130
+        GOTO 130
       END IF
-      RERR = MAX(RERR, ERR)
-      IF (ERR.GT.FPMAX) GO TO 370
+      RERR = MAX(RERR, ERROR)
+      IF (ERROR.GT.FPMAX) GOTO 370
       IF (ID.LT.0) CLL = Z11*TLOG-HPI*ETA-CLOGAM(BB)+CLOGAM(Z11+ONE+P11*ETA)-P11*SIGMA
       EK = (Z11+ONE)*XLOG - P11*X + CLL  - ABS(SCALE)
       IF (ID.GT.0) EK = EK - FESL + LOG(FCL)
-      IF (EK%RE.GT.FPLMAX) GO TO 350
-      IF (EK%RE.LT.FPLMIN) GO TO 340
+      IF (EK%RE.GT.FPLMAX) GOTO 350
+      IF (EK%RE.LT.FPLMIN) GOTO 340
       FCM = F11V * EXP(EK)
 !-----------------------------------------------------------------------
       IF (KASE.GE.5) THEN
@@ -1013,23 +1027,23 @@ MODULE COULCC_M
         EK = PK * XLOG - P11*X + CLL  - ABS(SCALE)
         SF = EXP(-ABS(SCALE))
         CHI = ZERO
-        IF(.NOT.( KASE.EQ.5 .OR. ZLNEG ) ) GO TO 210
+        IF(.NOT.( KASE.EQ.5 .OR. ZLNEG ) ) GOTO 210
 !-----------------------------------------------------------------------
 ! *** Use  G(l)  =  (cos(CHI) * F(l) - F(-l-1)) /  sin(CHI)
 !-----------------------------------------------------------------------
 !      where CHI = sig(l) - sig(-l-1) - (2l+1)*pi/2
 !-----------------------------------------------------------------------
         CHI = SIGMA - DSIG - (ZLM-SL) * HPI
-        F11V=F11(X,ETA,SL,P11,ACCT,LIMIT,0,ERR,NPQ(1),FPMAX,ACC8,ACC16)
-        RERR = MAX(RERR,ERR)
-        IF (KASE.EQ.6) GO TO 210
+        F11V=F11(X,ETA,SL,P11,ACCT,LIMIT,0,ERROR,NPQ(1),FPMAX,ACC8,ACC16)
+        RERR = MAX(RERR,ERROR)
+        IF (KASE.EQ.6) GOTO 210
         FESL = F11V * EXP(EK)
         FCL1 = EXP(PM*CHI) * FCM
         HCL = FCL1 - FESL
         RERR=MAX(RERR,ACCT*MAX(ABSC(FCL1),ABSC(FESL))/ABSC(HCL))
         HCL = HCL / SIN(CHI) * (SFSH/(SF*SF))
 !-----------------------------------------------------------------------
-        GO TO 220
+        GOTO 220
 !-----------------------------------------------------------------------
 ! *** Use the logarithmic expansion for the irregular solution (KASE 6)
 !        for the case that BB is integral so sin(CHI) would be zero.
@@ -1044,12 +1058,12 @@ MODULE COULCC_M
         ELSE
           IF (ID.GT.0 .AND. .NOT.ZLNEG) F11V = FCM * EXP(-EK)
           HCL = EXP(CHI-CLGBB-CLOGAM(AA))*(-1)**(N+1)*(F11V*ZLOG &
-            & +F11(X,ETA,SL,-PM,ACCT,LIMIT,2,ERR,NPQ(2),FPMAX,ACC8,ACC16))
-          RERR = MAX(RERR,ERR)
+            & +F11(X,ETA,SL,-PM,ACCT,LIMIT,2,ERROR,NPQ(2),FPMAX,ACC8,ACC16))
+          RERR = MAX(RERR,ERROR)
         END IF
         IF (N.GT.0) THEN
            EK  = CHI + CLOGAM(RL) - CLGAB - RL*ZLOG
-           DF  = F11(X,ETA,-SL-ONE,-PM,ZERO,N,0,ERR,L,FPMAX,ACC8,ACC16)
+           DF  = F11(X,ETA,-SL-ONE,-PM,ZERO,N,0,ERROR,L,FPMAX,ACC8,ACC16)
            HCL = HCL + EXP(EK) * DF
         END IF
 !-----------------------------------------------------------------------
@@ -1065,7 +1079,7 @@ MODULE COULCC_M
 !      so determine linear transformations for Functions required :
 !-----------------------------------------------------------------------
   230 IH = ABS(MODE1) / 10
-      IF (KFN.EQ.3) IH = (3-CIK%IM)/2  + HALF
+      IF (KFN.EQ.3) IH = INT((3._dpf-CIK%IM)/2._dpf  + HALF,KIND=spi)
       P11 = ONE
       IF (IH.EQ.1) P11 = CI
       IF (IH.EQ.2) P11 = -CI
@@ -1104,37 +1118,39 @@ MODULE COULCC_M
       ELSE
         TA = ABS(SCALE) + P11%IM*SCALE
 !-----------------------------------------------------------------------
-        IF (ABSC(DF).GT.ACCH .AND. TA.GT.FPLMAX) GO TO 320
+        IF (ABSC(DF).GT.ACCH .AND. TA.GT.FPLMAX) GOTO 320
         IF (ABSC(DF).GT.ACCH) DF = DF * EXP(TA)
         SF = TWO * (LH-IH) * SCALE
         RK = ZERO
-        IF (SF.GT.FPLMAX) GO TO 320
+        IF (SF.GT.FPLMAX) GOTO 320
         IF (SF.GT.FPLMIN) RK = EXP(SF)
       END IF
 !-----------------------------------------------------------------------
       KAS((3-ID)/2) = KASE
       W = FCM / FCL
-      IF (LOG(ABSC(W))+LOG(ABSC(FC(LF))) .LT. FPLMIN) GO TO 340
-      IF (MODE.GE.3) GO TO 240
-      IF (ABSC(F-PQ1) .LT. ACCH*ABSC(F) .AND. PR) WRITE(STDOUT,1020) LH,ZLM+DELL
-      HPL = HCL * PQ1
-      IF (ABSC(HPL).LT.FPMIN.OR.ABSC(HCL).LT.FPMIN) GO TO 330
+      IF (LOG(ABSC(W))+LOG(ABSC(FC(LF))) .LT. FPLMIN) GOTO 340
+      !IF (MODE.GE.3) GOTO 240
+      IF (MODE.LT.3) THEN
+        IF (ABSC(F-PQ1) .LT. ACCH*ABSC(F) .AND. PR) WRITE(STDOUT,1020) LH,ZLM+DELL
+        HPL = HCL * PQ1
+        IF (ABSC(HPL).LT.FPMIN.OR.ABSC(HCL).LT.FPMIN) GOTO 330
+      END IF
 !-----------------------------------------------------------------------
 ! *** IDward recurrence from HCL,HPL(LF) (stored GC(L) is RL if reqd)
 ! *** renormalise FC,FCP at each lambda
 ! ***    ZL   = ZLM - MIN(ID,0) here
 !-----------------------------------------------------------------------
-  240 DO 270 L = LF,L1,ID
+     DO L = LF,L1,ID
 !-----------------------------------------------------------------------
         FCL = W* FC(L)
-        IF (ABSC(FCL).LT.FPMIN) GO TO 340
+        IF (ABSC(FCL).LT.FPMIN) GOTO 340
         IF (IFCP) FPL = W*FCP(L)
         FC(L)  = BETA * FCL
         IF (IFCP) FCP(L) = BETA * (FPL - ALPHA * FCL) * CIK
         FC(L)  = TIDY(FC(L),ACCUR)
         IF (IFCP) FCP(L) = TIDY(FCP(L),ACCUR)
-        IF (MODE .GE. 3) GO TO 260
-        IF (L.EQ.LF)  GO TO 250
+        IF (MODE .GE. 3) GOTO 260
+        IF (L.EQ.LF)  GOTO 250
         ZL = ZL + ID
         ZID= ZL * ID
         RL = GC(L)
@@ -1153,7 +1169,7 @@ MODULE COULCC_M
           HPL = (HCL - RL * HCL1) * ID
         END IF
         HCL = HCL1
-        IF (ABSC(HCL).GT.FPMAX) GO TO 320
+        IF (ABSC(HCL).GT.FPMAX) GOTO 320
   250   GC(L) = AA * (RK * HCL + DF * FCL)
         IF (MODE.EQ.1) GCP(L) = (AA*(RK*HPL+DF*FPL)-ALPHA*GC(L))*CIK
         GC(L) = TIDY(GC(L),ACCUR)
@@ -1162,7 +1178,7 @@ MODULE COULCC_M
   260   IF (KFN.GE.3) BETA = - BETA * Q
 !-----------------------------------------------------------------------
         LAST = MIN(LAST,(L1-L)*ID)
-  270 CONTINUE
+      END DO
 !-----------------------------------------------------------------------
 ! *** Come here after all soft errors to determine how many L values ok
 !-----------------------------------------------------------------------
@@ -1171,7 +1187,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 ! *** Come here after ALL errors for this L range (ZLM,ZLL)
 !-----------------------------------------------------------------------
-  290 IF (ID.GT.0 .AND. LF.NE.M1) GO TO 300
+  290 IF (ID.GT.0 .AND. LF.NE.M1) GOTO 300
       IF (IFAIL.LT.0) RETURN
       IF (RERR.GT.ACCB) WRITE(STDOUT,1070) RERR
       IF (RERR.GT.0.1) IFAIL = -4
@@ -1189,7 +1205,7 @@ MODULE COULCC_M
       LF = MIN(LF,L1)
       L1 = M1
 !-----------------------------------------------------------------------
-      GO TO 10
+      GOTO 10
 !-----------------------------------------------------------------------
 ! ***    error messages
 !-----------------------------------------------------------------------
@@ -1209,24 +1225,24 @@ MODULE COULCC_M
   310 IF (PR) WRITE(STDOUT,1000) XX
       RETURN
   320 IF (PR) WRITE(STDOUT,1010) ZL+DELL,'IR',HCL,'MORE',FPMAX
-      GO TO 280
+      GOTO 280
   330 IF (PR) WRITE(STDOUT,1010) ZL+DELL,'IR',HCL,'LESS',FPMIN
-      GO TO 280
+      GOTO 280
   340 IF (PR) WRITE(STDOUT,1010) ZL+DELL,'  ',FCL,'LESS',FPMIN
-      GO TO 280
+      GOTO 280
   350 IF (PR) WRITE(STDOUT,1010) ZL+DELL,'  ',FCL,'MORE',FPMAX
-      GO TO 280
+      GOTO 280
   360 IF (PR) WRITE(STDOUT,1030) ZLL+DELL
-      GO TO 280
+      GOTO 280
   370 IF (PR) WRITE(STDOUT,1040) Z11,I
-      GO TO 390
+      GOTO 390
   380 IF (PR) WRITE(STDOUT,1050) ZLMIN,ZLM,ZLM+ONE,ZLMIN+NL-ONE
   390 IFAIL = -1
-      GO TO 290
+      GOTO 290
 !-----------------------------------------------------------------------
     END SUBROUTINE COULCC
 !-----------------------------------------------------------------------
-    COMPLEX(dpf) FUNCTION CF1C(X,ETA,ZL,EPS,FCL,TPK1,ETANE0,LIMIT,ERR,NFP &
+    COMPLEX(dpf) FUNCTION CF1C(X,ETA,ZL,EPS,FCL,TPK1,ETANE0,LIMIT,ERROR,NFP &
                             &, ACCH,FPMIN,FPMAX,PR,CALLER)
 !-----------------------------------------------------------------------
 ! *** Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)
@@ -1236,7 +1252,7 @@ MODULE COULCC_M
       COMPLEX(dpf),    INTENT(OUT) :: TPK1,FCL
       INTEGER(spi),    INTENT(IN)  :: LIMIT
       INTEGER(spi),    INTENT(OUT) :: NFP
-      REAL(dpf),       INTENT(OUT) :: ERR
+      REAL(dpf),       INTENT(OUT) :: ERROR
       REAL(dpf),       INTENT(IN)  :: EPS,ACCH,FPMIN,FPMAX
       LOGICAL,         INTENT(IN)  :: PR,ETANE0
       CHARACTER(len=6),INTENT(IN)  :: CALLER
@@ -1254,7 +1270,7 @@ MODULE COULCC_M
       FCL = ONE
       XI  = ONE/X
       PK  = ZL+ONE
-      PX  = PK+LIMIT
+      PX  = PK%RE+LIMIT
 !-----------------------------------------------------------------------
 ! ***   test ensures b1 .ne. zero for negative ETA etc.; fixup is exact.
 !-----------------------------------------------------------------------
@@ -1321,17 +1337,17 @@ MODULE COULCC_M
       END DO LOOP_30
 !-----------------------------------------------------------------------
       IF (CONVERGED) THEN
-        NFP = PK - ZL - 1
-        ERR = EPS * SQRT(REAL(NFP,KIND=dpf))
+        NFP = INT(PK%RE - ZL%RE,KIND=spi) - 1_spi
+        ERROR = EPS * SQRT(REAL(NFP,KIND=dpf))
         CF1C = F
       ELSE
         IF (PR) WRITE (STDOUT,1010) CALLER,LIMIT,ABS(X)
-        ERR = TWO
+        ERROR = TWO
       END IF
 !-----------------------------------------------------------------------
     END FUNCTION CF1C
 !-----------------------------------------------------------------------
-    COMPLEX(dpf) FUNCTION CF2(X,ETA,ZL,PM,EPS,LIMIT,ERR,NPQ,ACC8,ACCH  &
+    COMPLEX(dpf) FUNCTION CF2(X,ETA,ZL,PM,EPS,LIMIT,ERROR,NPQ,ACC8,ACCH  &
                             &, PR,ACCUR,DELL,CALLER)
 !-----------------------------------------------------------------------
 !                                    (omega)        (omega)
@@ -1342,7 +1358,7 @@ MODULE COULCC_M
       COMPLEX(dpf),    INTENT(IN)  :: X,ETA,ZL,PM,DELL
       INTEGER(spi),    INTENT(IN)  :: LIMIT
       INTEGER(spi),    INTENT(OUT) :: NPQ
-      REAL(dpf),       INTENT(OUT) :: ERR
+      REAL(dpf),       INTENT(OUT) :: ERROR
       REAL(dpf),       INTENT(IN)  :: EPS,ACC8,ACCH,ACCUR
       LOGICAL,         INTENT(IN)  :: PR
       CHARACTER(len=6),INTENT(IN)  :: CALLER
@@ -1374,18 +1390,18 @@ MODULE COULCC_M
       END IF
       DD = ONE/BB
       DL = AA*DD* RL
-      ERR = HUGE(1._dpf)
-      DO WHILE (ERR.GE.MAX(EPS,ACC8*RK*HALF) .AND. RK.LE.TA)
+      ERROR = HUGE(1._dpf)
+      DO WHILE (ERROR.GE.MAX(EPS,ACC8*RK*HALF) .AND. RK.LE.TA)
         PQ = PQ + DL
         RK = RK + TWO
         AA = AA + RK + WI
         BB = BB + TWO*PM
         DD = ONE/(AA*DD + BB)
         DL = DL*(BB*DD - ONE)
-        ERR = ABSC(DL)/ABSC(PQ)
+        ERROR = ABSC(DL)/ABSC(PQ)
       END DO
 !-----------------------------------------------------------------------
-      NPQ = RK/TWO
+      NPQ = INT(RK/TWO,KIND=spi)
       PQ  = PQ + DL
       CF2 = PQ
 !-----------------------------------------------------------------------
@@ -1393,11 +1409,11 @@ MODULE COULCC_M
      & ' ITERATIONS, SO ERROR IN IRREGULAR SOLUTION =',1P,D11.2,' AT ZL &
      & =', 0P,2F8.3)
 !-----------------------------------------------------------------------
-      IF (PR.AND.NPQ.GE.LIMIT-1 .AND. ERR.GT.ACCUR) WRITE(STDOUT,1000) CALLER,INT(PM%IM),NPQ,ERR,ZL+DELL
+      IF (PR.AND.NPQ.GE.LIMIT-1 .AND. ERROR.GT.ACCUR) WRITE(STDOUT,1000) CALLER,INT(PM%IM),NPQ,ERROR,ZL+DELL
 !-----------------------------------------------------------------------
     END FUNCTION CF2
 !-----------------------------------------------------------------------
-    COMPLEX(dpf) FUNCTION F11(X,ETA,ZL,P,EPS,LIMIT,KIND,ERR,NITS,FPMAX,ACC8,ACC16)
+    COMPLEX(dpf) FUNCTION F11(X,ETA,ZL,P,EPS,LIMIT,KIND,ERROR,NITS,FPMAX,ACC8,ACC16)
 !-----------------------------------------------------------------------
 ! *** evaluate the HYPERGEOMETRIC FUNCTION 1F1
 !                                        i
@@ -1411,7 +1427,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       COMPLEX(dpf),INTENT(IN)  :: X,ETA,ZL,P
       REAL(dpf),   INTENT(IN)  :: EPS,FPMAX,ACC8,ACC16
-      REAL(dpf),   INTENT(OUT) :: ERR
+      REAL(dpf),   INTENT(OUT) :: ERROR
       INTEGER(spi),INTENT(OUT) :: NITS
       INTEGER(spi),INTENT(IN)  :: LIMIT,KIND
 !-----------------------------------------------------------------------
@@ -1466,14 +1482,14 @@ MODULE COULCC_M
             GI = Z%RE * TI + Z%IM*TR
             DR = DR + GR
             DI = DI + GI
-            ERR = ABS(GR) + ABS(GI)
-            IF (ERR.GT.FPMAX) THEN
+            ERROR = REAL(ABS(GR) + ABS(GI),KIND=dpf)
+            IF (ERROR.GT.FPMAX) THEN
               EXIT_COND=-99
               EXIT LOOP_20
             END IF
-            RK  = ABS(DR) + ABS(DI)
+            RK  = REAL(ABS(DR) + ABS(DI),KIND=dpf)
             TA = MAX(TA,RK)
-            IF (ERR.LT.RK*EPS .OR. I.GE.4.AND.ERR.LT.ACC16) THEN
+            IF (ERROR.LT.RK*EPS .OR. I.GE.4.AND.ERROR.LT.ACC16) THEN
               EXIT_COND=2
               EXIT LOOP_20
             END IF
@@ -1506,14 +1522,14 @@ MODULE COULCC_M
             IF (KIND.GE.2) F = F + ONE/AI - ONE/BI - ONE/R
             T  = G * F
             DD = DD + T
-            ERR = ABSC(T)
-            IF (ERR.GT.FPMAX) THEN
+            ERROR = ABSC(T)
+            IF (ERROR.GT.FPMAX) THEN
               EXIT_COND=-99
               EXIT LOOP_40
             END IF
             RK = ABSC(DD)
             TA = MAX(TA,RK)
-            IF (ERR.LT.RK*EPS.OR.ERR.LT.ACC8.AND.I.GE.4) THEN
+            IF (ERROR.LT.RK*EPS.OR.ERROR.LT.ACC8.AND.I.GE.4) THEN
               EXIT_COND=3
               EXIT LOOP_40
             END IF
@@ -1528,14 +1544,14 @@ MODULE COULCC_M
           NITS = -1
         CASE(1)
           F11 = ZERO
-          ERR = ZERO
+          ERROR = ZERO
           NITS= 1
         CASE(2)
-          F11 = DR + CI * DI
-          ERR = ACC16 * TA / RK
+          F11 = CMPLX(DR + CI * DI,KIND=dpf)
+          ERROR = ACC16 * TA / RK
           NITS = I
         CASE(3)
-          ERR = ACC8 * TA / RK
+          ERROR = ACC8 * TA / RK
           F11 = DD
           NITS = I
         CASE(-99)
@@ -1642,7 +1658,7 @@ MODULE COULCC_M
       END DO LOOP_30
 !-----------------------------------------------------------------------
       IF (CONVERGED) THEN
-        NFP = PK - ZL - 1
+        NFP = INT(PK - ZL,KIND=spi) - 1_spi
         ERROR = EPS * SQRT(REAL(NFP,KIND=dpf))
         CF1R = F
       ELSE
