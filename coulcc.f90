@@ -432,6 +432,8 @@ MODULE COULCC_M
   USE RCF_M
   USE CSTEED_M
 !-----------------------------------------------------------------------
+  IMPLICIT NONE
+!-----------------------------------------------------------------------
   CONTAINS
 !-----------------------------------------------------------------------
 !  COMPLEX COULOMB WAVEFUNCTION PROGRAM USING STEED'S METHOD
@@ -544,9 +546,6 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
     SUBROUTINE COULCC(XX,ETA1,ZLMIN,NL,FC,GC,FCP,GCP,SIG,MODE1,KFN,IFAIL)
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX(dpf) (A-H,O-Z)
-      !IMPLICIT NONE
-!-----------------------------------------------------------------------
       COMPLEX(dpf),              INTENT(IN)    :: XX,ETA1,ZLMIN
       INTEGER(spi),              INTENT(IN)    :: NL,MODE1,KFN
       COMPLEX(dpf),DIMENSION(NL),INTENT(OUT)   :: FC,GC,FCP,GCP,SIG
@@ -576,30 +575,33 @@ MODULE COULCC_M
       REAL(dpf),   PARAMETER :: FPLMIN=LOG(FPMIN) !-140_dpf 
 !-----------------------------------------------------------------------
       COMPLEX(dpf),DIMENSION(JMAX,4) :: XRCF
-      LOGICAL :: PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2
-      REAL(dpf) :: ACCUR,ERR,ACCT,ACCH,ACCB,PACCQ,EPS,OFF,SCALE,SF,SFSH,TA,RK,OMEGA,ABSX
-      !INTEGER(spi) ::
-      !COMPLEX(dpf) :: X,ETA
+!-----------------------------------------------------------------------
+      LOGICAL      :: PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2
+      REAL(dpf)    :: ACCUR,ERR,ACCT,ACCH,ACCB,PACCQ,EPS,OFF,SCALE,SF
+      REAL(dpf)    :: SFSH,TA,RK,OMEGA,ABSX
+      INTEGER(spi) :: ID,I,IH,KASE,L,L1,LAST,LF,LH,M1,MODE,MONO,N
+      COMPLEX(dpf) :: X,ETA,ETAI,DELL,ZM1,AA,AB,ALPHA,BB,BETA,CHI,CIK
+      COMPLEX(dpf) :: CLGAA,CLGAB,CLGBB,CLL,DF,DSIG,EK,ETAP,F,F11V,F20V
+      COMPLEX(dpf) :: FCL,FCL1,FCM,FESL,FEST,FIRST,FPL,GAM,HCL,HCL1,P,P11
+      COMPLEX(dpf) :: PK,PL,PM,PQ1,PQ2,Q,RL,SIGMA,SL,THETA,THETAM,TPK1,W
+      COMPLEX(dpf) :: XI,XLOG,Z11,ZID,ZL,ZLL,ZLM,ZLOG,HPL
 !-----------------------------------------------------------------------
       MODE = MOD(ABS(MODE1),10)
       IFCP = MOD(MODE,2).EQ.1
-      PR = IFAIL.NE.0
+      PR = IFAIL.NE.0 !PRINT REPORT
       IFAIL = -2
       N11   = 0
       NFP   = 0
-      KAS(1)= 0
-      KAS(2)= 0
-      NPQ(1)= 0
-      NPQ(2)= 0
+      KAS(:)= 0
+      NPQ(:)= 0
       N20 = 0
       ACCUR = MAX((1._dpf)*(10._dpf)**(-14_spi), 50*ACC8)
       ACCT = ACCUR * .5
 !-----------------------------------------------------------------------
-!     initialise the log-gamma function
-!-----------------------------------------------------------------------
       CALL LOGAM_INIT(ACC8,FPLMIN)
-      ACCH  = SQRT(ACCUR)
-      ACCB  = SQRT(ACCH)
+!-----------------------------------------------------------------------
+      ACCH = SQRT(ACCUR)
+      ACCB = SQRT(ACCH)
       RERR = ACCT
 !-----------------------------------------------------------------------
       CIK = ONE
@@ -1223,8 +1225,6 @@ MODULE COULCC_M
 ! *** Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)
 !     using complex arithmetic
 !-----------------------------------------------------------------------
-      IMPLICIT NONE
-!-----------------------------------------------------------------------
       COMPLEX(dpf),    INTENT(IN)  :: X,ETA,ZL
       COMPLEX(dpf),    INTENT(OUT) :: TPK1,FCL
       INTEGER(spi),    INTENT(IN)  :: LIMIT
@@ -1313,8 +1313,6 @@ MODULE COULCC_M
 !                                    ZL             ZL
 !     where PM = omega.i
 !-----------------------------------------------------------------------
-      IMPLICIT NONE
-!-----------------------------------------------------------------------
       COMPLEX(dpf),    INTENT(IN)  :: X,ETA,ZL,PM,DELL
       INTEGER(spi),    INTENT(IN)  :: LIMIT
       INTEGER(spi),    INTENT(OUT) :: NPQ
@@ -1382,8 +1380,6 @@ MODULE COULCC_M
 !  If KIND = 0 : using extended precision but real arithmetic only,
 !            1 : using normal precision in complex arithmetic,
 !   or       2 : using normal complex arithmetic, but with CDIGAM factor
-!-----------------------------------------------------------------------
-      IMPLICIT NONE
 !-----------------------------------------------------------------------
       COMPLEX(dpf),INTENT(IN)  :: X,ETA,ZL,P
       REAL(dpf),   INTENT(IN)  :: EPS,FPMAX,ACC8,ACC16
@@ -1497,8 +1493,6 @@ MODULE COULCC_M
 ! ***    Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)
 !        using real arithmetic
 !-----------------------------------------------------------------------
-      IMPLICIT NONE
-!-----------------------------------------------------------------------
       REAL(dpf),       INTENT(IN)     :: X,ETA,ZL,EPS
       REAL(dpf),       INTENT(INOUT)  :: FCL,TPK1,ERROR
       REAL(dpf),       INTENT(IN)     :: ACCH,FPMIN,FPMAX
@@ -1591,8 +1585,6 @@ MODULE COULCC_M
 !     & evaluated progressively by Steed's method to obtain convergence.
 !-----------------------------------------------------------------------
 !      useful number also input:  FPMAX = near-largest f.p. number
-!-----------------------------------------------------------------------
-      IMPLICIT NONE
 !-----------------------------------------------------------------------
       COMPLEX(dpf),                  INTENT(IN)    :: AA,BB,Z
       COMPLEX(dpf),DIMENSION(JMAX,4),INTENT(INOUT) :: X
@@ -1708,8 +1700,6 @@ MODULE COULCC_M
 !     & evaluated progressively by Steed's method to obtain convergence.
 !-----------------------------------------------------------------------
 !      useful number also input:  FPMAX = near-largest f.p. number
-!-----------------------------------------------------------------------
-      IMPLICIT NONE
 !-----------------------------------------------------------------------
       COMPLEX(dpf),                   INTENT(IN)    :: RHO,ETA,XL,PSI
       COMPLEX(dpf),                   INTENT(INOUT) :: FCL
@@ -1835,7 +1825,6 @@ MODULE COULCC_M
     END FUNCTION CF1A
 !-----------------------------------------------------------------------
     PURE LOGICAL FUNCTION NPINT(Z,ACCB)
-      IMPLICIT NONE
       COMPLEX(dpf),INTENT(IN) :: Z
       REAL(dpf),   INTENT(IN) :: ACCB
       REAL(dpf), PARAMETER :: HALF=0.5_dpf
@@ -1844,22 +1833,17 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
     PURE INTEGER(spi) FUNCTION NINTC(Z)
       !!integer nearest to a complex no.
-      IMPLICIT NONE
       COMPLEX(dpf),INTENT(IN) :: Z
       NINTC = NINT(Z%RE)
     END FUNCTION NINTC
 !-----------------------------------------------------------------------
     PURE REAL(dpf) FUNCTION ABSC(Z)
-      IMPLICIT NONE
       COMPLEX(dpf),INTENT(IN) :: Z
       ABSC = ABS(Z%RE) + ABS(Z%IM)
     END FUNCTION ABSC
 !-----------------------------------------------------------------------
     PURE COMPLEX(dpf) FUNCTION TIDY(Z,ACC)
       !!tidy a complex number
-!-----------------------------------------------------------------------
-      IMPLICIT NONE
-!-----------------------------------------------------------------------
       COMPLEX(dpf),INTENT(IN) :: Z
       REAL(dpf),   INTENT(IN) :: ACC
 !-----------------------------------------------------------------------
