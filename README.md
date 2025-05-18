@@ -47,9 +47,9 @@
 
   original program  RCWFN       in    CPC  8 (1974) 377-395
 
-                 +  RCWFF       in    CPC 11 (1976) 141-142
+  original program  RCWFF       in    CPC 11 (1976) 141-142
 
-                 +  COULFG      in    CPC 27 (1982) 147-166
+  original program  COULFG      in    CPC 27 (1982) 147-166
 
   description of real algorithm in    CPC 21 (1981) 297-314
 
