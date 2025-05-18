@@ -708,7 +708,8 @@ MODULE COULCC_M
 ! *** compare accumulated phase FCL with asymptotic phase for G(k+1) :
 !     to determine estimate of F(ZLL) (with correct sign) to start recur
 !-----------------------------------------------------------------------
-! FLORES -- I.T. has 
+! FLORES -- I.T. HAS -- 
+! this flips the sign of test: 0X=20.,-0.0010, ETA=0.,0., ZLMIN=0.,0. NL=11 MODE=2 KFN=1 LENTZ: J,Y SPH.BESSE
 !   30 W   = LOG(ONE+TWO*ETA*X/(TPK1-ONE)+X*X/TPK1*(TWO*ETA*ETA/(TPK1-ONE)-HALF))
 !      FESL= (ZLL+ONE) * XLOG + CLL + W - LOG(FCL)
   30  W    =  X*X  *(HALF/TPK1 + ONE/TPK1**2) + ETA*(ETA-TWO*X)/TPK1
