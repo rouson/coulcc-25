@@ -1206,11 +1206,23 @@ MODULE COULCC_M
 ! *** Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)
 !     using complex arithmetic
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX(dpf)(A-H,O-Z)
-      LOGICAL PR,ETANE0
-      REAL(dpf) ONE,TWO,EPS,ERR,ACCH,FPMIN,FPMAX,SMALL,RK,PX   !ABSC
-      CHARACTER(len=6) CALLER
-      DATA ONE,TWO / 1D+0, 2D+0 /
+      !IMPLICIT COMPLEX(dpf)(A-H,O-Z)
+      IMPLICIT NONE
+!-----------------------------------------------------------------------
+      COMPLEX(dpf),    INTENT(IN)  :: X,ETA,ZL
+      COMPLEX(dpf),    INTENT(OUT) :: TPK1,FCL
+      INTEGER(spi),    INTENT(IN)  :: LIMIT
+      INTEGER(spi),    INTENT(OUT) :: NFP
+      REAL(dpf),       INTENT(OUT) :: ERR
+      REAL(dpf),       INTENT(IN)  :: EPS,ACCH,FPMIN,FPMAX
+      LOGICAL,         INTENT(IN)  :: PR,ETANE0
+      CHARACTER(len=6),INTENT(IN)  :: CALLER
+!-----------------------------------------------------------------------
+      REAL(dpf), PARAMETER :: ONE=1._dpf
+      REAL(dpf), PARAMETER :: TWO=2._dpf
+!-----------------------------------------------------------------------
+      REAL(dpf) :: RK,PX,SMALL
+      COMPLEX(dpf) :: XI,PK,EK,RK2,F,PK1,TK,SL,D,DF
 !-----------------------------------------------------------------------
  1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,13D9.2/)
  1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
