@@ -318,6 +318,8 @@ MODULE RCF_M
 !-----------------------------------------------------------------------
       IERROR=0_spi
 !-----------------------------------------------------------------------
+      X0 = CMPLX(0._dpf,0._dpf,KIND=dpf)
+!-----------------------------------------------------------------------
       IF (IBEG.GT.4 .AND. M .NE. IBEG-1) THEN
         WRITE(STDOUT,1000) M,IBEG-1
         STOP ("RCF HAS FAILED")
@@ -1583,6 +1585,8 @@ MODULE COULCC_M
  1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,7D9.2/)
  1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
 !-----------------------------------------------------------------------
+      SL=0._dpf
+!-----------------------------------------------------------------------
       FCL = ONE
       XI  = ONE/X
       PK  = ZL + ONE
@@ -1664,6 +1668,7 @@ MODULE COULCC_M
       ELSE
         IF (PR) WRITE(STDOUT,1010) CALLER,LIMIT,ABS(X)
         ERROR = TWO
+        !CF1R = 0._dpf
       END IF
 !-----------------------------------------------------------------------
     END FUNCTION CF1R
@@ -1703,6 +1708,7 @@ MODULE COULCC_M
       RE = 0.0
       X(1,1) = ONE
       SUM = X(1,1)
+      AT=ZERO
       ATL = ABSC(X(1,1))
       F = SUM
       D = ONE
@@ -1819,6 +1825,8 @@ MODULE COULCC_M
       LOGICAL :: BAD_EXIT
 !-----------------------------------------------------------------------
       BAD_EXIT=.FALSE.
+!-----------------------------------------------------------------------
+      K=0_spi
 !-----------------------------------------------------------------------
       T1 = SIN(PSI%RE)
       T2 = COS(PSI%RE)
