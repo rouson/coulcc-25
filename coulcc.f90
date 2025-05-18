@@ -1286,7 +1286,7 @@ MODULE COULCC_M
       TK = TPK1*(XI + EK/PK1)
       D  =  TK - D*RK2
       IF (ABSC(D) .GT. ACCH) GO TO 40
-      IF (PR) WRITE (6,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X
+      IF (PR) WRITE (STDOUT,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X
       RK= RK +   ONE
       IF( RK .GT. TWO) GO TO 50
   40  D = ONE/D
@@ -1303,7 +1303,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       RETURN
 !-----------------------------------------------------------------------
-  50  IF (PR) WRITE (6,1010) CALLER,LIMIT,ABS(X)
+  50  IF (PR) WRITE (STDOUT,1010) CALLER,LIMIT,ABS(X)
       ERR = TWO
 !-----------------------------------------------------------------------
     END FUNCTION CF1C
@@ -1351,24 +1351,26 @@ MODULE COULCC_M
       END IF
       DD = ONE/BB
       DL = AA*DD* RL
-  10  PQ = PQ + DL
-      RK = RK + TWO
-      AA = AA + RK + WI
-      BB = BB + TWO*PM
-      DD = ONE/(AA*DD + BB)
-      DL = DL*(BB*DD - ONE)
-      ERR = ABSC(DL)/ABSC(PQ)
-      IF (ERR.GE.MAX(EPS,ACC8*RK*HALF) .AND. RK.LE.TA) GO TO 10
+      ERR = HUGE(1._dpf)
+      DO WHILE (ERR.GE.MAX(EPS,ACC8*RK*HALF) .AND. RK.LE.TA)
+        PQ = PQ + DL
+        RK = RK + TWO
+        AA = AA + RK + WI
+        BB = BB + TWO*PM
+        DD = ONE/(AA*DD + BB)
+        DL = DL*(BB*DD - ONE)
+        ERR = ABSC(DL)/ABSC(PQ)
+      END DO
 !-----------------------------------------------------------------------
       NPQ = RK/TWO
       PQ  = PQ + DL
+      CF2 = PQ
 !-----------------------------------------------------------------------
  1000 FORMAT(' ',A6,': CF2(',I2,') NOT CONVERGED FULLY IN ',I7,         &
      & ' ITERATIONS, SO ERROR IN IRREGULAR SOLUTION =',1P,D11.2,' AT ZL &
      & =', 0P,2F8.3)
 !-----------------------------------------------------------------------
-      IF (PR.AND.NPQ.GE.LIMIT-1 .AND. ERR.GT.ACCUR) WRITE(STDOUT,1000) CALLER,INT(IMAG(PM)),NPQ,ERR,ZL+DELL
-      CF2 = PQ
+      IF (PR.AND.NPQ.GE.LIMIT-1 .AND. ERR.GT.ACCUR) WRITE(STDOUT,1000) CALLER,INT(PM%IM),NPQ,ERR,ZL+DELL
 !-----------------------------------------------------------------------
     END FUNCTION CF2
 !-----------------------------------------------------------------------
@@ -1551,7 +1553,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       IF (ETANE0) THEN
 !-----------------------------------------------------------------------
-        LOOP_10: DO WHILE(.TRUE.)
+        LOOP_10: DO
           EK  = ETA / PK
           RK2 = ONE + EK*EK
           F   = (EK + PK*XI)*FCL + (FCL - ONE)*XI
@@ -1588,7 +1590,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       CONVERGED=.FALSE.
 !-----------------------------------------------------------------------
-      LOOP_30: DO WHILE (.NOT.CONVERGED)
+      LOOP_30: DO
         PK    = PK1
         PK1   = PK1 + ONE
         TPK1 = PK + PK1
@@ -1599,7 +1601,7 @@ MODULE COULCC_M
         TK=TPK1*(XI + EK/PK1)
         D = TK - D*RK2
         IF (ABS(D) .LE. ACCH) THEN
-          IF (PR) WRITE (6,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X
+          IF (PR) WRITE(STDOUT,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X
           RK= RK + ONE
           IF (RK .GT. TWO) EXIT LOOP_30
         END IF
@@ -1610,7 +1612,10 @@ MODULE COULCC_M
         DF  = DF*(D*TK - ONE)
         F   = F  + DF
         IF (PK .GT. PX) EXIT LOOP_30
-        IF (ABS(DF) .LT. ABS(F)*EPS) CONVERGED=.TRUE.
+        IF (ABS(DF) .LT. ABS(F)*EPS) THEN
+          CONVERGED=.TRUE.
+          EXIT LOOP_30
+        END IF
       END DO LOOP_30
 !-----------------------------------------------------------------------
       IF (CONVERGED) THEN
@@ -1618,7 +1623,7 @@ MODULE COULCC_M
         ERROR = EPS * SQRT(REAL(NFP,KIND=dpf))
         CF1R = F
       ELSE
-        IF (PR) WRITE (6,1010) CALLER,LIMIT,ABS(X)
+        IF (PR) WRITE(STDOUT,1010) CALLER,LIMIT,ABS(X)
         ERROR = TWO
       END IF
 !-----------------------------------------------------------------------
