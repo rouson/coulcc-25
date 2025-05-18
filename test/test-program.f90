@@ -38,7 +38,7 @@ PROGRAM CCTEST
 !-----------------------------------------------------------------------
       WRITE(STDOUT,1000)                                                     
 !-----------------------------------------------------------------------
-  10  READ(STDIN,*,END=40) X,ETA,ZLMIN,NL,MODE,KFN,WHIT,NOTE                
+  10  READ(STDIN,*,END=40) X,ETA,ZLMIN,NL,MODE,KFN,WHIT,NOTE    
       IF (NL.LE.0) GO TO 40                                              
       IFAIL = 1                                                         
       MD = MOD(ABS(MODE),10)                                            
@@ -73,6 +73,6 @@ PROGRAM CCTEST
       END DO LOOP_20                                                          
   30  CONTINUE                                                          
       GO TO 10                                                          
-  40  STOP                                                              
+  40  WRITE(STDOUT,*) "TEST DONE"                                                              
 !-----------------------------------------------------------------------
 END PROGRAM CCTEST
