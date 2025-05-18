@@ -868,7 +868,8 @@ MODULE COULCC_M
 !     original guess for OMEGA (based on THETAM) was wrong
 !     Use KASE 5 or 6 if necessary if Re(X) < XNEAR
 !-----------------------------------------------------------------------
-  100 OMEGA = - OMEGA
+        OMEGA = - OMEGA
+  100 CONTINUE
 !-----------------------------------------------------------------------
       IF (UNSTAB) GO TO 360
       IF (X%RE.LT.-XNEAR .AND. PR) WRITE(STDOUT,1060) '-X',ERR
