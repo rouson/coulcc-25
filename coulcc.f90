@@ -712,6 +712,7 @@ MODULE COULCC_M
 ! this flips the sign of test: 0X=20.,-0.0010, ETA=0.,0., ZLMIN=0.,0. NL=11 MODE=2 KFN=1 LENTZ: J,Y SPH.BESSE
 !   30 W   = LOG(ONE+TWO*ETA*X/(TPK1-ONE)+X*X/TPK1*(TWO*ETA*ETA/(TPK1-ONE)-HALF))
 !      FESL= (ZLL+ONE) * XLOG + CLL + W - LOG(FCL)
+!-----------------------------------------------------------------------
   30  W    =  X*X  *(HALF/TPK1 + ONE/TPK1**2) + ETA*(ETA-TWO*X)/TPK1
       FESL = (ZLL+ONE) * XLOG + CLL - W - LOG(FCL)
 !-----------------------------------------------------------------------
@@ -854,6 +855,7 @@ MODULE COULCC_M
 ! ***   Check for small X, i.e. whether to avoid CF2 :
 !-----------------------------------------------------------------------
 ! FLORES -- I.T. has:
+! no change is test output -- keep original
 !       IF(NOCF2 .OR. ABSX.LT.XNEAR .AND. &
 !          ABSC(ETA)*ABSX .LT. 5 .AND. ABSC(ZLM).LT.4) THEN
 !         KASE = 5
