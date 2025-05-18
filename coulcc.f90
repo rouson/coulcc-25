@@ -1415,7 +1415,7 @@ MODULE COULCC_M
       INTEGER(spi),INTENT(OUT) :: NITS
       INTEGER(spi),INTENT(IN)  :: LIMIT,KIND
 !-----------------------------------------------------------------------
-      COMPLEX(dpf) :: L,AA,BB,Z,DD,G,F,AI,BI,T
+      COMPLEX(dpf) :: AA,BB,Z,DD,G,F,AI,BI,T
       REAL(dpf)    :: R,RK,TA
       INTEGER(spi) :: I,EXIT_COND
       LOGICAL      :: ZLLIN,ZLLIN2
@@ -1668,8 +1668,8 @@ MODULE COULCC_M
 !      useful number also input:  FPMAX = near-largest f.p. number
 !-----------------------------------------------------------------------
       COMPLEX(dpf),                  INTENT(IN)    :: AA,BB,Z
-      COMPLEX(dpf),DIMENSION(JMAX,4),INTENT(INOUT) :: X
       INTEGER(spi),                  INTENT(IN)    :: JMAX
+      COMPLEX(dpf),DIMENSION(JMAX,4),INTENT(INOUT) :: X
       INTEGER(spi),                  INTENT(OUT)   :: N
       REAL(dpf),                     INTENT(INOUT) :: RE
       REAL(dpf),                     INTENT(IN)    :: FPMAX

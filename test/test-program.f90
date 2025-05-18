@@ -51,9 +51,9 @@ PROGRAM CCTEST
 !-----------------------------------------------------------------------
       WRITE(STDOUT,1020) IFAIL,RERR,NFP,N11,NPQ,N20,KAS                             
       IF (IFAIL.LT.0) GO TO 30                                           
-      DO 20 I=1,8                                                       
+      LOOP_20: DO I=1,8                                                       
         L = LDISP(I)                                                      
-        IF (L.GT.NL-IFAIL) GO TO 20                                        
+        IF (L.GT.NL-IFAIL) CYCLE LOOP_20                                        
         ZL = ZLMIN + L - 1                                             
         IF (KFN.NE.0) SIG(L) = ZERO                                     
         IRREG = WHO(2,MAX(KFN+1,1),IH+1)                               
@@ -70,7 +70,7 @@ PROGRAM CCTEST
         WRITE(STDOUT,1030) ZL,REG,FC(L),IRREG,GC(L)                            
         IF (MD.EQ.1)WRITE(STDOUT,1040) FCP(L),GCP(L)                 
         IF (SIG(L).NE.ZERO.AND.KFIN.EQ.0) WRITE(STDOUT,1050) SIG(L)      
-  20  CONTINUE                                                          
+      END DO LOOP_20                                                          
   30  CONTINUE                                                          
       GO TO 10                                                          
   40  STOP                                                              
