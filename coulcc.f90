@@ -1169,7 +1169,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
  1000 FORMAT(/' COULCC: CANNOT CALCULATE IRREGULAR SOLUTIONS FOR X =',1P,2D10.2,', AS ABS(X) IS TOO SMALL'/)
  1010 FORMAT(' COULCC: AT ZL =',2F8.3,' ',A2,'REGULAR SOLUTION (',1P,2E10.1,') WILL BE ',A4,' THAN',E10.1)
- 1020 FORMAT('0COULCC WARNING: LINEAR INDEPENDENCE BETWEEN ''F'' AND ''H(',I1,')'' &
+ 1020 FORMAT(' COULCC WARNING: LINEAR INDEPENDENCE BETWEEN ''F'' AND ''H(',I1,')'' &
              & IS LOST AT ZL =',2F7.2,' (EG. COULOMB EIGENSTATE, OR CF1 UNSTABLE)'/)
  1030 FORMAT(' COULCC: (ETA&L)/X TOO LARGE FOR CF1A, AND CF1 UNSTABLE ATL =',2F8.2)
  1040 FORMAT(' COULCC: OVERFLOW IN 1F1 SERIES AT ZL =',2F8.3,' AT TERM',I5)
@@ -1177,8 +1177,8 @@ MODULE COULCC_M
         &  ,', OR MULTIPLE INSTABILITIES PRESENT.'                         &
         & ,/,' TRY CALLING TWICE,  FIRST FOR ZL FROM',2F8.3,' TO',2F8.3,   &
         &  ' (INCL.)',/,20X,     'SECOND FOR ZL FROM',2F8.3,' TO',2F8.3)
- 1060 FORMAT('0COULCC WARNING: AS ''',A2,''' REFLECTION RULES NOT USED,ERRORS CAN BE UP TO',1P,D12.2/)
- 1070 FORMAT('0COULCC WARNING: OVERALL ROUNDOFF ERROR APPROX.',1P,E11.1)
+ 1060 FORMAT(' COULCC WARNING: AS ''',A2,''' REFLECTION RULES NOT USED,ERRORS CAN BE UP TO',1P,D12.2/)
+ 1070 FORMAT(' COULCC WARNING: OVERALL ROUNDOFF ERROR APPROX.',1P,E11.1)
 !-----------------------------------------------------------------------
   310 IF (PR) WRITE(STDOUT,1000) XX
       RETURN
@@ -1206,7 +1206,6 @@ MODULE COULCC_M
 ! *** Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)
 !     using complex arithmetic
 !-----------------------------------------------------------------------
-      !IMPLICIT COMPLEX(dpf)(A-H,O-Z)
       IMPLICIT NONE
 !-----------------------------------------------------------------------
       COMPLEX(dpf),    INTENT(IN)  :: X,ETA,ZL
