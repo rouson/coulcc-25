@@ -1242,33 +1242,43 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       REAL(dpf) :: RK,PX,SMALL
       COMPLEX(dpf) :: XI,PK,EK,RK2,F,PK1,TK,SL,D,DF
+      LOGICAL :: CONVERGED
 !-----------------------------------------------------------------------
  1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,13D9.2/)
  1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
 !-----------------------------------------------------------------------
       FCL = ONE
       XI  = ONE/X
-      PK  = ZL + ONE
-      PX  = PK  + LIMIT
-  10  EK  = ETA / PK
-      RK2 = ONE + EK*EK
-      F   = (EK + PK*XI)*FCL + (FCL - ONE)*XI
-      PK1 =  PK + ONE
-      TPK1 = PK + PK1
-      TK  = TPK1*(XI + EK/PK1)
-      IF (ETANE0) THEN
+      PK  = ZL+ONE
+      PX  = PK+LIMIT
 !-----------------------------------------------------------------------
 ! ***   test ensures b1 .ne. zero for negative ETA etc.; fixup is exact.
 !-----------------------------------------------------------------------
-        IF (ABSC(TK) .GT. ACCH) GO TO 20
-        FCL  = RK2/(ONE + (ETA/PK1)**2)
-        SL   = TPK1*XI * (TPK1+TWO)*XI
-        PK   =  TWO + PK
-        GO TO 10
+      IF (ETANE0) THEN
+        LOOP_10: DO
+          EK  = ETA / PK
+          RK2 = ONE + EK*EK
+          F   = (EK + PK*XI)*FCL + (FCL - ONE)*XI
+          PK1 =  PK + ONE
+          TPK1 = PK + PK1
+          TK  = TPK1*(XI + EK/PK1)
+          IF (ABSC(TK) .GT. ACCH) EXIT LOOP_10
+          FCL  = RK2/(ONE + (ETA/PK1)**2)
+          SL   = TPK1*XI * (TPK1+TWO)*XI
+          PK   =  TWO + PK
+        END DO LOOP_10
+      ELSE
+        EK  = ETA / PK
+        RK2 = ONE + EK*EK
+        F   = (EK + PK*XI)*FCL + (FCL - ONE)*XI
+        PK1 =  PK + ONE
+        TPK1 = PK + PK1
+        TK  = TPK1*(XI + EK/PK1)
       END IF
-  20  D  =  ONE/TK
+!-----------------------------------------------------------------------
+      D  =  ONE/TK
       DF = -FCL*RK2*D
-      IF (REAL(PK).GT.REAL(ZL)+TWO) FCL = - RK2 * SL
+      IF (PK%RE.GT.ZL%RE+TWO) FCL = - RK2 * SL
       FCL = FCL * D * TPK1 * XI
       F   =  F  + DF
 !-----------------------------------------------------------------------
@@ -1276,35 +1286,44 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       RK    = ONE
       SMALL = SQRT(FPMIN)
-  30  PK    = PK1
-      PK1 = PK1 + ONE
-      TPK1 = PK + PK1
-      IF (ETANE0) THEN
-        EK  = ETA / PK
-        RK2 = ONE + EK*EK
+      CONVERGED=.FALSE.
+!-----------------------------------------------------------------------
+      LOOP_30: DO
+        PK    = PK1
+        PK1 = PK1 + ONE
+        TPK1 = PK + PK1
+        IF (ETANE0) THEN
+          EK  = ETA / PK
+          RK2 = ONE + EK*EK
+        END IF
+        TK = TPK1*(XI + EK/PK1)
+        D  =  TK - D*RK2
+        IF (ABSC(D) .LE. ACCH) THEN
+          IF (PR) WRITE (STDOUT,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X
+          RK= RK +   ONE
+          IF( RK .GT. TWO) EXIT LOOP_30
+        END IF
+        D = ONE/D
+        FCL = FCL * D * TPK1*XI
+        IF (ABSC(FCL).LT.SMALL) FCL = FCL / SMALL
+        IF (ABSC(FCL).GT.FPMAX) FCL = FCL / FPMAX
+        DF = DF*(D*TK - ONE)
+        F  = F  + DF
+        IF (PK%RE .GT. PX) EXIT LOOP_30
+        IF (ABSC(DF) .LT. ABSC(F)*EPS) THEN
+          CONVERGED=.TRUE.
+          EXIT LOOP_30
+        END IF
+      END DO LOOP_30
+!-----------------------------------------------------------------------
+      IF (CONVERGED) THEN
+        NFP = PK - ZL - 1
+        ERR = EPS * SQRT(REAL(NFP,KIND=dpf))
+        CF1C = F
+      ELSE
+        IF (PR) WRITE (STDOUT,1010) CALLER,LIMIT,ABS(X)
+        ERR = TWO
       END IF
-      TK = TPK1*(XI + EK/PK1)
-      D  =  TK - D*RK2
-      IF (ABSC(D) .GT. ACCH) GO TO 40
-      IF (PR) WRITE (STDOUT,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X
-      RK= RK +   ONE
-      IF( RK .GT. TWO) GO TO 50
-  40  D = ONE/D
-      FCL = FCL * D * TPK1*XI
-      IF (ABSC(FCL).LT.SMALL) FCL = FCL / SMALL
-      IF (ABSC(FCL).GT.FPMAX) FCL = FCL / FPMAX
-      DF = DF*(D*TK - ONE)
-      F  = F  + DF
-      IF( REAL(PK) .GT. PX ) GO TO 50
-      IF (ABSC(DF) .GE. ABSC(F)*EPS) GO TO 30
-      NFP = PK - ZL - 1
-      ERR = EPS * SQRT(REAL(NFP))
-      CF1C = F
-!-----------------------------------------------------------------------
-      RETURN
-!-----------------------------------------------------------------------
-  50  IF (PR) WRITE (STDOUT,1010) CALLER,LIMIT,ABS(X)
-      ERR = TWO
 !-----------------------------------------------------------------------
     END FUNCTION CF1C
 !-----------------------------------------------------------------------
