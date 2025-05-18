@@ -13,8 +13,6 @@ PROGRAM CCTEST
       COMPLEX(dpf) :: X,ETA,ZLMIN,ZL,WS
       COMPLEX(dpf),DIMENSION(201) :: FC,GC,FCP,GCP,SIG               
 !-----------------------------------------------------------------------
-      !INTEGER(spi),DIMENSION(3) :: NPQ
-!-----------------------------------------------------------------------
       CHARACTER(len=20) :: NOTE                                         
       CHARACTER(len=4)  :: IRREG,REG                                  
 !-----------------------------------------------------------------------
