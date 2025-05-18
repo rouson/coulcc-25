@@ -904,9 +904,9 @@ MODULE COULCC_M
         IF (AXIAL) KASE = 3
       ELSE
         KASE = 1
-! FLORES I.T. HAS
-!        IF (NPQ(1).GT.0 .AND. NPQ(1) * R20 .LT. JMAX) KASE = 4
-        IF (NPQ(1) * R20 .LT. JMAX) KASE = 4
+! FLORES I.T. HAS -- keep modification -- fixes maxed out iters in F20
+        IF (NPQ(1).GT.0 .AND. NPQ(1) * R20 .LT. JMAX) KASE = 4
+        !IF (NPQ(1) * R20 .LT. JMAX) KASE = 4
 !-----------------------------------------------------------------------
 !  i.e. change to kase=4 if the 2F0 predicted to converge
 !-----------------------------------------------------------------------
