@@ -545,22 +545,41 @@ MODULE COULCC_M
     SUBROUTINE COULCC(XX,ETA1,ZLMIN,NL,FC,GC,FCP,GCP,SIG,MODE1,KFN,IFAIL)
 !-----------------------------------------------------------------------
       IMPLICIT COMPLEX(dpf) (A-H,O-Z)
-      PARAMETER(JMAX=50)
-      DIMENSION FC(NL),GC(NL),FCP(NL),GCP(NL),SIG(NL),XRCF(JMAX,4)
-      LOGICAL PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2
-      REAL(dpf) ERR,ACCUR,ACCT,ACC8,ACCH,ACC16,ACCB, XNEAR
-      REAL(dpf) ZERO,ONE,TWO,HALF,HPI,TLOG,FPMAX,FPMIN,FPLMIN,FPLMAX
-      REAL(dpf) PACCQ,EPS,OFF,SCALE,SF,SFSH,TA,RK,OMEGA,R20,ASYM,ABSX
+      !IMPLICIT NONE
 !-----------------------------------------------------------------------
-      intent(in) :: XX,ETA1,ZLMIN,NL,MODE1,KFN
-      intent(out):: FC,GC,FCP,GCP,SIG
-      intent(inout):: IFAIL
+      COMPLEX(dpf),              INTENT(IN)    :: XX,ETA1,ZLMIN
+      INTEGER(spi),              INTENT(IN)    :: NL,MODE1,KFN
+      COMPLEX(dpf),DIMENSION(NL),INTENT(OUT)   :: FC,GC,FCP,GCP,SIG
+      INTEGER(spi),              INTENT(INOUT) :: IFAIL
 !-----------------------------------------------------------------------
-      DATA ZERO,ONE,TWO,LIMIT /0.0D+0, 1.0D+0, 2.0D+0, 20000 /
-      DATA HALF, CI / 0.5D+0, (0D+0, 1D+0) /
-      DATA FPMAX,FPMIN,FPLMAX,FPLMIN / 1D+60,1D-60 ,140D+0, -140D+0 /
-      DATA R20,ASYM,XNEAR,NDROP / 3., 3., .5, 5 /
-      DATA ACCUR, ACC8, ACC16 / 1D-14, 2D-16, 3D-33 /
+      INTEGER(spi),PARAMETER :: JMAX=50_spi
+      INTEGER(spi),PARAMETER :: LIMIT=20000_spi
+!-----------------------------------------------------------------------
+      REAL(dpf),   PARAMETER :: R20=3._dpf
+      REAL(dpf),   PARAMETER :: ASYM=3._dpf
+      REAL(dpf),   PARAMETER :: XNEAR=0.5_dpf
+      INTEGER(spi),PARAMETER :: NDROP=5_spi
+!-----------------------------------------------------------------------
+      REAL(dpf),   PARAMETER :: ZERO=0._dpf
+      REAL(dpf),   PARAMETER :: HALF=0.5_dpf
+      REAL(dpf),   PARAMETER :: ONE=1._dpf
+      REAL(dpf),   PARAMETER :: TWO=2._dpf
+      COMPLEX(dpf),PARAMETER :: CI=CMPLX(0._dpf,1._dpf,KIND=dpf)
+      REAL(dpf),   PARAMETER :: HPI=TWO*ATAN(ONE)
+      REAL(dpf),   PARAMETER :: TLOG=LOG(TWO)
+!-----------------------------------------------------------------------
+      REAL(dpf),   PARAMETER :: ACC8  =EPSILON(1._dpf) !(2._dpf)*(10._dpf)**(-16_spi) !2D-16
+      REAL(dpf),   PARAMETER :: ACC16 =EPSILON(1._qpf) !(3._dpf)*(10._dpf)**(-33_spi) !3D-33_dpf
+      REAL(dpf),   PARAMETER :: FPMAX =HUGE(1._dpf) * ACC8 !(1._dpf)*(10._dpf)**(60_spi) 
+      REAL(dpf),   PARAMETER :: FPMIN =TINY(1._dpf) / ACC8 !(1._dpf)*(10._dpf)**(-60_spi) 
+      REAL(dpf),   PARAMETER :: FPLMAX=LOG(FPMAX) !140_dpf 
+      REAL(dpf),   PARAMETER :: FPLMIN=LOG(FPMIN) !-140_dpf 
+!-----------------------------------------------------------------------
+      COMPLEX(dpf),DIMENSION(JMAX,4) :: XRCF
+      LOGICAL :: PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2
+      REAL(dpf) :: ACCUR,ERR,ACCT,ACCH,ACCB,PACCQ,EPS,OFF,SCALE,SF,SFSH,TA,RK,OMEGA,ABSX
+      !INTEGER(spi) ::
+      !COMPLEX(dpf) :: X,ETA
 !-----------------------------------------------------------------------
       MODE = MOD(ABS(MODE1),10)
       IFCP = MOD(MODE,2).EQ.1
@@ -573,9 +592,7 @@ MODULE COULCC_M
       NPQ(1)= 0
       NPQ(2)= 0
       N20 = 0
-      HPI = TWO*ATAN(ONE)
-      TLOG = LOG(TWO)
-      ACCUR = MAX(ACCUR, 50*ACC8)
+      ACCUR = MAX((1._dpf)*(10._dpf)**(-14_spi), 50*ACC8)
       ACCT = ACCUR * .5
 !-----------------------------------------------------------------------
 !     initialise the log-gamma function
@@ -1404,7 +1421,7 @@ MODULE COULCC_M
       END IF
       TA = ONE
       RK = ONE
-      IF (KIND.LE.0.AND.ABSC(Z)*ABSC(AA).GT.ABSC(BB)*1.0) THEN
+      IF (KIND.LE.0 .AND. ABSC(Z)*ABSC(AA).GT.ABSC(BB)*1.0) THEN
         DR = ONE
         DI = ZERO
         GR = ONE
