@@ -1268,17 +1268,28 @@ MODULE COULCC_M
     COMPLEX(dpf) FUNCTION CF2(X,ETA,ZL,PM,EPS,LIMIT,ERR,NPQ,ACC8,ACCH  &
                             &, PR,ACCUR,DELL,CALLER)
 !-----------------------------------------------------------------------
-      IMPLICIT COMPLEX(dpf)(A-H,O-Z)
-      LOGICAL PR
-      REAL(dpf) EPS,ERR,ACC8,ACCH,ACCUR,TA,RK
-      REAL(dpf) ZERO,HALF,ONE,TWO !ABSC
-      CHARACTER(len=6) CALLER
-      DATA ZERO,HALF,ONE,TWO / 0D+0, .5D+0, 1D+0, 2D+0 /
-!-----------------------------------------------------------------------
 !                                    (omega)        (omega)
 ! *** Evaluate  CF2  = p + PM.q  =  H   (ETA,X)' / H   (ETA,X)
 !                                    ZL             ZL
 !     where PM = omega.i
+!-----------------------------------------------------------------------
+      IMPLICIT NONE
+!-----------------------------------------------------------------------
+      COMPLEX(dpf),    INTENT(IN)  :: X,ETA,ZL,PM,DELL
+      INTEGER(spi),    INTENT(IN)  :: LIMIT
+      INTEGER(spi),    INTENT(OUT) :: NPQ
+      REAL(dpf),       INTENT(OUT) :: ERR
+      REAL(dpf),       INTENT(IN)  :: EPS,ACC8,ACCH,ACCUR
+      LOGICAL,         INTENT(IN)  :: PR
+      CHARACTER(len=6),INTENT(IN)  :: CALLER
+!-----------------------------------------------------------------------
+      REAL(dpf), PARAMETER :: ZERO=0._dpf
+      REAL(dpf), PARAMETER :: HALF=0.5_dpf
+      REAL(dpf), PARAMETER :: ONE=1._dpf
+      REAL(dpf), PARAMETER :: TWO=2._dpf
+!-----------------------------------------------------------------------
+      REAL(dpf) :: TA,RK
+      COMPLEX(dpf) :: E2MM1,ETAP,XI,WI,PQ,AA,BB,RL,DD,DL
 !-----------------------------------------------------------------------
       TA = TWO*LIMIT
       E2MM1 = ETA*ETA + ZL*ZL + ZL
@@ -1448,13 +1459,13 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       IMPLICIT NONE
 !-----------------------------------------------------------------------
-      REAL(dpf),   INTENT(IN)     :: X,ETA,ZL,EPS
-      REAL(dpf),   INTENT(INOUT)  :: FCL,TPK1,ERROR
-      REAL(dpf),   INTENT(IN)     :: ACCH,FPMIN,FPMAX
-      INTEGER(spi),INTENT(IN)     :: LIMIT
-      INTEGER(spi),INTENT(INOUT)  :: NFP
-      LOGICAL,     INTENT(IN)     :: PR,ETANE0
-      CHARACTER(len=6),INTENT(IN) :: CALLER
+      REAL(dpf),       INTENT(IN)     :: X,ETA,ZL,EPS
+      REAL(dpf),       INTENT(INOUT)  :: FCL,TPK1,ERROR
+      REAL(dpf),       INTENT(IN)     :: ACCH,FPMIN,FPMAX
+      INTEGER(spi),    INTENT(IN)     :: LIMIT
+      INTEGER(spi),    INTENT(INOUT)  :: NFP
+      LOGICAL,         INTENT(IN)     :: PR,ETANE0
+      CHARACTER(len=6),INTENT(IN)     :: CALLER
 !-----------------------------------------------------------------------
       REAL(dpf),PARAMETER :: ONE=1._dpf
       REAL(dpf),PARAMETER :: TWO=2._dpf
