@@ -28,6 +28,7 @@
 !-----------------------------------------------------------------------
 
   A CONTINUED-FRACTION ALGORITHM FOR COULOMB
+
   FUNCTIONS OF COMPLEX ORDER WITH COMPLEX ARGUMENTS
 
 !-----------------------------------------------------------------------
@@ -37,14 +38,21 @@
 !-----------------------------------------------------------------------
 
   A. R. Barnett           Manchester  March   1981
+
   modified I.J. Thompson  Daresbury, Sept. 1983 for Complex Functions
+
   modified A.R. flores    WashU, April 2025 for Modern Compilers
 
 !-----------------------------------------------------------------------
 
   original program  RCWFN       in    CPC  8 (1974) 377-395
+
                  +  RCWFF       in    CPC 11 (1976) 141-142
+
                  +  COULFG      in    CPC 27 (1982) 147-166
+
   description of real algorithm in    CPC 21 (1981) 297-314
+
   description of complex algorithm    JCP XX (1985) YYY-ZZZ
+
   this version written up       in    CPC XX (1985) YYY-ZZZ
