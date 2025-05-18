@@ -68,8 +68,8 @@ set -u # error on use of undefined variable
 case $MACHINE in
   gnu-cpu)
   CMK_FC=${CMK_FC:-"mpif90"}
-  #CMK_FC=${CMK_FC:-"gfortran"}
-  CMK_FLAG="-Wall -cpp -O0 -fopenmp -std=f2018 -ffree-line-length-512 -fbacktrace -fcheck=all -pedantic"
+  #CMK_FC=${CMK_FC:-"gfortran-14"}
+  CMK_FLAG="-Wall -cpp -O3 -fopenmp -std=f2018 -ffree-line-length-512 -fbacktrace -fcheck=all -pedantic"
   ;;
   gnu-gpu)
   CMK_FC=${CMK_FC:-"mpif90"}

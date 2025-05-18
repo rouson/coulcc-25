@@ -35,12 +35,9 @@ MODULE LOGAM_M
 !-----------------------------------------------------------------------
     SUBROUTINE LOGAM_INIT(ACC,FPLMIN_IN)
 !-----------------------------------------------------------------------
-      REAL(dpf),INTENT(IN),OPTIONAL :: ACC
-      REAL(dpf),INTENT(IN),OPTIONAL :: FPLMIN_IN
+      REAL(dpf),INTENT(IN) :: ACC
+      REAL(dpf),INTENT(IN) :: FPLMIN_IN
 !-----------------------------------------------------------------------
-      REAL(dpf),   PARAMETER :: ACC8=(2._dpf)*(10._dpf)**(-16_dpf)  !2D-16
-      REAL(dpf),   PARAMETER :: ACC16=(3._dpf)*(10._dpf)**(-33_dpf) !3D-33_dpf
-      REAL(dpf),   PARAMETER :: FPLMIN_DEFAULT=-140._dpf
       REAL(dpf),   PARAMETER :: ONE=1._dpf
       REAL(dpf),   PARAMETER :: TWO=2._dpf
       INTEGER(spi) :: K
@@ -78,17 +75,8 @@ MODULE LOGAM_M
                                                &,           870._dpf &
                                                &,         14322._dpf]
 !-----------------------------------------------------------------------
-      IF (PRESENT(ACC)) THEN
-        ACCUR=ACC
-      ELSE
-        ACCUR=ACC16
-      END IF
-!-----------------------------------------------------------------------
-      IF (PRESENT(FPLMIN_IN)) THEN
-        FPLMIN=FPLMIN_IN
-      ELSE
-        FPLMIN=FPLMIN_DEFAULT
-      END IF
+      ACCUR=ACC
+      FPLMIN=FPLMIN_IN
 !-----------------------------------------------------------------------
       NX0 = 6
       X0  = NX0 + ONE
@@ -201,9 +189,7 @@ MODULE LOGAM_M
 !-----------------------------------------------------------------------
       REAL(dpf), PARAMETER :: ZERO=0._dpf
       REAL(dpf), PARAMETER :: HALF=0.5_dpf
-      REAL(dpf), PARAMETER :: QUART=0.25_dpf
       REAL(dpf), PARAMETER :: ONE=1._dpf
-      REAL(dpf), PARAMETER :: TWO=2._dpf
       REAL(dpf), PARAMETER :: FOUR=4._dpf
       REAL(dpf), PARAMETER :: PI=FOUR*ATAN(ONE)
       COMPLEX(dpf) :: U,V,H,R,SER
@@ -299,7 +285,7 @@ MODULE RCF_M
 !   see also:  Haenggi,Roesel & Trautmann,
 !              Jnl. Computational Physics, vol 137, pp242-258 (1980)
 !   note:      restart procedure modified by I.J.Thompson
-!   note:      ierror added by A.R. Flores
+!   note:      ierror added by A.R. FLORES
 !-----------------------------------------------------------------------
     SUBROUTINE RCF(A,B,IBEG,INUM,XX,EPS,IERROR)
 !-----------------------------------------------------------------------
@@ -447,7 +433,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 !  A. R. Barnett           Manchester  March   1981
 !  modified I.J. Thompson  Daresbury, Sept. 1983 for Complex Functions
-!  modified A.R. Flores    WashU, April 2025 for Modern Compilers
+!  modified A.R. FLORES    WashU, April 2025 for Modern Compilers
 !-----------------------------------------------------------------------
 !  original program  RCWFN       in    CPC  8 (1974) 377-395
 !                 +  RCWFF       in    CPC 11 (1976) 141-142
@@ -565,6 +551,7 @@ MODULE COULCC_M
       REAL(dpf),   PARAMETER :: ONE=1._dpf
       REAL(dpf),   PARAMETER :: TWO=2._dpf
       COMPLEX(dpf),PARAMETER :: CI=CMPLX(0._dpf,1._dpf,KIND=dpf)
+      COMPLEX(dpf),PARAMETER :: CZERO=CMPLX(ZERO,ZERO,KIND=dpf)
       REAL(dpf),   PARAMETER :: HPI=TWO*ATAN(ONE)
       REAL(dpf),   PARAMETER :: TLOG=LOG(TWO)
 !-----------------------------------------------------------------------
@@ -586,6 +573,13 @@ MODULE COULCC_M
       COMPLEX(dpf) :: FCL,FCL1,FCM,FESL,FEST,FIRST,FPL,GAM,HCL,HCL1,P,P11
       COMPLEX(dpf) :: PK,PL,PM,PQ1,PQ2,Q,RL,SIGMA,SL,THETA,THETAM,TPK1,W
       COMPLEX(dpf) :: XI,XLOG,Z11,ZID,ZL,ZLL,ZLM,ZLOG,HPL,UC
+!-----------------------------------------------------------------------
+      KASE = 0_spi
+      PACCQ = ZERO
+      F20V = CZERO
+      CLL = CZERO
+      PQ1 = CZERO
+      HPL = CZERO
 !-----------------------------------------------------------------------
       MODE = MOD(ABS(MODE1),10)
       IFCP = MOD(MODE,2).EQ.1
@@ -670,6 +664,7 @@ MODULE COULCC_M
       RK = SIGN(ONE, X%RE + ACC8)
       P =  THETA
       IF (RK.LT.0) P = -X + ETA*(LOG(-X)+TLOG)-ZLL*HPI-SIGMA
+      !FLORES -- I.T. has jmax/2
       F = RK * CF1A(X*RK,ETA*RK,ZLL,P,ACCT,JMAX,NFP,FEST,ERROR,FPMAX,XRCF,XRCF(1,3), XRCF(1,4))
       FESL = LOG(FEST) + ABS(X%IM)
       NFP = - NFP
@@ -710,8 +705,12 @@ MODULE COULCC_M
 ! *** compare accumulated phase FCL with asymptotic phase for G(k+1) :
 !     to determine estimate of F(ZLL) (with correct sign) to start recur
 !-----------------------------------------------------------------------
+! FLORES -- I.T. has 
+!   30 W   = LOG(ONE+TWO*ETA*X/(TPK1-ONE)+X*X/TPK1*(TWO*ETA*ETA/(TPK1-ONE)-HALF))
+!      FESL= (ZLL+ONE) * XLOG + CLL + W - LOG(FCL)
   30  W    =  X*X  *(HALF/TPK1 + ONE/TPK1**2) + ETA*(ETA-TWO*X)/TPK1
       FESL = (ZLL+ONE) * XLOG + CLL - W - LOG(FCL)
+!-----------------------------------------------------------------------
   40  FESL = FESL - ABS(SCALE)
       RK   = MAX(FESL%RE,FPLMIN*HALF)
       FESL = CMPLX(MIN(RK,FPLMAX*HALF),FESL%IM,KIND=dpf)
@@ -850,6 +849,12 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 ! ***   Check for small X, i.e. whether to avoid CF2 :
 !-----------------------------------------------------------------------
+! FLORES -- I.T. has:
+!       IF(NOCF2 .OR. ABSX.LT.XNEAR .AND. &
+!          ABSC(ETA)*ABSX .LT. 5 .AND. ABSC(ZLM).LT.4) THEN
+!         KASE = 5
+!         GO TO 120
+!       END IF
         IF (MODE.GE.3 .AND. ABSX.LT.ONE ) GOTO 190
         IF (MODE.LT.3 .AND. (NOCF2 .OR. ABSX.LT.XNEAR .AND.  &
           &  ABSC(ETA)*ABSX .LT. 5 .AND. ABSC(ZLM).LT.4)) THEN
@@ -861,7 +866,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
         PQ1 = CF2(X,ETA,ZLM,PM,EPS,LIMIT,ERROR,NPQ(LH),ACC8,ACCH,PR,ACCUR,DELL,'COULCC')
 !-----------------------------------------------------------------------
-        ERROR = ERROR * MAX(ONE,ABSC(PQ1)/MAX(ABSC(F-PQ1),ACC8) )
+        ERROR = ERROR * MAX(ONE,ABSC(PQ1)/MAX(ABSC(F-PQ1),ACC8))
         IF (ERROR.LT.ACCH) GOTO 110
 !-----------------------------------------------------------------------
 ! *** check if impossible to get F-PQ accurately because of cancellation
@@ -881,6 +886,7 @@ MODULE COULCC_M
 ! ***  establish case of calculation required for irregular solution
 !-----------------------------------------------------------------------
   120 IF (KASE.GE.5) GOTO 130
+! FLORES I.T. REMOVES THE FOLLOWING IF STATEMENT -- ALWAYS SETS PACCQ
       IF (X%RE .GT. XNEAR) THEN
 !-----------------------------------------------------------------------
 !  estimate errors if KASE 2 or 3 were to be used:
@@ -892,6 +898,8 @@ MODULE COULCC_M
         IF (AXIAL) KASE = 3
       ELSE
         KASE = 1
+! FLORES I.T. HAS
+!        IF (NPQ(1).GT.0 .AND. NPQ(1) * R20 .LT. JMAX) KASE = 4
         IF (NPQ(1) * R20 .LT. JMAX) KASE = 4
 !-----------------------------------------------------------------------
 !  i.e. change to kase=4 if the 2F0 predicted to converge
@@ -911,7 +919,7 @@ MODULE COULCC_M
         CASE(6)
           GOTO 190
       END SELECT
-  140 IF(.NOT.DONEM) PQ2 = CF2(X,ETA,ZLM,-PM,EPS,LIMIT,ERROR,NPQ(3-LH),ACC8,ACCH,PR,ACCUR,DELL,'COULCC')
+  140 IF(.NOT.DONEM) PQ2=CF2(X,ETA,ZLM,-PM,EPS,LIMIT,ERROR,NPQ(3-LH),ACC8,ACCH,PR,ACCUR,DELL,'COULCC')
 !-----------------------------------------------------------------------
 ! ***  Evaluate   CF2 : PQ2 = p - i.omega.q  at lambda = ZLM   (Kase 2)
 !-----------------------------------------------------------------------
@@ -1023,7 +1031,7 @@ MODULE COULCC_M
           IF (NPINT(AA,ACCUR)) CLGAA = CLGAB - TWO*PM*SIGMA
           IF (NPINT(AB,ACCUR)) CLGAB = CLGAA + TWO*PM*SIGMA
         END IF
-        CLL = SL*TLOG- HPI*ETA - CLGBB + (CLGAA + CLGAB) * HALF
+        CLL = SL*TLOG - HPI*ETA - CLGBB + (CLGAA + CLGAB) * HALF
         DSIG = (CLGAA - CLGAB) * PM*HALF
         IF (KASE.EQ.6) P11 = - PM
         EK = PK * XLOG - P11*X + CLL  - ABS(SCALE)
@@ -1131,7 +1139,6 @@ MODULE COULCC_M
       KAS((3-ID)/2) = KASE
       W = FCM / FCL
       IF (LOG(ABSC(W))+LOG(ABSC(FC(LF))) .LT. FPLMIN) GOTO 340
-      !IF (MODE.GE.3) GOTO 240
       IF (MODE.LT.3) THEN
         IF (ABSC(F-PQ1) .LT. ACCH*ABSC(F) .AND. PR) WRITE(STDOUT,1020) LH,ZLM+DELL
         HPL = HCL * PQ1
@@ -1269,6 +1276,8 @@ MODULE COULCC_M
  1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,13D9.2/)
  1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
 !-----------------------------------------------------------------------
+      SL = CMPLX(0._dpf,0._dpf,KIND=dpf)
+!-----------------------------------------------------------------------
       FCL = ONE
       XI  = ONE/X
       PK  = ZL+ONE
@@ -1345,6 +1354,7 @@ MODULE COULCC_M
       ELSE
         IF (PR) WRITE (STDOUT,1010) CALLER,LIMIT,ABS(X)
         ERROR = TWO
+        CF1C = CMPLX(0._dpf,0._dpf,KIND=dpf)
       END IF
 !-----------------------------------------------------------------------
     END FUNCTION CF1C
@@ -1543,6 +1553,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       SELECT CASE(EXIT_COND)
         CASE(-1)
+          F11 = ZERO
           NITS = -1
         CASE(1)
           F11 = ZERO
@@ -1557,6 +1568,7 @@ MODULE COULCC_M
           F11 = DD
           NITS = I
         CASE(-99)
+          F11 = ZERO
           NITS = I
       END SELECT
 !-----------------------------------------------------------------------
@@ -1668,7 +1680,7 @@ MODULE COULCC_M
       ELSE
         IF (PR) WRITE(STDOUT,1010) CALLER,LIMIT,ABS(X)
         ERROR = TWO
-        !CF1R = 0._dpf
+        CF1R = 0._dpf
       END IF
 !-----------------------------------------------------------------------
     END FUNCTION CF1R
@@ -1816,7 +1828,6 @@ MODULE COULCC_M
       REAL(dpf),    PARAMETER :: ZERO=0._dpf
       REAL(dpf),    PARAMETER :: ONE=1._dpf
       REAL(dpf),    PARAMETER :: TWO=2._dpf
-      COMPLEX(dpf), PARAMETER :: CI=CMPLX(0._dpf,1._dpf,KIND=dpf)
 !-----------------------------------------------------------------------
       COMPLEX(dpf) :: GLAST,GSUM,XLL1,SL1,SL2,SL,SC1,SC,TL1,TL,TC1,TC
       COMPLEX(dpf) :: SC2,TC2,TL2,F,D,DF,COSL,TANL,C1,C2,DENOM,ETASQ
