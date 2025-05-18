@@ -892,11 +892,11 @@ MODULE COULCC_M
 ! ***  establish case of calculation required for irregular solution
 !-----------------------------------------------------------------------
   120 IF (KASE.GE.5) GOTO 130
-! FLORES I.T. REMOVES THE FOLLOWING IF STATEMENT -- ALWAYS SETS PACCQ
-      IF (X%RE .GT. XNEAR) THEN
 !-----------------------------------------------------------------------
 !  estimate errors if KASE 2 or 3 were to be used:
 !-----------------------------------------------------------------------
+! FLORES I.T. REMOVES THE FOLLOWING IF STATEMENT -- ALWAYS SETS PACCQ
+      IF (X%RE .GT. XNEAR) THEN
         PACCQ = EPS * OFF * ABSC(PQ1) / MAX(ABS(PQ1%IM),ACC8)
       END IF
       IF (PACCQ .LT. ACCUR) THEN
