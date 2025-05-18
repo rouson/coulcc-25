@@ -497,7 +497,7 @@ MODULE COULCC_M
 !               but if CF1A fails because X too small or ETA too large
 !               the F solution  is less accurate if it decreases with
 !               decreasing lambda (e.g. for lambda.LE.-1 & ETA.NE.0)
-!              RERR in COMMON/STEED/ traces the main roundoff errors.
+!              RERR in CSTEED module traces the main roundoff errors.
 !
 !   COULCC is coded for real*8 on IBM or equivalent  ACCUR >= 10**-14
 !          with a section of doubled REAL*16 for less roundoff errors.
@@ -530,9 +530,8 @@ MODULE COULCC_M
 !     ROUTINES CALLED :       LOGAM/CLOGAM/CDIGAM,
 !                             F20, CF1A, RCF, CF1C, CF2, F11, CF1R
 !     Intrinsic functions :   MIN, MAX, SQRT, REAL, IMAG, ABS, LOG, EXP
-!      (Generic names)        NINT, MOD, ATAN, ATAN2, COS, SIN, DCMPLX,
+!      (Generic names)        NINT, MOD, ATAN, ATAN2, COS, SIN, CMPLX,
 !                             SIGN, CONJG, INT, TANH
-!     Note: Statement fntn.   NINTC = integer nearest to a complex no.
 !
 !     Parameters determining region of calculations :
 !
@@ -553,11 +552,9 @@ MODULE COULCC_M
       REAL(dpf) ZERO,ONE,TWO,HALF,HPI,TLOG,FPMAX,FPMIN,FPLMIN,FPLMAX
       REAL(dpf) PACCQ,EPS,OFF,SCALE,SF,SFSH,TA,RK,OMEGA,R20,ASYM,ABSX
 !-----------------------------------------------------------------------
-!***  common blocks are for information & storage only.
-!     (they are not essential to working of the code)
-      COMMON /RCFCM1/ PK,EK,CLGAA,CLGAB,CLGBB,DSIG,TPK1,W,RL,FCL1,Q &
-      & ,GAM,HCL,HPL,FCM,HCL1,ALPHA,BETA,PL
-      EQUIVALENCE            (PK,XRCF(1,1))
+      intent(in) :: XX,ETA1,ZLMIN,NL,MODE1,KFN
+      intent(out):: FC,GC,FCP,GCP,SIG
+      intent(inout):: IFAIL
 !-----------------------------------------------------------------------
       DATA ZERO,ONE,TWO,LIMIT /0.0D+0, 1.0D+0, 2.0D+0, 20000 /
       DATA HALF, CI / 0.5D+0, (0D+0, 1D+0) /
