@@ -3,7 +3,8 @@ PROGRAM CCTEST
   use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64 &
                               &,stdin=>input_unit,stdout=>output_unit
 !-----------------------------------------------------------------------
-  USE COULCC_M                                               
+  USE COULCC_M
+  USE CSTEED_M                                               
 !-----------------------------------------------------------------------
   IMPLICIT NONE
 !-----------------------------------------------------------------------
@@ -12,10 +13,7 @@ PROGRAM CCTEST
       COMPLEX(dpf) :: X,ETA,ZLMIN,ZL,WS
       COMPLEX(dpf),DIMENSION(201) :: FC,GC,FCP,GCP,SIG               
 !-----------------------------------------------------------------------
-      REAL(dpf) :: RERR
-      INTEGER(spi),DIMENSION(2) :: NFP,KASE
-      INTEGER(spi),DIMENSION(3) :: NPQ
-      COMMON /STEED/ RERR,NFP,NPQ,KASE                                  
+      !INTEGER(spi),DIMENSION(3) :: NPQ
 !-----------------------------------------------------------------------
       CHARACTER(len=20) :: NOTE                                         
       CHARACTER(len=4)  :: IRREG,REG                                  
@@ -53,7 +51,7 @@ PROGRAM CCTEST
 !-----------------------------------------------------------------------
       CALL COULCC(X,ETA,ZLMIN,NL,FC,GC,FCP,GCP,SIG,MODE,KFN,IFAIL)      
 !-----------------------------------------------------------------------
-      WRITE(STDOUT,1020) IFAIL,RERR,NFP,NPQ,KASE                             
+      WRITE(STDOUT,1020) IFAIL,RERR,NFP,N11,NPQ,N20,KAS                             
       IF (IFAIL.LT.0) GO TO 30                                           
       DO 20 I=1,8                                                       
         L = LDISP(I)                                                      

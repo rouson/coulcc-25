@@ -408,6 +408,21 @@ MODULE RCF_M
 !-----------------------------------------------------------------------
 END MODULE RCF_M
 !-----------------------------------------------------------------------
+MODULE CSTEED_M
+!-----------------------------------------------------------------------
+  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128 &
+                                        &, stdin=>input_unit,stdout=>output_unit
+!-----------------------------------------------------------------------
+  IMPLICIT NONE
+!-----------------------------------------------------------------------
+!***  This module is for information & storage only.
+!     (it is not essential to working of the code)
+!-----------------------------------------------------------------------
+    REAL(dpf)    :: RERR
+    INTEGER(spi) :: NFP,N11,N20
+    INTEGER(spi),DIMENSION(2) :: NPQ,KAS
+END MODULE CSTEED_M
+!-----------------------------------------------------------------------
 MODULE COULCC_M
 !-----------------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128 &
@@ -415,6 +430,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
   USE LOGAM_M
   USE RCF_M
+  USE CSTEED_M
 !-----------------------------------------------------------------------
   CONTAINS
 !-----------------------------------------------------------------------
@@ -532,12 +548,11 @@ MODULE COULCC_M
       IMPLICIT COMPLEX(dpf) (A-H,O-Z)
       PARAMETER(JMAX=50)
       DIMENSION FC(NL),GC(NL),FCP(NL),GCP(NL),SIG(NL),XRCF(JMAX,4)
-      LOGICAL PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2  !,NPINT
-      REAL(dpf) ERR,RERR,ACCUR,ACCT,ACC8,ACCH,ACC16,ACCB, XNEAR   !ABSC
+      LOGICAL PR,ETANE0,IFCP,RLEL,DONEM,UNSTAB,ZLNEG,AXIAL,NOCF2
+      REAL(dpf) ERR,ACCUR,ACCT,ACC8,ACCH,ACC16,ACCB, XNEAR
       REAL(dpf) ZERO,ONE,TWO,HALF,HPI,TLOG,FPMAX,FPMIN,FPLMIN,FPLMAX
       REAL(dpf) PACCQ,EPS,OFF,SCALE,SF,SFSH,TA,RK,OMEGA,R20,ASYM,ABSX
 !-----------------------------------------------------------------------
-      COMMON /STEED/ RERR,NFP,N11,NPQ(2),N20,KAS(2)
 !***  common blocks are for information & storage only.
 !     (they are not essential to working of the code)
       COMMON /RCFCM1/ PK,EK,CLGAA,CLGAB,CLGBB,DSIG,TPK1,W,RL,FCL1,Q &
@@ -1191,6 +1206,9 @@ MODULE COULCC_M
     COMPLEX(dpf) FUNCTION CF1C(X,ETA,ZL,EPS,FCL,TPK1,ETANE0,LIMIT,ERR,NFP &
                             &, ACCH,FPMIN,FPMAX,PR,CALLER)
 !-----------------------------------------------------------------------
+! *** Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)
+!     using complex arithmetic
+!-----------------------------------------------------------------------
       IMPLICIT COMPLEX(dpf)(A-H,O-Z)
       LOGICAL PR,ETANE0
       REAL(dpf) ONE,TWO,EPS,ERR,ACCH,FPMIN,FPMAX,SMALL,RK,PX   !ABSC
@@ -1199,9 +1217,6 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
  1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,13D9.2/)
  1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
-!-----------------------------------------------------------------------
-! *** Evaluate CF1  =  F   =  F'(ZL,ETA,X)/F(ZL,ETA,X)
-!     using complex arithmetic
 !-----------------------------------------------------------------------
       FCL = ONE
       XI  = ONE/X
