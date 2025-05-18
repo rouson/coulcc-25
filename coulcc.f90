@@ -518,31 +518,31 @@ MODULE COULCC_M
 !                    = -3 : values at ZLMIN not found as over/underflow
 !                    = -4 : roundoff errors make results meaningless
 !-----------------------------------------------------------------------
-!     Machine dependent constants :
-!
-!     ACCUR    target bound on relative error (except near 0 crossings)
-!               (ACCUR should be at least 100 * ACC8)
-!     ACC8     smallest number with 1+ACC8 .ne.1 in REAL*8  arithmetic
-!     ACC16    smallest number with 1+ACC16.ne.1 in REAL*16 arithmetic
-!     FPMAX    magnitude of largest floating point number * ACC8
-!     FPMIN    magnitude of smallest floating point number / ACC8
-!     FPLMAX   LOG(FPMAX)
-!     FPLMIN   LOG(FPMIN)
-!
 !     ROUTINES CALLED :       LOGAM/CLOGAM/CDIGAM,
 !                             F20, CF1A, RCF, CF1C, CF2, F11, CF1R
 !     Intrinsic functions :   MIN, MAX, SQRT, REAL, IMAG, ABS, LOG, EXP
 !      (Generic names)        NINT, MOD, ATAN, ATAN2, COS, SIN, CMPLX,
 !                             SIGN, CONJG, INT, TANH
-!
-!     Parameters determining region of calculations :
-!
-!        R20      estimate of (2F0 iterations)/(CF2 iterations)
-!        ASYM     minimum X/(ETA**2+L) for CF1A to converge easily
-!        XNEAR    minimum ABS(X) for CF2 to converge accurately
-!        LIMIT    maximum no. iterations for CF1, CF2, and 1F1 series
-!        JMAX     size of work arrays for Pade accelerations
-!        NDROP    number of successive decrements to define instability
+!-----------------------------------------------------------------------
+!     Machine dependent Parameters
+!-----------------------------------------------------------------------
+!     ACCUR  ::  target bound on relative error (except near 0 crossings)
+!                (ACCUR should be at least 100 * ACC8)
+!     ACC8   ::  smallest number with 1+ACC8 .ne.1 in REAL*8  arithmetic
+!     ACC16  ::  smallest number with 1+ACC16.ne.1 in REAL*16 arithmetic
+!     FPMAX  ::  magnitude of largest floating point number * ACC8
+!     FPMIN  ::  magnitude of smallest floating point number / ACC8
+!     FPLMAX ::  LOG(FPMAX)
+!     FPLMIN ::  LOG(FPMIN)
+!-----------------------------------------------------------------------
+!     Parameters determining region of calculations
+!-----------------------------------------------------------------------
+!     R20   ::   estimate of (2F0 iterations)/(CF2 iterations)
+!     ASYM  ::   minimum X/(ETA**2+L) for CF1A to converge easily
+!     XNEAR ::   minimum ABS(X) for CF2 to converge accurately
+!     LIMIT ::   maximum no. iterations for CF1, CF2, and 1F1 series
+!     JMAX  ::   size of work arrays for Pade accelerations
+!     NDROP ::   number of successive decrements to define instability
 !-----------------------------------------------------------------------
     SUBROUTINE COULCC(XX,ETA1,ZLMIN,NL,FC,GC,FCP,GCP,SIG,MODE1,KFN,IFAIL)
 !-----------------------------------------------------------------------
@@ -553,7 +553,6 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       INTEGER(spi),PARAMETER :: JMAX=50_spi
       INTEGER(spi),PARAMETER :: LIMIT=20000_spi
-!-----------------------------------------------------------------------
       REAL(dpf),   PARAMETER :: R20=3._dpf
       REAL(dpf),   PARAMETER :: ASYM=3._dpf
       REAL(dpf),   PARAMETER :: XNEAR=0.5_dpf
@@ -567,12 +566,12 @@ MODULE COULCC_M
       REAL(dpf),   PARAMETER :: HPI=TWO*ATAN(ONE)
       REAL(dpf),   PARAMETER :: TLOG=LOG(TWO)
 !-----------------------------------------------------------------------
-      REAL(dpf),   PARAMETER :: ACC8  =EPSILON(1._dpf) !(2._dpf)*(10._dpf)**(-16_spi) !2D-16
-      REAL(dpf),   PARAMETER :: ACC16 =EPSILON(1._qpf) !(3._dpf)*(10._dpf)**(-33_spi) !3D-33_dpf
-      REAL(dpf),   PARAMETER :: FPMAX =HUGE(1._dpf) * ACC8 !(1._dpf)*(10._dpf)**(60_spi) 
-      REAL(dpf),   PARAMETER :: FPMIN =TINY(1._dpf) / ACC8 !(1._dpf)*(10._dpf)**(-60_spi) 
-      REAL(dpf),   PARAMETER :: FPLMAX=LOG(FPMAX) !140_dpf 
-      REAL(dpf),   PARAMETER :: FPLMIN=LOG(FPMIN) !-140_dpf 
+      REAL(dpf),   PARAMETER :: ACC8  =EPSILON(1._dpf)
+      REAL(dpf),   PARAMETER :: ACC16 =EPSILON(1._qpf)
+      REAL(dpf),   PARAMETER :: FPMAX =HUGE(1._dpf) * ACC8
+      REAL(dpf),   PARAMETER :: FPMIN =TINY(1._dpf) / ACC8
+      REAL(dpf),   PARAMETER :: FPLMAX=LOG(FPMAX)
+      REAL(dpf),   PARAMETER :: FPLMIN=LOG(FPMIN)
 !-----------------------------------------------------------------------
       COMPLEX(dpf),DIMENSION(JMAX,4) :: XRCF
 !-----------------------------------------------------------------------
@@ -681,12 +680,16 @@ MODULE COULCC_M
 ! ***  evaluate CF1  =  f   =  F'(ZLL,ETA,X)/F(ZLL,ETA,X)
 !-----------------------------------------------------------------------
   20  IF (AXIAL) THEN
+!-----------------------------------------------------------------------
 !  REAL VERSION
+!-----------------------------------------------------------------------
         F = CF1R(REAL(X),REAL(ETA),REAL(ZLL),ACC8,SF,RK,ETANE0,LIMIT,ERR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
         FCL = SF
         TPK1= RK
       ELSE
+!-----------------------------------------------------------------------
 !  COMPLEX VERSION
+!-----------------------------------------------------------------------
         F = CF1C(X,ETA,ZLL,ACC8,FCL,TPK1,ETANE0,LIMIT,ERR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
       END IF
 !-----------------------------------------------------------------------
