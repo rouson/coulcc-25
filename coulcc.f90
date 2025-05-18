@@ -664,8 +664,11 @@ MODULE COULCC_M
       RK = SIGN(ONE, X%RE + ACC8)
       P =  THETA
       IF (RK.LT.0) P = -X + ETA*(LOG(-X)+TLOG)-ZLL*HPI-SIGMA
-      !FLORES -- I.T. has jmax/2
-      F = RK * CF1A(X*RK,ETA*RK,ZLL,P,ACCT,JMAX,NFP,FEST,ERROR,FPMAX,XRCF,XRCF(1,3), XRCF(1,4))
+!-----------------------------------------------------------------------
+! FLORES -- I.T. HAS jmax/2 --  seems jmax/2 fixes axial problem for second test case
+      !F = RK * CF1A(X*RK,ETA*RK,ZLL,P,ACCT,JMAX,NFP,FEST,ERROR,FPMAX,XRCF,XRCF(1,3), XRCF(1,4))
+!-----------------------------------------------------------------------
+      F = RK * CF1A(X*RK,ETA*RK,ZLL,P,ACCT,JMAX/2,NFP,FEST,ERROR,FPMAX,XRCF,XRCF(1,3), XRCF(1,4))
       FESL = LOG(FEST) + ABS(X%IM)
       NFP = - NFP
       IF (NFP.LT.0   .OR.(UNSTAB.AND.ERROR.LT.ACCB)) GOTO 40
