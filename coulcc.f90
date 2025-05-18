@@ -1161,7 +1161,8 @@ MODULE COULCC_M
         IF (KFN.GE.3) AA = AA * Q
   260   IF (KFN.GE.3) BETA = - BETA * Q
 !-----------------------------------------------------------------------
-  270 LAST = MIN(LAST,(L1-L)*ID)
+        LAST = MIN(LAST,(L1-L)*ID)
+  270 CONTINUE
 !-----------------------------------------------------------------------
 ! *** Come here after all soft errors to determine how many L values ok
 !-----------------------------------------------------------------------
