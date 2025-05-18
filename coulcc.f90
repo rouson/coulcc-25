@@ -583,7 +583,7 @@ MODULE COULCC_M
       COMPLEX(dpf) :: CLGAA,CLGAB,CLGBB,CLL,DF,DSIG,EK,ETAP,F,F11V,F20V
       COMPLEX(dpf) :: FCL,FCL1,FCM,FESL,FEST,FIRST,FPL,GAM,HCL,HCL1,P,P11
       COMPLEX(dpf) :: PK,PL,PM,PQ1,PQ2,Q,RL,SIGMA,SL,THETA,THETAM,TPK1,W
-      COMPLEX(dpf) :: XI,XLOG,Z11,ZID,ZL,ZLL,ZLM,ZLOG,HPL
+      COMPLEX(dpf) :: XI,XLOG,Z11,ZID,ZL,ZLL,ZLM,ZLOG,HPL,UC
 !-----------------------------------------------------------------------
       MODE = MOD(ABS(MODE1),10)
       IFCP = MOD(MODE,2).EQ.1
@@ -604,7 +604,7 @@ MODULE COULCC_M
       RERR = ACCT
 !-----------------------------------------------------------------------
       CIK = ONE
-      IF (KFN.GE.3) CIK = CI * SIGN(ONE,ACC8-IMAG(XX))
+      IF (KFN.GE.3) CIK = CI * SIGN(ONE,ACC8-XX%IM)
       X     = XX * CIK
       ETA   = ETA1
       IF (KFN .GT. 0) ETA = ZERO
@@ -614,13 +614,13 @@ MODULE COULCC_M
       IF (KFN .GE. 2)  DELL = HALF
       ZM1   = ZLMIN - DELL
       SCALE = ZERO
-      IF (MODE1.LT.0) SCALE = IMAG(X)
+      IF (MODE1.LT.0) SCALE = X%IM
 !-----------------------------------------------------------------------
       M1 = 1
       L1  = M1 + NL - 1
-      RLEL = ABS(IMAG(ETA)) + ABS(IMAG(ZM1)) .LT. ACC8
+      RLEL = ABS(ETA%IM) + ABS(ZM1%IM) .LT. ACC8
       ABSX = ABS(X)
-      AXIAL = RLEL .AND. ABS(IMAG(X)) .LT. ACC8 * ABSX
+      AXIAL = RLEL .AND. ABS(X%IM) .LT. ACC8 * ABSX
       IF (MODE.LE.2 .AND. ABSX.LT.FPMIN) GO TO 310
       XI  = ONE/X
       XLOG = LOG(X)
@@ -639,7 +639,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       Z11 = ZLL
       IF (ID.LT.0) Z11 = ZLM
-      P11 = CI*SIGN(ONE,ACC8-IMAG(ETA))
+      P11 = CI*SIGN(ONE,ACC8-ETA%IM)
       LAST = L1
 !-----------------------------------------------------------------------
 ! *** Find phase shifts and Gamow factor at lambda = ZLL
@@ -658,18 +658,18 @@ MODULE COULCC_M
       IF(.NOT.ZLNEG) CLL = ZLL*TLOG- HPI*ETA - CLOGAM(BB) + (CLGAA+CLGAB)*HALF
       THETA  = X - ETA*(XLOG+TLOG) - ZLL*HPI + SIGMA
 !-----------------------------------------------------------------------
-      TA = (IMAG(AA)**2+IMAG(AB)**2+ABS(REAL(AA))+ABS(REAL(AB)))*HALF
+      TA = (AA%IM**2+AB%IM**2+ABS(AA%RE)+ABS(AB%RE))*HALF
       IF (ID.GT.0 .AND. ABSX .LT. TA*ASYM .AND. .NOT.ZLNEG) GO TO 20
 !-----------------------------------------------------------------------
 ! ***  use CF1 instead of CF1A, if predicted to converge faster,
 !          (otherwise using CF1A as it treats negative lambda &
 !           recurrence-unstable cases properly)
 !-----------------------------------------------------------------------
-      RK = SIGN(ONE, REAL(X) + ACC8)
+      RK = SIGN(ONE, X%RE + ACC8)
       P =  THETA
       IF (RK.LT.0) P = -X + ETA*(LOG(-X)+TLOG)-ZLL*HPI-SIGMA
       F = RK * CF1A(X*RK,ETA*RK,ZLL,P,ACCT,JMAX,NFP,FEST,ERR,FPMAX,XRCF,XRCF(1,3), XRCF(1,4))
-      FESL = LOG(FEST) + ABS(IMAG(X))
+      FESL = LOG(FEST) + ABS(X%IM)
       NFP = - NFP
       IF (NFP.LT.0   .OR.(UNSTAB.AND.ERR.LT.ACCB)) GO TO 40
       IF(.NOT.ZLNEG .OR. UNSTAB.AND.ERR.GT.ACCB)  GO TO 20
@@ -683,7 +683,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 !  REAL VERSION
 !-----------------------------------------------------------------------
-        F = CF1R(REAL(X),REAL(ETA),REAL(ZLL),ACC8,SF,RK,ETANE0,LIMIT,ERR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
+        F = CF1R(X%RE,ETA%RE,ZLL%RE,ACC8,SF,RK,ETANE0,LIMIT,ERR,NFP,ACCH,FPMIN,FPMAX,PR,'COULCC')
         FCL = SF
         TPK1= RK
       ELSE
@@ -698,8 +698,10 @@ MODULE COULCC_M
 ! ***  Make a simple check for CF1 being badly unstable:
 !-----------------------------------------------------------------------
       IF (ID.LT.0) GO TO 30
-      UNSTAB = REAL((ONE-ETA*XI)*CI*IMAG(THETA)/F).GT.ZERO     &
-        & .AND..NOT.AXIAL .AND. ABS(IMAG(THETA)).GT.-LOG(ACC8)*.5 &
+      UC = (CMPLX(ONE,0._dpf,KIND=dpf)-ETA*XI)*CI*THETA%IM/F
+      UNSTAB = UC%RE.GT.ZERO     &
+        & .AND. .NOT.AXIAL &
+        & .AND. ABS(THETA%IM).GT.-LOG(ACC8)*HALF &
         & .AND. ABSC(ETA)+ABSC(ZLL).LT.ABSC(X)
       IF (UNSTAB) GO TO 60
 !-----------------------------------------------------------------------
@@ -709,11 +711,11 @@ MODULE COULCC_M
   30  W    =  X*X  *(HALF/TPK1 + ONE/TPK1**2) + ETA*(ETA-TWO*X)/TPK1
       FESL = (ZLL+ONE) * XLOG + CLL - W - LOG(FCL)
   40  FESL = FESL - ABS(SCALE)
-      RK   =        MAX(REAL(FESL), FPLMIN*HALF)
-      FESL = DCMPLX(MIN(RK,   FPLMAX*HALF ) , IMAG(FESL))
+      RK   = MAX(FESL%RE,FPLMIN*HALF)
+      FESL = CMPLX(MIN(RK,FPLMAX*HALF),FESL%IM,KIND=dpf)
       FEST = EXP(FESL)
 !-----------------------------------------------------------------------
-      RERR = MAX(RERR, ERR, ACC8 * ABS(REAL(THETA)) )
+      RERR = MAX(RERR,ERR,ACC8*ABS(THETA%RE))
 !-----------------------------------------------------------------------
       FCL = FEST
       FPL = FCL*F
@@ -730,8 +732,8 @@ MODULE COULCC_M
       DO 70  L  = L1-ID,LF,-ID
         IF (ETANE0) THEN
           IF (RLEL) THEN
-            DSIG = ATAN2(REAL(ETA),REAL(ZL))
-            RL = SQRT(REAL(ZL)**2 + REAL(ETA)**2)
+            DSIG = ATAN2(ETA%RE,ZL%RE)
+            RL = SQRT(ZL%RE**2 + ETA%RE**2)
           ELSE
             AA = ZL - ETAI
             BB = ZL + ETAI
@@ -782,7 +784,7 @@ MODULE COULCC_M
         IF (MODE .LE. 2) GC(L+ID) = RL
         ZL = ZL - ID
         IF (MONO.LT.NDROP) GO TO 70
-        IF (AXIAL .OR. REAL(ZLM)*ID.GT.-NDROP.AND..NOT.ETANE0) GO TO 70
+        IF (AXIAL .OR. ZLM%RE*ID.GT.-NDROP.AND..NOT.ETANE0) GO TO 70
         UNSTAB = .TRUE.
 !-----------------------------------------------------------------------
 ! ***    take action if cannot or should not recur below this ZL:
@@ -821,12 +823,12 @@ MODULE COULCC_M
 !       so H(omega) is smaller and recurs upwards accurately.
 !     (x-plane boundary is shifted to give CF2(LH) a chance to converge)
 !-----------------------------------------------------------------------
-      OMEGA = SIGN(ONE,IMAG(X)+ACC8)
-      IF (REAL(X).GE.XNEAR) OMEGA = SIGN(ONE,IMAG(THETAM)+ACC8)
+      OMEGA = SIGN(ONE,X%IM+ACC8)
+      IF (X%RE.GE.XNEAR) OMEGA = SIGN(ONE,THETAM%IM+ACC8)
       IF (AXIAL) OMEGA = ONE
 !-----------------------------------------------------------------------
       SFSH = EXP(OMEGA*SCALE - ABS(SCALE))
-      OFF = EXP(MIN(TWO*MAX(ABS(IMAG(X)),ABS(IMAG(THETAM)),ABS(IMAG(ZLM))*3),FPLMAX))
+      OFF = EXP(MIN(TWO*MAX(ABS(X%IM),ABS(THETAM%IM),ABS(ZLM%IM)*3),FPLMAX))
       EPS = MAX(ACC8 , ACCT * HALF / OFF)
 !-----------------------------------------------------------------------
 ! ***    Try first estimated omega, then its opposite,
@@ -861,7 +863,7 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
 ! *** check if impossible to get F-PQ accurately because of cancellation
 !-----------------------------------------------------------------------
-        NOCF2 = REAL(X).LT.XNEAR .AND. ABS(IMAG(X)).LT.-LOG(ACC8)
+        NOCF2 = X%RE.LT.XNEAR .AND. ABS(X%IM).LT.-LOG(ACC8)
 !-----------------------------------------------------------------------
 !     original guess for OMEGA (based on THETAM) was wrong
 !     Use KASE 5 or 6 if necessary if Re(X) < XNEAR
@@ -869,17 +871,17 @@ MODULE COULCC_M
   100 OMEGA = - OMEGA
 !-----------------------------------------------------------------------
       IF (UNSTAB) GO TO 360
-      IF (REAL(X).LT.-XNEAR .AND. PR) WRITE(STDOUT,1060) '-X',ERR
+      IF (X%RE.LT.-XNEAR .AND. PR) WRITE(STDOUT,1060) '-X',ERR
   110 RERR = MAX(RERR,ERR)
 !-----------------------------------------------------------------------
 ! ***  establish case of calculation required for irregular solution
 !-----------------------------------------------------------------------
   120 IF (KASE.GE.5) GO TO 130
-      IF (REAL(X) .GT. XNEAR) THEN
+      IF (X%RE .GT. XNEAR) THEN
 !-----------------------------------------------------------------------
 !  estimate errors if KASE 2 or 3 were to be used:
 !-----------------------------------------------------------------------
-        PACCQ = EPS * OFF * ABSC(PQ1) / MAX(ABS(IMAG(PQ1)),ACC8)
+        PACCQ = EPS * OFF * ABSC(PQ1) / MAX(ABS(PQ1%IM),ACC8)
       END IF
       IF (PACCQ .LT. ACCUR) THEN
         KASE = 2
@@ -901,8 +903,8 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       GO TO 160
 !-----------------------------------------------------------------------
-  150 P = REAL(PQ1)
-      Q = IMAG(PQ1)
+  150 P = PQ1%RE
+      Q = PQ1%IM
 !-----------------------------------------------------------------------
 ! ***   With Kase = 3 on the real axes, P and Q are real & PQ2 = PQ1*
 !-----------------------------------------------------------------------
@@ -917,7 +919,7 @@ MODULE COULCC_M
 !  any SQRT given here is corrected by
 !  using sign for FCM nearest to phase of FCL
 !-----------------------------------------------------------------------
-      IF (REAL(FCM/FCL).LT.ZERO) FCM  = - FCM
+      IF (REAL(FCM/FCL,KIND=dpf).LT.ZERO) FCM  = - FCM
       GAM = (F - P)/Q
       TA = ABSC(GAM + PM)
       PACCQ= EPS * MAX(TA,ONE/TA)
@@ -944,7 +946,7 @@ MODULE COULCC_M
       IF (N20.LE.0) GO TO 190
       RERR = MAX(RERR,ERR)
       HCL = FPMIN
-      IF (ABS(REAL(PM*THETAM)+OMEGA*SCALE).GT.FPLMAX) GO TO 330
+      IF (ABS(REAL(PM*THETAM,KIND=dpf)+OMEGA*SCALE).GT.FPLMAX) GO TO 330
   180 HCL = F20V * EXP(PM * THETAM + OMEGA*SCALE)
       FCM = SFSH / ((F - PQ1) * HCL )
 !-----------------------------------------------------------------------
@@ -979,8 +981,8 @@ MODULE COULCC_M
       IF (ID.LT.0) CLL = Z11*TLOG-HPI*ETA-CLOGAM(BB)+CLOGAM(Z11+ONE+P11*ETA)-P11*SIGMA
       EK = (Z11+ONE)*XLOG - P11*X + CLL  - ABS(SCALE)
       IF (ID.GT.0) EK = EK - FESL + LOG(FCL)
-      IF (REAL(EK).GT.FPLMAX) GO TO 350
-      IF (REAL(EK).LT.FPLMIN) GO TO 340
+      IF (EK%RE.GT.FPLMAX) GO TO 350
+      IF (EK%RE.LT.FPLMIN) GO TO 340
       FCM = F11V * EXP(EK)
 !-----------------------------------------------------------------------
       IF (KASE.GE.5) THEN
@@ -990,7 +992,7 @@ MODULE COULCC_M
 ! ***      use an expansion for irregular soln from origin :
 !-----------------------------------------------------------------------
         SL = ZLM
-        ZLNEG = REAL(ZLM) .LT. -ONE + ACCB
+        ZLNEG = ZLM%RE .LT. -ONE + ACCB
         IF (KASE.EQ.5 .OR. ZLNEG) SL = - ZLM - ONE
         PK = SL + ONE
         AA = PK - ETAP
@@ -1020,7 +1022,7 @@ MODULE COULCC_M
         F11V=F11(X,ETA,SL,P11,ACCT,LIMIT,0,ERR,NPQ(1),FPMAX,ACC8,ACC16)
         RERR = MAX(RERR,ERR)
         IF (KASE.EQ.6) GO TO 210
-        FESL = F11V * EXP( EK )
+        FESL = F11V * EXP(EK)
         FCL1 = EXP(PM*CHI) * FCM
         HCL = FCL1 - FESL
         RERR=MAX(RERR,ACCT*MAX(ABSC(FCL1),ABSC(FESL))/ABSC(HCL))
@@ -1062,7 +1064,7 @@ MODULE COULCC_M
 !      so determine linear transformations for Functions required :
 !-----------------------------------------------------------------------
   230 IH = ABS(MODE1) / 10
-      IF (KFN.EQ.3) IH = (3-IMAG(CIK))/2  + HALF
+      IF (KFN.EQ.3) IH = (3-CIK%IM)/2  + HALF
       P11 = ONE
       IF (IH.EQ.1) P11 = CI
       IF (IH.EQ.2) P11 = -CI
@@ -1078,7 +1080,7 @@ MODULE COULCC_M
       BETA  = ONE
       IF (KFN .EQ. 1) BETA  = XI
       IF (KFN .GE. 2) BETA  = SQRT(XI/HPI)
-      IF (KFN .GE. 2 .AND. REAL(BETA).LT.ZERO) BETA  = - BETA
+      IF (KFN .GE. 2 .AND. BETA%RE.LT.ZERO) BETA  = - BETA
 !-----------------------------------------------------------------------
       AA = ONE
       IF (KFN.GT.0) AA = -P11 * BETA
@@ -1095,11 +1097,11 @@ MODULE COULCC_M
 ! Calculate rescaling factors for GC output
 !-----------------------------------------------------------------------
       IF (IH.EQ.0) THEN
-        TA = ABS(SCALE) + IMAG(PM)*SCALE
+        TA = ABS(SCALE) + PM%IM*SCALE
         RK = ZERO
         IF (TA.LT.FPLMAX) RK = EXP(-TA)
       ELSE
-        TA = ABS(SCALE) + IMAG(P11)*SCALE
+        TA = ABS(SCALE) + P11%IM*SCALE
 !-----------------------------------------------------------------------
         IF (ABSC(DF).GT.ACCH .AND. TA.GT.FPLMAX) GO TO 320
         IF (ABSC(DF).GT.ACCH) DF = DF * EXP(TA)
