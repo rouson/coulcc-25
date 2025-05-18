@@ -1392,8 +1392,8 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       COMPLEX(dpf) :: L,AA,BB,Z,DD,G,F,AI,BI,T
       REAL(dpf)    :: R,RK,TA
-      INTEGER(spi) :: I
-      LOGICAL      :: ZLLIN
+      INTEGER(spi) :: I,EXIT_COND
+      LOGICAL      :: ZLLIN,ZLLIN2
 !-----------------------------------------------------------------------
       REAL(qpf) :: AR,BR,GR,GI,DR,DI,TR,TI,UR,UI,FI,FI1,DEN !128 bit real
 !-----------------------------------------------------------------------
@@ -1408,85 +1408,114 @@ MODULE COULCC_M
       BB = TWO*(ZL+ONE)
       Z  = TWO*P*X
 !-----------------------------------------------------------------------
-      ZLLIN = REAL(BB).LE.ZERO .AND. ABS(BB-NINTC(BB)).LT.ACC8**0.25
-      IF(.NOT.ZLLIN.OR.REAL(BB)+LIMIT.LT.1.5) GO TO 10
-      NITS = -1
-      RETURN
-  10  IF (LIMIT.LE.0) THEN
-        F11 = ZERO
-        ERR = ZERO
-        NITS= 1
-        RETURN
-      END IF
-      TA = ONE
-      RK = ONE
-      IF (KIND.LE.0 .AND. ABSC(Z)*ABSC(AA).GT.ABSC(BB)*1.0) THEN
-        DR = ONE
-        DI = ZERO
-        GR = ONE
-        GI = ZERO
-        AR = REAL(AA)
-        BR = REAL(BB)
-        FI = ZERO
-        DO 20 I=2,LIMIT
-          FI1 = FI + ONE
-          TR = BR * FI1
-          TI = IMAG(BB) * FI1
-          DEN= ONE / (TR*TR + TI*TI)
-          UR = (AR*TR + IMAG(AA)*TI) * DEN
-          UI = (IMAG(AA)*TR - AR*TI) * DEN
-          TR = UR*GR - UI*GI
-          TI = UR*GI + UI*GR
-          GR = REAL(Z) * TR - IMAG(Z)*TI
-          GI = REAL(Z) * TI + IMAG(Z)*TR
-          DR = DR + GR
-          DI = DI + GI
-          ERR = ABS(GR) + ABS(GI)
-          IF (ERR.GT.FPMAX) GO TO 60
-          RK  = ABS(DR) + ABS(DI)
-          TA = MAX(TA,RK)
-          IF (ERR.LT.RK*EPS .OR. I.GE.4.AND.ERR.LT.ACC16) GO TO 30
-          FI = FI1
-          AR = AR + ONE
-  20    BR = BR + ONE
+      EXIT_COND=0_spi
 !-----------------------------------------------------------------------
-  30    F11 = DR + CI * DI
-        ERR = ACC16 * TA / RK
+      ZLLIN = BB%RE.LE.ZERO .AND. ABS(BB-CMPLX(NINTC(BB),0._dpf,KIND=dpf)).LT.ACC8**0.25_dpf
+      ZLLIN2= BB%RE+LIMIT.LT.1.5_dpf
+      IF(.NOT.(.NOT.ZLLIN.OR.ZLLIN2)) EXIT_COND=-1
 !-----------------------------------------------------------------------
-      ELSE
+      IF (LIMIT.LE.0) EXIT_COND=1
+!-----------------------------------------------------------------------
+      IF (.NOT.(EXIT_COND.EQ.-1 .OR. EXIT_COND.EQ.1)) THEN
+!-----------------------------------------------------------------------
+        TA = ONE
+        RK = ONE
+        IF (KIND.LE.0 .AND. ABSC(Z)*ABSC(AA).GT.ABSC(BB)*1.0) THEN
+          DR = ONE
+          DI = ZERO
+          GR = ONE
+          GI = ZERO
+          AR = AA%RE
+          BR = BB%RE
+          FI = ZERO
+          LOOP_20: DO I=2,LIMIT
+            FI1 = FI + ONE
+            TR = BR * FI1
+            TI = BB%IM * FI1
+            DEN= ONE / (TR*TR + TI*TI)
+            UR = (AR*TR + AA%IM*TI) * DEN
+            UI = (AA%IM*TR - AR*TI) * DEN
+            TR = UR*GR - UI*GI
+            TI = UR*GI + UI*GR
+            GR = Z%RE * TR - Z%IM*TI
+            GI = Z%RE * TI + Z%IM*TR
+            DR = DR + GR
+            DI = DI + GI
+            ERR = ABS(GR) + ABS(GI)
+            IF (ERR.GT.FPMAX) THEN
+              EXIT_COND=-99
+              EXIT LOOP_20
+            END IF
+            RK  = ABS(DR) + ABS(DI)
+            TA = MAX(TA,RK)
+            IF (ERR.LT.RK*EPS .OR. I.GE.4.AND.ERR.LT.ACC16) THEN
+              EXIT_COND=2
+              EXIT LOOP_20
+            END IF
+            FI = FI1
+            AR = AR + ONE
+            BR = BR + ONE
+          END DO LOOP_20
+!-----------------------------------------------------------------------
+          IF (EXIT_COND.NE.-99) EXIT_COND=2
+!-----------------------------------------------------------------------
+        ELSE
 !-----------------------------------------------------------------------
 !* -------------------alternative code----------------------------------
 !-----------------------------------------------------------------------
 !*    If REAL*16 arithmetic is not available, (or already using it]),
 !*    then use KIND > 0
 !-----------------------------------------------------------------------
-        G = ONE
-        F = ONE
-        IF (KIND.GE.2) F = CDIGAM(AA) - CDIGAM(BB) - CDIGAM(G)
-        DD = F
-        DO 40 I=2,LIMIT
-          AI = AA + (I-2)
-          BI = BB + (I-2)
-          R  = I-ONE
-          G = G * Z * AI / (BI * R)
+          G = ONE
+          F = ONE
+          IF (KIND.GE.2) F = CDIGAM(AA) - CDIGAM(BB) - CDIGAM(G)
+          DD = F
+          LOOP_40: DO I=2,LIMIT
+            AI = AA + (I-2)
+            BI = BB + (I-2)
+            R  = I-ONE
+            G = G * Z * AI / (BI * R)
 !-----------------------------------------------------------------------
 !  multiply by (psi(a+r)-psi(b+r)-psi(1+r))
 !-----------------------------------------------------------------------
-          IF (KIND.GE.2) F = F + ONE/AI - ONE/BI - ONE/R
-          T  = G * F
-          DD = DD + T
-          ERR = ABSC(T)
-          IF (ERR.GT.FPMAX) GO TO 60
-          RK = ABSC(DD)
-          TA = MAX(TA,RK)
-          IF (ERR.LT.RK*EPS.OR.ERR.LT.ACC8.AND.I.GE.4) GO TO 50
-  40    CONTINUE
-!-----------------------------------------------------------------------
-  50    ERR = ACC8 * TA / RK
-        F11 = DD
+            IF (KIND.GE.2) F = F + ONE/AI - ONE/BI - ONE/R
+            T  = G * F
+            DD = DD + T
+            ERR = ABSC(T)
+            IF (ERR.GT.FPMAX) THEN
+              EXIT_COND=-99
+              EXIT LOOP_40
+            END IF
+            RK = ABSC(DD)
+            TA = MAX(TA,RK)
+            IF (ERR.LT.RK*EPS.OR.ERR.LT.ACC8.AND.I.GE.4) THEN
+              EXIT_COND=3
+              EXIT LOOP_40
+            END IF
+          END DO LOOP_40
+          IF (EXIT_COND.NE.-99) EXIT_COND=3
 !* --------------------------------------------- end of alternative code
+        END IF
       END IF
-  60  NITS = I
+!-----------------------------------------------------------------------
+      SELECT CASE(EXIT_COND)
+        CASE(-1)
+          NITS = -1
+        CASE(1)
+          F11 = ZERO
+          ERR = ZERO
+          NITS= 1
+        CASE(2)
+          F11 = DR + CI * DI
+          ERR = ACC16 * TA / RK
+          NITS = I
+        CASE(3)
+          ERR = ACC8 * TA / RK
+          F11 = DD
+          NITS = I
+        CASE(-99)
+          NITS = I
+      END SELECT
 !-----------------------------------------------------------------------
     END FUNCTION F11
 !-----------------------------------------------------------------------
@@ -1508,6 +1537,7 @@ MODULE COULCC_M
       REAL(dpf),PARAMETER :: TWO=2._dpf
 !-----------------------------------------------------------------------
       REAL(dpf) :: XI,PK,PX,EK,RK2,F,PK1,TK,D,DF,RK,SMALL,SL
+      LOGICAL :: CONVERGED
 !-----------------------------------------------------------------------
  1000 FORMAT(/' ',A6,': CF1 ACCURACY LOSS: D,DF,ACCH,K,ETA/K,ETA,X = ',/1X,1P,7D9.2/)
  1010 FORMAT(' ',A6,': CF1 HAS FAILED TO CONVERGE AFTER ',I10  ,' ITERATIONS AS ABS(X) =',F15.0)
@@ -1516,23 +1546,36 @@ MODULE COULCC_M
       XI  = ONE/X
       PK  = ZL + ONE
       PX  = PK  + LIMIT
-  10  EK  = ETA / PK
-      RK2 = ONE + EK*EK
-      F   = (EK + PK*XI)*FCL + (FCL - ONE)*XI
-      PK1 =  PK + ONE
-      TPK1 = PK + PK1
-      TK  = TPK1*(XI + EK/PK1)
-      IF (ETANE0) THEN
 !-----------------------------------------------------------------------
 ! ***   test ensures b1 .ne. zero for negative ETA etc.; fixup is exact.
 !-----------------------------------------------------------------------
-        IF (ABS(TK) .GT. ACCH)  GO TO 20
-        FCL  = RK2/(ONE + (ETA/PK1)**2)
-        SL   = TPK1*XI * (TPK1+TWO)*XI
-        PK   =  TWO + PK
-        GO TO 10
+      IF (ETANE0) THEN
+!-----------------------------------------------------------------------
+        LOOP_10: DO WHILE(.TRUE.)
+          EK  = ETA / PK
+          RK2 = ONE + EK*EK
+          F   = (EK + PK*XI)*FCL + (FCL - ONE)*XI
+          PK1 =  PK + ONE
+          TPK1 = PK + PK1
+          TK  = TPK1*(XI + EK/PK1)
+!-----------------------------------------------------------------------
+          IF (ABS(TK) .GT. ACCH) EXIT LOOP_10
+!-----------------------------------------------------------------------
+          FCL  = RK2/(ONE + (ETA/PK1)**2)
+          SL   = TPK1*XI * (TPK1+TWO)*XI
+          PK   =  TWO + PK
+        END DO LOOP_10
+!-----------------------------------------------------------------------
+      ELSE
+        EK  = ETA / PK
+        RK2 = ONE + EK*EK
+        F   = (EK + PK*XI)*FCL + (FCL - ONE)*XI
+        PK1 =  PK + ONE
+        TPK1 = PK + PK1
+        TK  = TPK1*(XI + EK/PK1)
       END IF
-  20  D =  ONE/TK
+!-----------------------------------------------------------------------
+      D =  ONE/TK
       DF= -FCL*RK2*D
       IF (PK.GT.ZL+TWO) FCL = - RK2 * SL
       FCL=FCL * D * TPK1 * XI
@@ -1542,35 +1585,42 @@ MODULE COULCC_M
 !-----------------------------------------------------------------------
       RK    = ONE
       SMALL = SQRT(FPMIN)
-  30  PK    = PK1
-      PK1   = PK1 + ONE
-      TPK1 = PK + PK1
-      IF (ETANE0) THEN
-        EK  = ETA / PK
-        RK2 = ONE + EK*EK
+!-----------------------------------------------------------------------
+      CONVERGED=.FALSE.
+!-----------------------------------------------------------------------
+      LOOP_30: DO WHILE (.NOT.CONVERGED)
+        PK    = PK1
+        PK1   = PK1 + ONE
+        TPK1 = PK + PK1
+        IF (ETANE0) THEN
+          EK  = ETA / PK
+          RK2 = ONE + EK*EK
+        END IF
+        TK=TPK1*(XI + EK/PK1)
+        D = TK - D*RK2
+        IF (ABS(D) .LE. ACCH) THEN
+          IF (PR) WRITE (6,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X
+          RK= RK + ONE
+          IF (RK .GT. TWO) EXIT LOOP_30
+        END IF
+        D = ONE/D
+        FCL = FCL * D * TPK1*XI
+        IF (ABS(FCL).LT.SMALL) FCL = FCL / SMALL
+        IF (ABS(FCL).GT.FPMAX) FCL = FCL / FPMAX
+        DF  = DF*(D*TK - ONE)
+        F   = F  + DF
+        IF (PK .GT. PX) EXIT LOOP_30
+        IF (ABS(DF) .LT. ABS(F)*EPS) CONVERGED=.TRUE.
+      END DO LOOP_30
+!-----------------------------------------------------------------------
+      IF (CONVERGED) THEN
+        NFP = PK - ZL - 1
+        ERROR = EPS * SQRT(REAL(NFP,KIND=dpf))
+        CF1R = F
+      ELSE
+        IF (PR) WRITE (6,1010) CALLER,LIMIT,ABS(X)
+        ERROR = TWO
       END IF
-      TK=TPK1*(XI + EK/PK1)
-      D = TK - D*RK2
-      IF (ABS(D) .GT. ACCH) GO TO 40
-      IF (PR) WRITE (6,1000) CALLER,D,DF,ACCH,PK,EK,ETA,X
-      RK= RK + ONE
-      IF( RK .GT. TWO ) GO TO 50
-  40  D = ONE/D
-      FCL = FCL * D * TPK1*XI
-      IF (ABS(FCL).LT.SMALL) FCL = FCL / SMALL
-      IF (ABS(FCL).GT.FPMAX) FCL = FCL / FPMAX
-      DF  = DF*(D*TK - ONE)
-      F   = F  + DF
-      IF( PK .GT. PX ) GO TO 50
-      IF (ABS(DF) .GE. ABS(F)*EPS) GO TO 30
-      NFP = PK - ZL - 1
-      ERROR = EPS * SQRT(REAL(NFP))
-      CF1R = F
-!-----------------------------------------------------------------------
-      RETURN
-!-----------------------------------------------------------------------
-  50  IF (PR) WRITE (6,1010) CALLER,LIMIT,ABS(X)
-      ERROR = TWO
 !-----------------------------------------------------------------------
     END FUNCTION CF1R
 !-----------------------------------------------------------------------
@@ -1617,8 +1667,8 @@ MODULE COULCC_M
       EP = EPS * JMAX*10._dpf
       MA = - NINTC(AA)
       MB = - NINTC(BB)
-      FINITE = ABS(ABS(REAL(AA))-MA).LT.EP .AND. ABS(IMAG(AA)).LT.EP &
-     &    .OR. ABS(ABS(REAL(BB))-MB).LT.EP .AND. ABS(IMAG(BB)).LT.EP
+      FINITE = ABS(ABS(AA%RE)-MA).LT.EP .AND. ABS(AA%IM).LT.EP &
+     &    .OR. ABS(ABS(BB%RE)-MB).LT.EP .AND. ABS(BB%IM).LT.EP
       IMAX = JMAX
       IF (FINITE.AND.MA.GE.0) IMAX = MIN(MA+1,IMAX)
       IF (FINITE.AND.MB.GE.0) IMAX = MIN(MB+1,IMAX)
