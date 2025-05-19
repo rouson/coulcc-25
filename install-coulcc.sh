@@ -105,4 +105,5 @@ CMK_FLAG=${CMK_FLAG}" ${DEBUG} ${VERBOSE}"
 
 #buildit
 cmake -S . -B ${PREFIX} -DCMAKE_Fortran_COMPILER=${CMK_FC}  \
-                           -DCMAKE_Fortran_FLAGS="${CMK_FLAG}"\
+                        -DCMAKE_Fortran_FLAGS="${CMK_FLAG}"\
+                        -DCOULCC_MASTER_PROJECT="ON"\
