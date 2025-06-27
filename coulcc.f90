@@ -574,12 +574,17 @@ MODULE COULCC_M
       COMPLEX(dpf) :: PK,PL,PM,PQ1,PQ2,Q,RL,SIGMA,SL,THETA,THETAM,TPK1,W
       COMPLEX(dpf) :: XI,XLOG,Z11,ZID,ZL,ZLL,ZLM,ZLOG,HPL,UC
 !-----------------------------------------------------------------------
+      NOCF2=.TRUE.
       KASE = 0_spi
       PACCQ = ZERO
+      SFSH = ZERO
+      OMEGA = ZERO
       F20V = CZERO
       CLL = CZERO
       PQ1 = CZERO
       HPL = CZERO
+      THETAM = CZERO
+      Q = CZERO
 !-----------------------------------------------------------------------
       MODE = MOD(ABS(MODE1),10)
       IFCP = MOD(MODE,2).EQ.1
