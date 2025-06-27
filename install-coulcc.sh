@@ -19,18 +19,14 @@ usage()
   echo " --machine=MACHINE  sets compiler and flags"
   echo "                    Default MACHINE='gnu'"
   echo "                    Available:          '"
-  echo "                               gnu-cpu  '"
-  echo "                               gnu-gpu'"
-  echo "                               improv'"
-  echo "                               aurora'"
-  echo "                               nersc-cpu'"
-  echo "                               nersc-gpu'"
-#  echo "                               polaris'"
+  echo "                               gnu  '"
+  echo "                               intel'"
+  echo "                               cray'"
   echo ""
 }
 
 PREFIX="$(pwd)/build"
-MACHINE="gnu-cpu"
+MACHINE="gnu"
 DEBUG=""
 VERBOSE=""
 PHI_R4=0
@@ -66,31 +62,18 @@ done
 set -u # error on use of undefined variable
 
 case $MACHINE in
-  gnu-cpu)
-  CMK_FC=${CMK_FC:-"mpif90"}
-  #CMK_FC=${CMK_FC:-"gfortran-14"}
-  CMK_FLAG="-Wall -cpp -O3 -fopenmp -std=f2018 -ffree-line-length-512 -fbacktrace -fcheck=all -pedantic"
-  ;;
-  gnu-gpu)
-  CMK_FC=${CMK_FC:-"mpif90"}
-  CMK_FLAG="-Wall -cpp -O3 -fopenmp -foffload=nvptx-none -std=f2018 -ffree-line-length-512 -fbacktrace -fcheck=all -pedantic"
+  gnu)
+  CMK_FC=${CMK_FC:-"gfortran-15.1"}
+  #CMK_FC=${CMK_FC:-"gfortran"}
+  CMK_FLAG="-Wall -cpp -O3 -std=f2023 -ffree-line-length-512 -fbacktrace -fcheck=all -pedantic"
   ;;
   improv)
-  CMK_FC=${CMK_FC:-"mpif90"}
-  CMK_FLAG="-warn -cpp -O3 -fiopenmp"
+  CMK_FC=${CMK_FC:-"ifx"}
+  CMK_FLAG="-warn -cpp -O3"
   ;;
-  aurora)
-  CMK_FC=${CMK_FC:-"mpif90"}
-  CMK_FLAG="-warn -cpp -O3 -fiopenmp -fopenmp-targets=spir64_gen -Xopenmp-target-backend=spir64_gen \"-device pvc\" "
-  ;;
-  nersc-cpu)
+  cray)
   CMK_FC=${CMK_FC:-"ftn"}
-  CMK_FLAG="-Wall -cpp -O3 -fopenmp -std=f2018 -ffree-line-length-512 -fbacktrace -fcheck=all -pedantic"
-  #CMK_FLAG="-O3 -fopenmp -e Z"
-  ;;
-  nersc-gpu)
-  CMK_FC=${CMK_FC:-"ftn"}
-  CMK_FLAG="-Wall -fast -O3 -mp=gpu,multicore -cpp -gpu=cc80 -Minfo=mp,accel"
+  CMK_FLAG="-O3 -e Z"
   ;;
 
   *)
