@@ -16,11 +16,46 @@
 !  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
 !  OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 !  OTHER DEALINGS IN THE SOFTWARE.
+! ----------------------------------------------------------------------
+MODULE KINDS_M
+!-----------------------------------------------------------------------
+  IMPLICIT NONE
+! ----------------------------------------------------------------------
+  INTEGER,PARAMETER :: HPI = SELECTED_INT_KIND(4)        ! 2-BYTE INTEGER
+  INTEGER,PARAMETER :: SPI = SELECTED_INT_KIND(9)        ! 4-BYTE INTEGER
+  INTEGER,PARAMETER :: DPI = SELECTED_INT_KIND(18)       ! 8-BYTE INTEGER
+! ----------------------------------------------------------------------
+  INTEGER,PARAMETER :: SPF = SELECTED_REAL_KIND(6,37)    ! 4-BYTE REAL (FLOAT)
+  INTEGER,PARAMETER :: DPF = SELECTED_REAL_KIND(15,307)  ! 8-BYTE REAL (FLOAT)
+! ----------------------------------------------------------------------
+#if no_quad == 1
+  INTEGER,PARAMETER :: QPI = SELECTED_INT_KIND(9)        !=> 8 BYTE INT
+  INTEGER,PARAMETER :: QPF = SELECTED_REAL_KIND(15,307)  !=> 8 BYTE REAL
+#else
+  INTEGER,PARAMETER :: QPI = SELECTED_INT_KIND(38)       !16-BYTE INTEGER
+  INTEGER,PARAMETER :: QPF = SELECTED_REAL_KIND(33,4931) !16-BYTE REAL (FLOAT)
+#endif
+! ----------------------------------------------------------------------
+END MODULE KINDS_M
+!-----------------------------------------------------------------------
+MODULE STDIO_M
+!-----------------------------------------------------------------------
+  USE, INTRINSIC :: ISO_FORTRAN_ENV, ONLY: INPUT_UNIT,OUTPUT_UNIT,ERROR_UNIT
+!-----------------------------------------------------------------------
+  IMPLICIT NONE
+! ----------------------------------------------------------------------
+  INTEGER, PARAMETER :: STDIN =INPUT_UNIT
+  INTEGER, PARAMETER :: STDOUT=OUTPUT_UNIT
+  INTEGER, PARAMETER :: STDERR=ERROR_UNIT
+! ----------------------------------------------------------------------
+  CHARACTER(len=72), PARAMETER :: BREAK=REPEAT("*",72)
+! ----------------------------------------------------------------------
+END MODULE STDIO_M
 !-----------------------------------------------------------------------
 MODULE LOGAM_M
 !-----------------------------------------------------------------------
-  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128 &
-                                        &, stdin=>input_unit,stdout=>output_unit
+  USE KINDS_M,ONLY: SPI,DPF
+  USE STDIO_M,ONLY: STDOUT
 !-----------------------------------------------------------------------
   IMPLICIT NONE
 !-----------------------------------------------------------------------
@@ -29,7 +64,6 @@ MODULE LOGAM_M
   REAL(dpf),              PRIVATE :: ACCUR
   REAL(dpf),              PRIVATE :: FPLMIN
   INTEGER(spi),           PRIVATE :: NX0,NT
-
 !-----------------------------------------------------------------------
   CONTAINS
 !-----------------------------------------------------------------------
@@ -243,8 +277,8 @@ END MODULE LOGAM_M
 !-----------------------------------------------------------------------
 MODULE RCF_M
 !-----------------------------------------------------------------------
-  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128 &
-                                        &, stdout=>output_unit
+  USE KINDS_M,ONLY: SPI,DPF
+  USE STDIO_M,ONLY: STDOUT
 !-----------------------------------------------------------------------
   IMPLICIT NONE
 !-----------------------------------------------------------------------
@@ -398,8 +432,7 @@ END MODULE RCF_M
 !-----------------------------------------------------------------------
 MODULE CSTEED_M
 !-----------------------------------------------------------------------
-  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128 &
-                                        &, stdin=>input_unit,stdout=>output_unit
+  USE KINDS_M,ONLY: SPI,DPF
 !-----------------------------------------------------------------------
   IMPLICIT NONE
 !-----------------------------------------------------------------------
@@ -413,8 +446,8 @@ END MODULE CSTEED_M
 !-----------------------------------------------------------------------
 MODULE COULCC_M
 !-----------------------------------------------------------------------
-  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64, qpf=>real128 &
-                                        &, stdin=>input_unit,stdout=>output_unit
+  USE KINDS_M,ONLY: SPI,DPF,QPF
+  USE STDIO_M,ONLY: STDOUT
 !-----------------------------------------------------------------------
   USE LOGAM_M
   USE RCF_M

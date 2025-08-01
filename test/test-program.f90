@@ -1,17 +1,17 @@
 PROGRAM CCTEST
 !-----------------------------------------------------------------------
-  use, intrinsic :: iso_fortran_env, only: spi=>int32, dpf=>real64 &
-                              &,stdin=>input_unit,stdout=>output_unit
+  USE KINDS_M,ONLY: SPI,DPF
+  USE STDIO_M,ONLY: STDIN,STDOUT
 !-----------------------------------------------------------------------
-  USE COULCC_M
-  USE CSTEED_M                                               
+  USE COULCC_M,ONLY: COULCC
+  USE CSTEED_M
 !-----------------------------------------------------------------------
   IMPLICIT NONE
 !-----------------------------------------------------------------------
-      LOGICAL :: WHIT                                                      
+      LOGICAL :: WHIT
       INTEGER(spi) :: I,L,NL,MODE,IFAIL,MD,IH,KFN,KFIN
       COMPLEX(dpf) :: X,ETA,ZLMIN,ZL,WS
-      COMPLEX(dpf),DIMENSION(201) :: FC,GC,FCP,GCP,SIG               
+      COMPLEX(dpf),DIMENSION(201) :: FC,GC,FCP,GCP,SIG
 !-----------------------------------------------------------------------
       CHARACTER(len=20) :: NOTE                                         
       CHARACTER(len=4)  :: IRREG,REG                                  
